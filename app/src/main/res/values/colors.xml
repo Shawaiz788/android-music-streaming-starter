@@ -1,0 +1,43 @@
+<resources>
+    <!--   Core   -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <!--   Neutrals   -->
+    <color name="soft_black">#FF121212</color>
+    <color name="productgray">#F3F3F3</color>
+    <color name="charcoal">#FF1E1E1E</color>
+    <color name="dark_gray">#FF2A2A2A</color>
+    <color name="mid_gray">#FFB0B0B0</color>
+    <color name="light_gray">#FFF2F2F2</color>
+    <!--   Professional Blues (CV friendly)   -->
+    <color name="navy_blue">#FF0A1F44</color>
+    <!--   Strong headings   -->
+    <color name="deep_navy">#FF0D2A52</color>
+    <!--   App bar / section title   -->
+    <color name="slate_blue">#FF34495E</color>
+    <!--   Text secondary   -->
+    <color name="steel_blue">#FF5D6D7E</color>
+    <!--   Icons / labels   -->
+    <color name="primary_blue">#FF3F51B5</color>
+    <!--   Accent   -->
+    <!--   Soft Accents   -->
+    <color name="cold_blue">#FF4FC3F7</color>
+    <color name="cool_teal">#FF26C6DA</color>
+    <color name="primary_purple">#FF6A5ACD</color>
+    <color name="app_purple">#FF6A5ACD</color>
+    <!--   Success / Warning (keep subtle for CV)   -->
+    <color name="mint_green">#FF2ECC71</color>
+    <color name="soft_green">#FF81C784</color>
+    <color name="warm_orange">#FFFFA726</color>
+    <color name="hot_red">#FFE53935</color>
+    <color name="deep_red">#FFB71C1C</color>
+    <!--   Borders & Overlays   -->
+    <color name="border_light">#33FFFFFF</color>
+    <color name="border_dark">#33000000</color>
+    <color name="overlay_dark">#66000000</color>
+    <color name="tab_selected">#000000</color>
+    <!--  BLACK  -->
+    <color name="tab_unselected">#888888</color>
+    <!--  GRAY  -->
+    <color name="tab_ripple">#22000000</color>
+</resources>

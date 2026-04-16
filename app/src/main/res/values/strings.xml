@@ -1,0 +1,66 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="rode_podmic">RØDE PodMic</string>
+    <string name="_108_2">108.2$</string>
+    <string name="microphone">Microphones</string>
+    <string name="dynamic_microphone_speaker_microphone">Dynamic microphone, Speaker microphone</string>
+    <string name="recommended_for_you">Recommended For You</string>
+    <string name="wh_1000xm4_biege">WH-1000XM4,Biege</string>
+    <string name="sony_premium_nwireless_headphones">SONY Premium \nWireless Headphones</string>
+    <string name="_349_99">$349.99</string>
+    <string name="wh_1000xm4_black">WH-1000XM4,Black</string>
+    <!--  Strings used for fragments for navigation  -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="old_price">
+<![CDATA[ <strike>$349.99</strike> ]]>
+</string>
+    <string name="lorem_ipsum"> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus dui nec risus. Maecenas non sodales nisi, vel dictum dolor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse blandit eleifend diam, vel rutrum tellus vulputate quis. Aliquam eget libero aliquet, imperdiet nisl a, ornare ex. Sed rhoncus est ut libero porta lobortis. Fusce in dictum tellus.\n\n Suspendisse interdum ornare ante. Aliquam nec cursus lorem. Morbi id magna felis. Vivamus egestas, est a condimentum egestas, turpis nisl iaculis ipsum, in dictum tellus dolor sed neque. Morbi tellus erat, dapibus ut sem a, iaculis tincidunt dui. Interdum et malesuada fames ac ante ipsum primis in faucibus. Curabitur et eros porttitor, ultricies urna vitae, molestie nibh. Phasellus at commodo eros, non aliquet metus. Sed maximus nisl nec dolor bibendum, vel congue leo egestas.\n\n Sed interdum tortor nibh, in sagittis risus mollis quis. Curabitur mi odio, condimentum sit amet auctor at, mollis non turpis. Nullam pretium libero vestibulum, finibus orci vel, molestie quam. Fusce blandit tincidunt nulla, quis sollicitudin libero facilisis et. Integer interdum nunc ligula, et fermentum metus hendrerit id. Vestibulum lectus felis, dictum at lacinia sit amet, tristique id quam. Cras eu consequat dui. Suspendisse sodales nunc ligula, in lobortis sem porta sed. Integer id ultrices magna, in luctus elit. Sed a pellentesque est.\n\n Aenean nunc velit, lacinia sed dolor sed, ultrices viverra nulla. Etiam a venenatis nibh. Morbi laoreet, tortor sed facilisis varius, nibh orci rhoncus nulla, id elementum leo dui non lorem. Nam mollis ipsum quis auctor varius. Quisque elementum eu libero sed commodo. In eros nisl, imperdiet vel imperdiet et, scelerisque a mauris. Pellentesque varius ex nunc, quis imperdiet eros placerat ac. Duis finibus orci et est auctor tincidunt. Sed non viverra ipsum. Nunc quis augue egestas, cursus lorem at, molestie sem. Morbi a consectetur ipsum, a placerat diam. Etiam vulputate dignissim convallis. Integer faucibus mauris sit amet finibus convallis.\n\n Phasellus in aliquet mi. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. In volutpat arcu ut felis sagittis, in finibus massa gravida. Pellentesque id tellus orci. Integer dictum, lorem sed efficitur ullamcorper, libero justo consectetur ipsum, in mollis nisl ex sed nisl. Donec maximus ullamcorper sodales. Praesent bibendum rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim. </string>
+    <string name="black_headphone_desc">The technology with two noise sensors and two microphones on each ear cup detects ambient noise and sends the data to the HD noise minimization processor QN1. Using a new algorithm, the QN1 then processes and minimizes noise for different acoustic environments in real time.</string>
+    <string name="sony_premium_wireless_nheadphones">SONY Premium Wireless\nHeadphones</string>
+    <string name="the_r_de_podmic_is_a_broadcast_quality_dynamic_microphone_designed_specifically_for_podcasting_streaming_and_content_creation_built_with_a_durable_all_metal_construction_and_integrated_pop_filter_it_delivers_rich_and_balanced_audio_while_reducing_unwanted_background_noise_its_cardioid_pickup_pattern_focuses_on_your_voice_ensuring_professional_clarity_whether_you_re_recording_in_a_studio_or_at_home">The RØDE PodMic is a broadcast-quality dynamic microphone designed specifically for podcasting, streaming, and content creation. Built with a durable all-metal construction and integrated pop filter, it delivers rich and balanced audio while reducing unwanted background noise. Its cardioid pickup pattern focuses on your voice, ensuring professional clarity whether you\'re recording in a studio or at home.</string>
+    <string name="buy_now">Buy Now</string>
+    <string name="are_you_sure_you_want_to_buy_this">Are you sure you want to buy this?</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="shawaiz_s_marketplace">Shawaiz\'s\nMarketplace</string>
+    <string name="welcome_to_fastmart">Welcome To FastMart</string>
+    <string name="discover_products_you_love_n_delivered_to_your_door">Discover products you love,\n delivered to your door.</string>
+    <string name="get_started">Get Started</string>
+    <!--  TODO: Remove or change this placeholder text  -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="get_started_now">Get Started Now</string>
+    <string name="login_statement">Create an account or log in to explore about our app</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="enter_here">Enter Here</string>
+    <string name="stars">********</string>
+    <string name="verify_password">Verify password</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="deal_of_the_day">Deals of the Day</string>
+    <string name="hello_shawaiz">Hello Shawaiz!</string>
+    <string name="model_wh_1000xm4_black">Model: WH-1000XM4, Black</string>
+    <string name="favourties">Favourties</string>
+    <string name="my_details">My Details</string>
+    <string name="full_name">Full Name</string>
+    <string name="shawaiz_ali">Shawaiz Ali</string>
+    <string name="email_address">Email Address</string>
+    <string name="shawaiz_gmail_com">shawaiz@gmail.com</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="_02_08_2004">02/08/2004</string>
+    <string name="gender">Gender</string>
+    <string name="male">Male</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="_92_323_4818244">+92 323 4818244</string>
+    <string name="search">Search</string>
+    <string name="clear_all">Clear all</string>
+    <string name="cart">Cart</string>
+    <string name="_0_00">$0.00</string>
+    <string name="shipping">Shipping</string>
+    <string name="checkout">Checkout</string>
+    <string name="_1">1</string>
+    <string name="log_in">Log In</string>
+    <string name="sign_out">Sign Out</string>
+</resources>
