@@ -13,7 +13,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/email" />
+        android:text="@string/email"
+        android:textColor="@color/black"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
@@ -30,7 +31,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/password"
-        android:layout_marginTop="20dp"/>
+        android:textColor="@color/black"
+        android:paddingTop="20dp"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
@@ -56,6 +58,7 @@
         android:layout_marginBottom="40dp"
         android:text="@string/log_in"
         android:textSize="14sp"
+        android:textColor="@color/white"
         android:backgroundTint="@color/black"
         android:layout_marginTop="40dp"
         app:cornerRadius="8dp"
