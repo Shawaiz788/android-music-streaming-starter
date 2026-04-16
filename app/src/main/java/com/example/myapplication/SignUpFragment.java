@@ -1,59 +1,62 @@
 package com.example.myapplication;
 
+import static android.content.Context.MODE_PRIVATE;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link SignUpFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import com.google.android.material.textfield.TextInputEditText;
+
+import org.w3c.dom.Text;
+
+
 public class SignUpFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public SignUpFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment SignUpFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static SignUpFragment newInstance(String param1, String param2) {
-        SignUpFragment fragment = new SignUpFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
+    TextInputEditText tietemail,tietpassword,tietcpassword;
+    Button btnSignup;
+    SharedPreferences srPref;
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        tietemail=view.findViewById(R.id.tietemail);
+        tietpassword=view.findViewById(R.id.tietpassword);
+        tietcpassword=view.findViewById(R.id.tietcpassword);
+        btnSignup=view.findViewById(R.id.btnSignup);
+        srPref= requireActivity().getSharedPreferences("MyPref",MODE_PRIVATE);
+        btnSignup.setOnClickListener((v->{
+            String email,password,cpassword;
+            email=tietemail.getText().toString().trim();
+            password=tietpassword.getText().toString().trim(); //idk if supposed to be trimmed or not
+            cpassword=tietcpassword.getText().toString().trim();//idk if supposed to be trimmed or not
+
+            if(email.isEmpty()||password.isEmpty()||cpassword.isEmpty()){
+                Toast.makeText(requireContext(),"All fields must be filled",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if(!password.equals(cpassword)){
+                Toast.makeText(requireContext(),"Password and Verified Password are not equal",Toast.LENGTH_SHORT).show();
+                return;
+            }
+            srPref.edit().putString("email",email).putString("password",password).putBoolean("is_loggedin",true).commit();
+            Intent i =new Intent(requireContext(), MainActivity.class);
+            startActivity(i);
+
+
+        }));
+
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
