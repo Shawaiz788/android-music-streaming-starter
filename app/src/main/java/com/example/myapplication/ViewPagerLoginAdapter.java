@@ -16,7 +16,7 @@ public class ViewPagerLoginAdapter extends FragmentStateAdapter {
         if(position==0){
             return new SignUpFragment();
         }else{
-            return new LoginFragment();
+            return new SigninFragment();
         }
 
     }

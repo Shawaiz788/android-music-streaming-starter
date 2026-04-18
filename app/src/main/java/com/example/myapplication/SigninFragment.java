@@ -14,26 +14,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.textfield.TextInputEditText;
 
-
-public class LoginFragment extends Fragment {
-    TextInputEditText tietemail,tietpassword;
+public class SigninFragment extends Fragment {
+    EditText etEmail,etPassword;
     Button btnLogin;
     SharedPreferences srPref;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        tietemail=view.findViewById(R.id.tietemail);
-        tietpassword=view.findViewById(R.id.tietpassword);
+        etEmail=view.findViewById(R.id.etEmail);
+        etPassword=view.findViewById(R.id.etPassword);
         btnLogin=view.findViewById(R.id.btnLogin);
+        TextView tvCreateAccount = view.findViewById(R.id.tvcreateAccount);
         srPref= requireActivity().getSharedPreferences("MyPref",MODE_PRIVATE);
         btnLogin.setOnClickListener((v->{
-            String email,password,cpassword;
-            email=tietemail.getText().toString().trim();
-            password=tietpassword.getText().toString().trim(); //idk if supposed to be trimmed or not
+            String email,password;
+            email=etEmail.getText().toString().trim();
+            password=etPassword.getText().toString().trim(); //idk if supposed to be trimmed or not
 
 
             if(email.isEmpty()||password.isEmpty()){
@@ -49,7 +50,16 @@ public class LoginFragment extends Fragment {
             startActivity(i);
 
 
+
         }));
+
+        tvCreateAccount.setOnClickListener(v1 -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new SignUpFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
     }
 
@@ -57,6 +67,6 @@ public class LoginFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_login, container, false);
+        return inflater.inflate(R.layout.fragment_signin, container, false);
     }
 }
