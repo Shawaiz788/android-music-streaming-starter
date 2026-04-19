@@ -30,7 +30,9 @@ SharedPreferences srPref;
         });
         init();
         new Handler().postDelayed(()->{
-            checkLoggedIn();
+            //checkLoggedIn();
+            startActivity(new Intent(Splash.this, MainActivity.class));
+            finish();
         },2000);
     }
 
