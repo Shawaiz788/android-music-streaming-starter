@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.musicplayer;
 
 import android.os.Bundle;
 import android.widget.TableLayout;
@@ -13,11 +13,15 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
 TabLayout tablayout;
 ViewPager2 viewpager;
 TabLayoutMediator mediator;
+    FirebaseAuth auth;
+    FirebaseUser user;
 
 ViewPagerAdapter adapter;
     @Override

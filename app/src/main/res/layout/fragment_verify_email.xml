@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context=".VerifyEmailFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Verify your email"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="We've sent a verification link to your email address. Please check your inbox (and spam folder) and click the link to activate your account."
+            android:textColor="#CCCCCC"
+            android:textSize="16sp"
+            android:textAlignment="center"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="40dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnContinueLogin"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="I've Verified My Email"
+            android:textColor="@android:color/black"
+            android:backgroundTint="#E0E0E0"
+            app:cornerRadius="25dp"/>
+
+        <TextView
+            android:id="@+id/tvResendEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Resend email"
+            android:textColor="@android:color/white"
+            android:background="@drawable/outline_button"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:layout_marginTop="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Free for 3 months, then $12 a month"
+            android:textColor="#CCCCCC"
+            android:textSize="12sp"
+            android:layout_marginTop="32dp"/>
+
+    </LinearLayout>
+
+</ScrollView>

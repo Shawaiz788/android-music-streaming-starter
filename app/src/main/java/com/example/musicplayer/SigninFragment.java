@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.musicplayer;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -18,19 +18,26 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+
 
 public class SigninFragment extends Fragment {
     EditText etEmail,etPassword;
     Button btnLogin;
-    SharedPreferences srPref;
+
+    FirebaseAuth auth;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        auth=FirebaseAuth.getInstance();
         etEmail=view.findViewById(R.id.etEmail);
         etPassword=view.findViewById(R.id.etPassword);
         btnLogin=view.findViewById(R.id.btnLogin);
         TextView tvCreateAccount = view.findViewById(R.id.tvcreateAccount);
-        srPref= requireActivity().getSharedPreferences("MyPref",MODE_PRIVATE);
+
         btnLogin.setOnClickListener((v->{
             String email,password;
             email=etEmail.getText().toString().trim();
@@ -41,13 +48,27 @@ public class SigninFragment extends Fragment {
                 Toast.makeText(requireContext(),"All fields must be filled",Toast.LENGTH_SHORT).show();
                 return;
             }
-            if(!password.equals(srPref.getString("password",""))){
-                Toast.makeText(requireContext(),"Invalid Username/Password",Toast.LENGTH_SHORT).show();
-                return;
-            }
-            srPref.edit().putBoolean("is_loggedin",true).commit();
-            Intent i =new Intent(requireContext(), MainActivity.class);
-            startActivity(i);
+
+            auth.signInWithEmailAndPassword(email,password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                @Override
+                public void onSuccess(AuthResult authResult) {
+                    Toast.makeText(getContext(), "SignIn Successful!", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(getActivity(), MainActivity.class));
+                    requireActivity().finish();
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(requireContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
+                }
+            });
+//            if(!password.equals(srPref.getString("password",""))){
+//                Toast.makeText(requireContext(),"Invalid Username/Password",Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//            srPref.edit().putBoolean("is_loggedin",true).commit();
+//            Intent i =new Intent(requireContext(), MainActivity.class);
+//            startActivity(i);
 
 
 

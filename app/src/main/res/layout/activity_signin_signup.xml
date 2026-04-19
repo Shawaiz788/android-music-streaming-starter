@@ -9,7 +9,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container"
-        android:name="com.example.myapplication.SigninFragment"
+        android:name="com.example.musicplayer.SigninFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

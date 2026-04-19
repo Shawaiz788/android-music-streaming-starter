@@ -1,47 +1,39 @@
-package com.example.myapplication;
+package com.example.musicplayer;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
-public class Splash extends AppCompatActivity {
-SharedPreferences srPref;
+public class SignInSignup extends AppCompatActivity {
+   FragmentManager manager;
+Fragment signin_frag,signup_frag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_splash);
+        setContentView(R.layout.activity_signin_signup);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
         init();
-        new Handler().postDelayed(()->{
-            checkLoggedIn();
-        },2000);
-    }
 
-    private void checkLoggedIn() {
-        if(srPref.getBoolean("is_loggedin",false)==true){
-            startActivity(new Intent(Splash.this, SignInSignup.class));
-            finish();
-        }else{
-            startActivity(new Intent(Splash.this, MainActivity.class));
-            finish();
-        }
     }
 
     public void init(){
-        srPref=getSharedPreferences("MyPref",MODE_PRIVATE);
+       manager=getSupportFragmentManager();
+       manager.beginTransaction().replace(R.id.fragment_container,new SigninFragment()).addToBackStack(null).commit();
+
+
+
 
     }
 }
