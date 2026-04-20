@@ -63,4 +63,12 @@
     <string name="_1">1</string>
     <string name="log_in">Log In</string>
     <string name="sign_out">Sign Out</string>
+    <string name="expiry_valid_until_01_jan_2026">Expiry valid until 01 Jan 2026</string>
+    <string name="my_subscription">My Subscription</string>
+    <string name="quit">Quit</string>
+    <string name="enter_promo_code">Enter promo code</string>
+    <string name="restore_purchases">Restore purchases</string>
+    <string name="user_email_com">user@email.com</string>
+    <string name="user_name">User Name</string>
+    <string name="profile">Profile</string>
 </resources>
