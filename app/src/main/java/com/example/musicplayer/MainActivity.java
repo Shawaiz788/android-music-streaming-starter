@@ -1,80 +1,66 @@
 package com.example.musicplayer;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.widget.TableLayout;
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.fragment.app.FragmentManager;
-import androidx.viewpager2.widget.ViewPager2;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
+import androidx.navigation.fragment.NavHostFragment;
 
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
-TabLayout tablayout;
-ViewPager2 viewpager;
-TabLayoutMediator mediator;
-    FirebaseAuth auth;
-    FirebaseUser user;
-    CardView cvProfile;
 
-ViewPagerAdapter adapter;
+    BottomNavigationView bottomNav;
+    NavController navController;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-//            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-//            return insets;
-//        });
-        init();
-    }
-    public void init(){
-        cvProfile = findViewById(R.id.cvProfile);
-        tablayout=findViewById(R.id.tablayout);
-        viewpager=findViewById(R.id.viewpager2);
-        adapter=new ViewPagerAdapter(this);
-        viewpager.setAdapter(adapter);
-        mediator =new TabLayoutMediator(tablayout,viewpager, new TabLayoutMediator.TabConfigurationStrategy() {
-            @Override
-            public void onConfigureTab(@NonNull TabLayout.Tab tab, int i) {
-                switch (i){
-                    case 0:
-                       tab.setText("Home");
-                       tab.setIcon(R.drawable.icon_home);
 
-                       break;
+        bottomNav = findViewById(R.id.bottom_navigation);
 
-                    case 1:
-                        tab.setText("Top");
-                        tab.setIcon(R.drawable.icon_music);
+        NavHostFragment navHostFragment =
+                (NavHostFragment) getSupportFragmentManager()
+                        .findFragmentById(R.id.nav_host_fragment);
 
-                        break;
+        if (navHostFragment == null) return;
 
-                    case 2:
-                        tab.setText("Favorites");
-                        tab.setIcon(R.drawable.icon_favorites);
+        navController = navHostFragment.getNavController();
 
-                        break;
+        bottomNav.setOnItemSelectedListener(item -> {
 
-                    case 3:
-                        tab.setText("Search");
-                        tab.setIcon(R.drawable.icon_search);
-                        break;
-                }
+            int id = item.getItemId();
+
+            if (navController.getCurrentDestination() != null &&
+                    navController.getCurrentDestination().getId() == id) {
+                return true;
             }
+
+            NavOptions options = new NavOptions.Builder()
+                    .setLaunchSingleTop(true)
+                    .setPopUpTo(navController.getGraph().getStartDestinationId(), false)
+                    .build();
+
+            if (id == R.id.homeFragment) {
+                navController.navigate(R.id.homeFragment, null, options);
+                return true;
+            }
+            else if (id == R.id.topFragment) {
+                navController.navigate(R.id.topFragment, null, options);
+                return true;
+            }
+            else if (id == R.id.favoritesFragment) {
+                navController.navigate(R.id.favoritesFragment, null, options);
+                return true;
+            }
+            else if (id == R.id.searchFragment) {
+                navController.navigate(R.id.searchFragment, null, options);
+                return true;
+            }
+
+            return false;
         });
-        mediator.attach();
     }
 }

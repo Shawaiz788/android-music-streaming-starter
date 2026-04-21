@@ -71,4 +71,7 @@
     <string name="user_email_com">user@email.com</string>
     <string name="user_name">User Name</string>
     <string name="profile">Profile</string>
+    <string name="home">Home</string>
+    <string name="top">Top</string>
+    <string name="favorites">Favorites</string>
 </resources>
