@@ -2,11 +2,16 @@ package com.example.musicplayer;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,6 +28,8 @@ public class ProfileFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    ImageView btnClose;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -60,5 +67,21 @@ public class ProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_profile, container, false);
+
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        btnClose = view.findViewById(R.id.closeBtn);
+
+        btnClose.setOnClickListener(v -> {
+
+            NavController navController =
+                    NavHostFragment.findNavController(ProfileFragment.this);
+
+            navController.navigate(R.id.homeFragment);
+
+        });
     }
 }
