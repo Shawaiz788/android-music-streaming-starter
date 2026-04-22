@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import com.facebook.shimmer.ShimmerFrameLayout;
 
 
 public class HomeFragment extends Fragment {
@@ -24,6 +26,8 @@ public class HomeFragment extends Fragment {
     CardView cvProfile;
     RecyclerView rvReleases;
     RvReleasesAdapter adapter;
+    ShimmerFrameLayout shimmerContainer;
+    private MyApplication.OnSongsLoadedListener songsLoadedListener;
 
 
 
@@ -43,16 +47,47 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         cvProfile = view.findViewById(R.id.cvProfile);
         rvReleases=view.findViewById(R.id.rvReleases);
+        shimmerContainer = view.findViewById(R.id.shimmer_view_container);
         rvReleases.setHasFixedSize(true);
-        //ArrayList<Song>list=new ArrayList<>();
-        //the array here should be an array that gets only the latest songs based on the date added
-        //or atleast an array thats sorted based on the date added
+        
         adapter=new RvReleasesAdapter(requireContext(),MyApplication.songs);
         rvReleases.setLayoutManager(new LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false));
         rvReleases.setAdapter(adapter);
+
+        songsLoadedListener = songs -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (adapter != null && songs != null && !songs.isEmpty()) {
+                        adapter.notifyDataSetChanged();
+                        rvReleases.setVisibility(View.VISIBLE);
+                        shimmerContainer.stopShimmer();
+                        shimmerContainer.setVisibility(View.GONE);
+                    }
+                });
+            }
+        };
+        MyApplication.subscribe(songsLoadedListener);
+
+        // Check if already loaded
+        if (MyApplication.songs != null && !MyApplication.songs.isEmpty()) {
+            rvReleases.setVisibility(View.VISIBLE);
+            shimmerContainer.stopShimmer();
+            shimmerContainer.setVisibility(View.GONE);
+        } else {
+            shimmerContainer.startShimmer();
+        }
+
         cvProfile.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.profileFragment);
         });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (songsLoadedListener != null) {
+            MyApplication.unsubscribe(songsLoadedListener);
+        }
     }
 }

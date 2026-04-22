@@ -18,6 +18,23 @@ public class MyApplication extends Application {
     public static ArrayList<Song> songs;
     private DatabaseReference databaseReference;
 
+    public interface OnSongsLoadedListener {
+        void onSongsLoaded(ArrayList<Song> songs);
+    }
+
+    private static final ArrayList<OnSongsLoadedListener> listeners = new ArrayList<>();
+
+    public static void subscribe(OnSongsLoadedListener listener) {
+        listeners.add(listener);
+        if (songs != null && !songs.isEmpty()) {
+            listener.onSongsLoaded(songs);
+        }
+    }
+
+    public static void unsubscribe(OnSongsLoadedListener listener) {
+        listeners.remove(listener);
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -83,6 +100,7 @@ public class MyApplication extends Application {
                         addNewSongToFirebase(localSong);
                     }
                 }
+                notifyListeners();
             }
 
             @Override
@@ -113,6 +131,7 @@ public class MyApplication extends Application {
                         }
                     }
                 }
+                notifyListeners();
             }
 
             @Override
@@ -141,5 +160,11 @@ public class MyApplication extends Application {
 
     public String getResourceUri(int resId) {
         return "android.resource://" + getPackageName() + "/" + resId;
+    }
+
+    private void notifyListeners() {
+        for (OnSongsLoadedListener listener : new ArrayList<>(listeners)) {
+            listener.onSongsLoaded(songs);
+        }
     }
 }
