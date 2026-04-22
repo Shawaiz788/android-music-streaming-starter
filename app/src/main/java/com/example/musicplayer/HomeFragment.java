@@ -10,6 +10,8 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,9 @@ public class HomeFragment extends Fragment {
 
 
     CardView cvProfile;
+    RecyclerView rvReleases;
+    RvReleasesAdapter adapter;
+
 
 
     public HomeFragment() {
@@ -37,7 +42,14 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         cvProfile = view.findViewById(R.id.cvProfile);
-
+        rvReleases=view.findViewById(R.id.rvReleases);
+        rvReleases.setHasFixedSize(true);
+        //ArrayList<Song>list=new ArrayList<>();
+        //the array here should be an array that gets only the latest songs based on the date added
+        //or atleast an array thats sorted based on the date added
+        adapter=new RvReleasesAdapter(requireContext(),MyApplication.songs);
+        rvReleases.setLayoutManager(new LinearLayoutManager(requireContext(),LinearLayoutManager.HORIZONTAL,false));
+        rvReleases.setAdapter(adapter);
         cvProfile.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.profileFragment);
