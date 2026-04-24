@@ -30,11 +30,30 @@
         android:id="@+id/iv_song"
         android:layout_width="280dp"
         android:layout_height="280dp"
-        android:layout_centerInParent="true"
+        android:layout_above="@id/fav_btn"
+        android:layout_centerHorizontal="true"
         android:scaleType="centerCrop"
         android:elevation="8dp"
         android:background="@drawable/rounded_button"
         />
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="30dp"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/fav_btn"
+        android:layout_above="@id/tv_title"
+        android:layout_margin="8dp"
+        app:cardBackgroundColor="#40FFFFFF"
+        >
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_fav"
+            android:padding="6dp"
+            />
+
+    </androidx.cardview.widget.CardView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_music_list"
