@@ -1,10 +1,17 @@
 package com.example.musicplayer;
 
+import android.app.AlertDialog;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +21,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity
@@ -29,6 +37,7 @@ public class MainActivity extends AppCompatActivity
 
     Handler handler = new Handler();
     Runnable progressUpdater;
+    Runnable updateSeekBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,16 +138,131 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void reopenFullPlayer() {
-        NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment);
-        if (nhf == null) return;
-        Fragment current = nhf.getChildFragmentManager().getPrimaryNavigationFragment();
         Song song = PlayerManager.getInstance().getCurrentSong();
-        if (song == null) return;
-        if (current instanceof FavoritesFragment) {
-            ((FavoritesFragment) current).showPlayerDialog(song, true);
+        if (song != null) {
+            showPlayerDialog(song, true);
         }
-        // Add other fragments here as you expand
+    }
+
+    public void showPlayerDialog(Song song, boolean resumeOnly) {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_player, null);
+
+        TextView tvTitle = view.findViewById(R.id.tv_title);
+        TextView tvArtist = view.findViewById(R.id.tv_artist);
+        TextView tvTotalTime = view.findViewById(R.id.tv_total_time);
+        TextView tvCurrentTime = view.findViewById(R.id.tv_current_time);
+        ImageView ivSong = view.findViewById(R.id.iv_song);
+        ImageView ivPlayPause = view.findViewById(R.id.iv_play_pause);
+        CardView btnPlayPause = view.findViewById(R.id.btn_play_pause);
+        SeekBar seekBar = view.findViewById(R.id.seek_bar);
+
+        PlayerManager playerManager = PlayerManager.getInstance();
+
+        tvTitle.setText(song.getTitle());
+        tvArtist.setText(song.getArtist());
+
+        if (song.getImageUrl() != null) {
+            Glide.with(this).load(song.getImageUrl()).into(ivSong);
+        }
+
+        if (!resumeOnly) {
+            playerManager.play(this, song);
+        }
+
+        ivPlayPause.setImageResource(playerManager.isPlaying() ?
+                android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+
+        seekBar.setMax(playerManager.getDuration());
+        tvTotalTime.setText(formatTime(playerManager.getDuration()));
+
+        updateSeekBar = new Runnable() {
+            @Override
+            public void run() {
+                if (playerManager.getMediaPlayer() != null && playerManager.isPlaying()) {
+                    seekBar.setProgress(playerManager.getCurrentPosition());
+                    tvCurrentTime.setText(formatTime(playerManager.getCurrentPosition()));
+                }
+                handler.postDelayed(this, 1000);
+            }
+        };
+        handler.post(updateSeekBar);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    playerManager.seekTo(progress);
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        btnPlayPause.setOnClickListener(v -> {
+            playerManager.togglePlayPause();
+            ivPlayPause.setImageResource(playerManager.isPlaying() ?
+                    android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+        });
+
+        AlertDialog dialog = new AlertDialog.Builder(this, R.style.TransparentDialog)
+                .setView(view)
+                .create();
+
+        view.findViewById(R.id.btn_music_list).setOnClickListener(v1 -> {
+            playerManager.stop();
+            handler.removeCallbacks(updateSeekBar);
+            dialog.dismiss();
+        });
+
+        view.setOnTouchListener(new View.OnTouchListener() {
+            float touchStartY = 0;
+            float totalDeltaY = 0;
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        touchStartY = event.getRawY();
+                        totalDeltaY = 0;
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        float deltaY = event.getRawY() - touchStartY;
+                        if (deltaY > 0) {
+                            totalDeltaY = deltaY;
+                            view.setTranslationY(deltaY);
+                            view.setAlpha(1f - (deltaY / 800f));
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        if (totalDeltaY < 10) {
+                            v.performClick();
+                        } else if (totalDeltaY > 300) {
+                            view.animate()
+                                    .translationY(view.getHeight())
+                                    .alpha(0f)
+                                    .setDuration(250)
+                                    .withEndAction(dialog::dismiss)
+                                    .start();
+                        } else {
+                            view.animate().translationY(0f).alpha(1f).setDuration(150).start();
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        dialog.show();
+
+        view.setTranslationY(2000f);
+        view.animate().translationY(0f).setDuration(350)
+                .setInterpolator(new DecelerateInterpolator()).start();
+    }
+
+    private String formatTime(int millis) {
+        int totalSeconds = millis / 1000;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return String.format("%d:%02d", minutes, seconds);
     }
 
     @Override public void onSongChanged(Song song) { showMiniPlayer(song); }
