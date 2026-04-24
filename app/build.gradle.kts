@@ -42,6 +42,8 @@ dependencies {
     implementation(libs.navigation.ui.ktx)
     implementation(libs.firebase.database)
     implementation(libs.shimmer)
+    implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

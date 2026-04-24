@@ -11,6 +11,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+
 import java.util.ArrayList;
 
 import kotlinx.serialization.descriptors.SerialKind;
@@ -36,9 +38,14 @@ ArrayList<Song>songs;
 
     @Override
     public void onBindViewHolder(@NonNull ReleaseViewHolder holder, int position) {
-        Song song=songs.get(position);
-       holder.ivRelease.setImageURI(Uri.parse(song.getImageUrl()));
-
+        Song song = songs.get(position);
+        
+        // Use Glide for reliable image loading (Firebase URLs + Local Resources)
+        if (song.getImageUrl() != null) {
+            Glide.with(context)
+                .load(song.getImageUrl())
+                .into(holder.ivRelease);
+        }
     }
 
     @Override
