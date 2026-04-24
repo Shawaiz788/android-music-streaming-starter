@@ -50,7 +50,7 @@ public class FavoritesFragment extends Fragment {
         LLTracks.setOnClickListener(v -> {
             MyApplication app = (MyApplication) requireActivity().getApplication();
             if (app.songs != null && !app.songs.isEmpty()) {
-                showPlayerDialog(app.songs.get(0), false);
+                showPlayerDialog(app.songs.get(1), false);
             }
         });
     }

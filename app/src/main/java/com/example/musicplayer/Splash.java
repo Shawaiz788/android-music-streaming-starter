@@ -24,7 +24,7 @@ SharedPreferences srPref;
         setContentView(R.layout.activity_splash);
         init();
         new Handler().postDelayed(()->{
-            //checkLoggedIn();
+           // checkLoggedIn();
             startActivity(new Intent(Splash.this, MainActivity.class));
             finish();
         },2000);
