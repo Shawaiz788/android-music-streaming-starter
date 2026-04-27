@@ -1,64 +1,106 @@
 package com.example.musicplayer;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
+import android.widget.TextView;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link SearchFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class SearchFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    RecyclerView rvSearch;
+    View defaultContent;
+    View searchResultContent;
+    TextView tvSearchHeader;
+    SearchAdapter adapter;
+    List<Song> displayList = new ArrayList<>();
 
     public SearchFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment SearchFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static SearchFragment newInstance(String param1, String param2) {
-        SearchFragment fragment = new SearchFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_search, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        EditText etSearch = view.findViewById(R.id.etSearch);
+        rvSearch = view.findViewById(R.id.rvSearch);
+        defaultContent = view.findViewById(R.id.defaultContent);
+        searchResultContent = view.findViewById(R.id.searchResultContent);
+        tvSearchHeader = view.findViewById(R.id.tvSearchHeader);
+        
+        adapter = new SearchAdapter(requireContext(), displayList);
+        rvSearch.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvSearch.setAdapter(adapter);
+
+        if (etSearch != null) {
+            etSearch.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    showSearchResults();
+                }
+            });
+
+            etSearch.setOnClickListener(v -> showSearchResults());
+
+            etSearch.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String query = s.toString();
+                    if (query.trim().isEmpty()) {
+                        tvSearchHeader.setText("Recent searches");
+                    } else {
+                        tvSearchHeader.setText("Search results");
+                    }
+                    performSearch(query);
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
+
+            etSearch.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    performSearch(etSearch.getText().toString());
+                    return true;
+                }
+                return false;
+            });
+        }
+    }
+
+    private void showSearchResults() {
+        defaultContent.setVisibility(GONE);
+        searchResultContent.setVisibility(VISIBLE);
+        // Initially show all songs or recent searches
+        if (displayList.isEmpty()) {
+            performSearch("");
+        }
+    }
+
+    private void performSearch(String query) {
+        List<Song> results = MyApplication.searchSongs(query);
+        displayList.clear();
+        displayList.addAll(results);
+        adapter.notifyDataSetChanged();
     }
 }

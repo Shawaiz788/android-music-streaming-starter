@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.shimmer)
     implementation(libs.glide)
     annotationProcessor(libs.glide.compiler)
+    implementation(libs.algoliasearch)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
