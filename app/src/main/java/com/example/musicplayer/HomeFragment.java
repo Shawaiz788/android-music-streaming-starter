@@ -17,6 +17,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.TextView;
+
 import com.facebook.shimmer.ShimmerFrameLayout;
 
 
@@ -27,6 +29,7 @@ public class HomeFragment extends Fragment {
     RecyclerView rvReleases;
     RvReleasesAdapter adapter;
     ShimmerFrameLayout shimmerContainer;
+    TextView tvViewAll;
     private MyApplication.OnSongsLoadedListener songsLoadedListener;
 
 
@@ -45,6 +48,7 @@ public class HomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        tvViewAll=view.findViewById(R.id.tvViewAll);
         cvProfile = view.findViewById(R.id.cvProfile);
         rvReleases=view.findViewById(R.id.rvReleases);
         shimmerContainer = view.findViewById(R.id.shimmer_view_container);
@@ -81,6 +85,13 @@ public class HomeFragment extends Fragment {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.profileFragment);
         });
+
+        tvViewAll.setOnClickListener((v)->{
+            NavController navController = NavHostFragment.findNavController(this);
+            navController.navigate(R.id.ReleasesFragment);
+        });
+
+
     }
 
     @Override

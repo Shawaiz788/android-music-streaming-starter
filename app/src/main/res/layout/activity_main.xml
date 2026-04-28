@@ -45,7 +45,7 @@
                 android:layout_alignParentStart="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/arrow_up_float"
-                android:tint="#FFFFFF" />
+                app:tint="@color/white" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -86,7 +86,7 @@
                 android:layout_alignParentEnd="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:tint="#FFFFFF" />
+                app:tint="@color/white" />
 
         </RelativeLayout>
 

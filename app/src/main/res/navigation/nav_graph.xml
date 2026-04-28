@@ -21,4 +21,8 @@
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.musicplayer.ProfileFragment" />
+
+    <fragment
+        android:id="@+id/ReleasesFragment"
+        android:name="com.example.musicplayer.ReleasesFragment" />
 </navigation>

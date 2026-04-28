@@ -35,11 +35,9 @@ public class FavoritesFragment extends Fragment {
         cvProfile=view.findViewById(R.id.cvProfile);
         
         LLTracks.setOnClickListener(v -> {
-            MyApplication app = (MyApplication) requireActivity().getApplication();
-            if (app.songs != null && !app.songs.isEmpty()) {
-                // Safely get the song
-                Song song = app.songs.get(app.songs.size() > 1 ? 1 : 0);
-                // Call the central showPlayerDialog in MainActivity
+
+            if (MyApplication.songs != null && !MyApplication.songs.isEmpty()) {
+                Song song = MyApplication.songs.get(0);
                 ((MainActivity) requireActivity()).showPlayerDialog(song, false);
             }
         });

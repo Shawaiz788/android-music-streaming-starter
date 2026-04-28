@@ -30,9 +30,7 @@ ArrayList<Song>songs;
     @Override
     public ReleaseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view= LayoutInflater.from(context).inflate(R.layout.new_release_item,parent,false);
-       view.setOnClickListener((v->{
-           Toast.makeText(context,"Clicked",Toast.LENGTH_SHORT).show();
-       }));
+
         return new ReleaseViewHolder(view);
     }
 
@@ -46,6 +44,12 @@ ArrayList<Song>songs;
                 .load(song.getImageUrl())
                 .into(holder.ivRelease);
         }
+
+        holder.ivRelease.setOnClickListener((v->{
+            if (MyApplication.songs != null && !MyApplication.songs.isEmpty()) {
+                ((MainActivity) context).showPlayerDialog(song, false);
+            }
+        }));
     }
 
     @Override
