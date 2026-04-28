@@ -15,7 +15,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -30,6 +33,7 @@ public class SearchFragment extends Fragment {
     TextView tvSearchHeader;
     SearchAdapter adapter;
     List<Song> displayList = new ArrayList<>();
+    CardView cvProfile;
 
     public SearchFragment() {
         // Required empty public constructor
@@ -44,13 +48,13 @@ public class SearchFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        cvProfile=view.findViewById(R.id.cvProfile);
         EditText etSearch = view.findViewById(R.id.etSearch);
         rvSearch = view.findViewById(R.id.rvSearch);
         defaultContent = view.findViewById(R.id.defaultContent);
         searchResultContent = view.findViewById(R.id.searchResultContent);
         tvSearchHeader = view.findViewById(R.id.tvSearchHeader);
-        
+
         adapter = new SearchAdapter(requireContext(), displayList);
         rvSearch.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvSearch.setAdapter(adapter);
@@ -86,6 +90,10 @@ public class SearchFragment extends Fragment {
                 return false;
             });
         }
+        cvProfile.setOnClickListener(v -> {
+            NavController navController = NavHostFragment.findNavController(this);
+            navController.navigate(R.id.profileFragment);
+        });
     }
 
     private void showSearchResults() {

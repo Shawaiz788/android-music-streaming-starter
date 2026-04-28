@@ -31,7 +31,8 @@
             android:layout_centerVertical="true"
             app:cardBackgroundColor="@android:color/white"
             app:cardCornerRadius="24dp"
-            app:cardElevation="0dp">
+            app:cardElevation="0dp"
+            android:id="@+id/cvProfile">
 
             <View
                 android:layout_width="match_parent"

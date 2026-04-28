@@ -8,11 +8,15 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 
 public class FavoritesFragment extends Fragment {
 
     LinearLayout LLTracks;
+    CardView cvProfile;
 
     public FavoritesFragment() {
         // Required empty public constructor
@@ -28,6 +32,7 @@ public class FavoritesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         LLTracks = view.findViewById(R.id.LLTracks);
+        cvProfile=view.findViewById(R.id.cvProfile);
         
         LLTracks.setOnClickListener(v -> {
             MyApplication app = (MyApplication) requireActivity().getApplication();
@@ -37,6 +42,11 @@ public class FavoritesFragment extends Fragment {
                 // Call the central showPlayerDialog in MainActivity
                 ((MainActivity) requireActivity()).showPlayerDialog(song, false);
             }
+        });
+
+        cvProfile.setOnClickListener(v -> {
+            NavController navController = NavHostFragment.findNavController(this);
+            navController.navigate(R.id.profileFragment);
         });
     }
 }
