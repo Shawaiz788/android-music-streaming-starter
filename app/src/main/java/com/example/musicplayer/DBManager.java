@@ -41,9 +41,8 @@ public class DBManager {
         }
     }
 
-    /**
-     * Downloads the song files and saves the metadata to the offline database.
-     */
+   //Downloads the song files and saves the metadata to the offline database.
+
     public void AddSongs(Song song) {
        //download the audio file
         DownloadUtils.getLocalPath(context, song, new DownloadUtils.DownloadCallback() {
