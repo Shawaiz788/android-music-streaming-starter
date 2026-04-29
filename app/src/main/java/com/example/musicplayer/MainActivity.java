@@ -1,6 +1,9 @@
 package com.example.musicplayer;
 
 import android.app.AlertDialog;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,14 +17,19 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.palette.graphics.Palette;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity
@@ -162,7 +170,31 @@ public class MainActivity extends AppCompatActivity
         tvArtist.setText(song.getArtist());
 
         if (song.getImageUrl() != null) {
-            Glide.with(this).load(song.getImageUrl()).into(ivSong);
+            Glide.with(this)
+                    .asBitmap()
+                    .load(song.getImageUrl())
+                    .into(new CustomTarget<Bitmap>() {
+                        @Override
+                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                            ivSong.setImageBitmap(resource);
+                            Palette.from(resource).generate(palette -> {
+                                if (palette != null) {
+                                    int dominantColor = palette.getDominantColor(0xFFA67B5B);
+                                    int darkMutedColor = palette.getDarkMutedColor(0xFF2E2016);
+                                    
+                                    GradientDrawable gd = new GradientDrawable(
+                                            GradientDrawable.Orientation.TOP_BOTTOM,
+                                            new int[] {dominantColor, darkMutedColor}
+                                    );
+                                    gd.setCornerRadius(0f);
+                                    view.setBackground(gd);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onLoadCleared(@Nullable Drawable placeholder) { }
+                    });
         }
 
         if (!resumeOnly) {
