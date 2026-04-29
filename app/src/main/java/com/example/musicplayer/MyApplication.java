@@ -45,57 +45,40 @@ public class MyApplication extends Application {
     private static final ArrayList<OnUserLoadedListener> userListeners = new ArrayList<>();
 
     public static void subscribe(OnSongsLoadedListener listener) {
-        synchronized (songListeners) {
+        if (!songListeners.contains(listener)) {
             songListeners.add(listener);
         }
-        synchronized (songs) {
-            if (!songs.isEmpty()) {
-                listener.onSongsLoaded(new ArrayList<>(songs));
-            }
+        
+        if (!songs.isEmpty()) {
+            listener.onSongsLoaded(new ArrayList<>(songs));
         }
     }
 
     public static void unsubscribe(OnSongsLoadedListener listener) {
-        synchronized (songListeners) {
-            songListeners.remove(listener);
-        }
+        songListeners.remove(listener);
     }
 
     public static void subscribeUser(OnUserLoadedListener listener) {
-        synchronized (userListeners) {
-            userListeners.add(listener);
-        }
+        userListeners.add(listener);
         if (currentUserInfo != null) {
             listener.onUserLoaded(currentUserInfo);
         }
     }
 
     public static void unsubscribeUser(OnUserLoadedListener listener) {
-        synchronized (userListeners) {
-            userListeners.remove(listener);
-        }
+        userListeners.remove(listener);
     }
 
     public static void notifySongsLoaded() {
-        List<OnSongsLoadedListener> currentListeners;
-        synchronized (songListeners) {
-            currentListeners = new ArrayList<>(songListeners);
-        }
-        synchronized (songs) {
-            ArrayList<Song> copy = new ArrayList<>(songs);
-            for (OnSongsLoadedListener listener : currentListeners) {
-                listener.onSongsLoaded(copy);
-            }
+        ArrayList<Song> copy = new ArrayList<>(songs);
+        for (OnSongsLoadedListener listener : songListeners) {
+            listener.onSongsLoaded(copy);
         }
     }
 
     public static void notifyUserLoaded() {
-        List<OnUserLoadedListener> currentListeners;
-        synchronized (userListeners) {
-            currentListeners = new ArrayList<>(userListeners);
-        }
         if (currentUserInfo != null) {
-            for (OnUserLoadedListener listener : currentListeners) {
+            for (OnUserLoadedListener listener : userListeners) {
                 listener.onUserLoaded(currentUserInfo);
             }
         }
@@ -105,11 +88,14 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         
+        // Ensure we start with a fresh list to trigger the shimmer
+        songs.clear();
+        
         // 1. Initialize Songs Handler
         songsHandler = new FirebaseSongsHandler();
 
         // 2. Add local songs
-        addLocalSongs();
+        // addLocalSongs();
 
         // 3. Sync local songs with Firebase and Load from Cloud
         songsHandler.syncLocalSongs(new ArrayList<>(songs));
@@ -131,57 +117,59 @@ public class MyApplication extends Application {
     }
 
     private void addLocalSongs() {
-        synchronized (songs) {
-            songs.add(new Song(
-                    "local_1",
-                    "RUDE",
-                    "AnimeVibe",
-                    "Chill",
-                    "Pop",
-                    "No lyrics available",
-                    206000,
-                    getResourceUri(R.raw.rude),
-                    getResourceUri(R.drawable.rude)
-            ));
+        songs.add(new Song(
+                "local_1",
+                "RUDE",
+                "AnimeVibe",
+                "Chill",
+                "Pop",
+                "No lyrics available",
+                206000,
+                getResourceUri(R.raw.rude),
+                getResourceUri(R.drawable.rude)
+        ));
 
-            songs.add(new Song(
-                    "local_2",
-                    "hungama",
-                    "Hassan Raheem",
-                    "Hungama",
-                    "Pop",
-                    "دکھے مجھ میں کیا...\n (lyrics truncated)",
-                    179000,
-                    getResourceUri(R.raw.hungama),
-                    getResourceUri(R.drawable.hungama)
-            ));
-        }
+        songs.add(new Song(
+                "local_2",
+                "hungama",
+                "Hassan Raheem",
+                "Hungama",
+                "Pop",
+                "دکھے مجھ میں کیا...\n (lyrics truncated)",
+                179000,
+                getResourceUri(R.raw.hungama),
+                getResourceUri(R.drawable.hungama)
+        ));
     }
 
     public String getResourceUri(int resId) {
-        return "android.resource://" + getPackageName() + "/" + resId;
+        try {
+            String type = getResources().getResourceTypeName(resId);
+            String name = getResources().getResourceEntryName(resId);
+            return "android.resource://" + getPackageName() + "/" + type + "/" + name;
+        } catch (Exception e) {
+            return "android.resource://" + getPackageName() + "/" + resId;
+        }
     }
 
-    public static List<Song> searchSongs(String query) {
+    public static ArrayList<Song> searchSongs(String query) {
         if (query == null || query.trim().isEmpty()) {
             return new ArrayList<>(recentSearches);
         }
 
         String lowerQuery = query.toLowerCase().trim();
-        List<ScoredSong> scoredSongs = new ArrayList<>();
+        ArrayList<ScoredSong> scoredSongs = new ArrayList<>();
 
-        synchronized (songs) {
-            for (Song song : songs) {
-                int score = calculateScore(song, lowerQuery);
-                if (score > 0) {
-                    scoredSongs.add(new ScoredSong(song, score));
-                }
+        for (Song song : songs) {
+            int score = calculateScore(song, lowerQuery);
+            if (score > 0) {
+                scoredSongs.add(new ScoredSong(song, score));
             }
         }
 
         Collections.sort(scoredSongs, (o1, o2) -> Integer.compare(o2.score, o1.score));
 
-        List<Song> results = new ArrayList<>();
+        ArrayList<Song> results = new ArrayList<>();
         for (ScoredSong ss : scoredSongs) {
             results.add(ss.song);
         }

@@ -22,6 +22,7 @@ public class ReleasesFragment extends Fragment {
    RecyclerView rvReleases;
    RvReleasesAdapter adapter;
    ImageButton btn_back;
+   MyApplication.OnSongsLoadedListener songsLoadedListener;
 
     public ReleasesFragment() {
         // Required empty public constructor
@@ -40,6 +41,25 @@ public class ReleasesFragment extends Fragment {
         adapter=new RvReleasesAdapter(requireContext(),MyApplication.songs);
         rvReleases.setLayoutManager(new GridLayoutManager(requireContext(),2,GridLayoutManager.VERTICAL,false));
         rvReleases.setAdapter(adapter);
+
+        songsLoadedListener = songs -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (adapter != null) {
+                        adapter.notifyDataSetChanged();
+                    }
+                });
+            }
+        };
+        MyApplication.subscribe(songsLoadedListener);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (songsLoadedListener != null) {
+            MyApplication.unsubscribe(songsLoadedListener);
+        }
     }
 
     @Override

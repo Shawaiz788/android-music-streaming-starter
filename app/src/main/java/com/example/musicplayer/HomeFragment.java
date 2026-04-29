@@ -62,6 +62,11 @@ public class HomeFragment extends Fragment {
         cvProfile = view.findViewById(R.id.cvProfile);
         rvReleases = view.findViewById(R.id.rvReleases);
         shimmerContainer = view.findViewById(R.id.shimmer_view_container);
+
+        rvReleases.setVisibility(View.GONE);
+        if (shimmerContainer != null) {
+            shimmerContainer.startShimmer();
+        }
         rvReleases.setHasFixedSize(true);
         
         adapter = new RvReleasesAdapter(requireContext(), MyApplication.songs);
@@ -71,8 +76,11 @@ public class HomeFragment extends Fragment {
         songsLoadedListener = songs -> {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    if (adapter != null && songs != null && !songs.isEmpty()) {
-                        adapter.notifyDataSetChanged();
+                    // Only hide the shimmer once we have at least 2 songs
+                    if (songs != null && songs.size() >= 2) {
+                        if (adapter != null) {
+                            adapter.notifyDataSetChanged();
+                        }
                         if (shimmerContainer != null) {
                             shimmerContainer.stopShimmer();
                             shimmerContainer.setVisibility(View.GONE);

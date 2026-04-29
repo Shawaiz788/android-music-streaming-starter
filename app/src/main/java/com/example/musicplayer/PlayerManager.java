@@ -37,9 +37,20 @@ public class PlayerManager {
         mediaPlayer = new MediaPlayer();
         try {
             mediaPlayer.setDataSource(context, Uri.parse(song.getSongUrl()));
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-            if (listener != null) listener.onSongChanged(song);
+            
+            // Use prepareAsync for streaming from network URLs
+            mediaPlayer.prepareAsync();
+            
+            mediaPlayer.setOnPreparedListener(mp -> {
+                mp.start();
+                if (listener != null) listener.onSongChanged(song);
+            });
+
+            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                // Handle errors (e.g., connection issues)
+                return false;
+            });
+
         } catch (IOException e) {
             e.printStackTrace();
         }

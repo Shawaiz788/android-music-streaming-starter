@@ -20,14 +20,12 @@ public class FirebaseSongsHandler {
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                synchronized (MyApplication.songs) {
-                    for (DataSnapshot bucketSnapshot : snapshot.getChildren()) {
-                        for (DataSnapshot songSnapshot : bucketSnapshot.getChildren()) {
-                            Song cloudSong = songSnapshot.getValue(Song.class);
-                            if (cloudSong != null) {
-                                cloudSong.setId(songSnapshot.getKey());
-                                updateOrAddSong(cloudSong);
-                            }
+                for (DataSnapshot bucketSnapshot : snapshot.getChildren()) {
+                    for (DataSnapshot songSnapshot : bucketSnapshot.getChildren()) {
+                        Song cloudSong = songSnapshot.getValue(Song.class);
+                        if (cloudSong != null) {
+                            cloudSong.setId(songSnapshot.getKey());
+                            updateOrAddSong(cloudSong);
                         }
                     }
                 }
