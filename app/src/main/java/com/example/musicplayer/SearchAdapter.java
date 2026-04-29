@@ -1,7 +1,5 @@
 package com.example.musicplayer;
 
-import static android.app.PendingIntent.getActivity;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,19 +11,16 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.musicplayer.MainActivity;
-import com.example.musicplayer.R;
-import com.example.musicplayer.Song;
 
 import java.util.List;
 
 public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder> {
-     List<Song> songs;
-     Context context;
+    List<Song> songs;
+    Context context;
 
     SearchAdapter(Context context, List<Song> songs) {
         this.songs = songs;
-        this.context=context;
+        this.context = context;
     }
 
     @NonNull
@@ -42,13 +37,18 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         holder.tvArtist.setText(song.getArtist());
 
         if (song.getImageUrl() != null) {
-            Glide.with(holder.itemView.getContext())
+            Glide.with(context)
                     .load(song.getImageUrl())
                     .placeholder(android.R.color.darker_gray)
                     .into(holder.ivSong);
         }
 
         holder.itemView.setOnClickListener(v -> {
+            // Save to recent searches in Firebase
+            if (MyApplication.recentSearchHandler != null) {
+                MyApplication.recentSearchHandler.addRecentSearch(song);
+            }
+
             if (context instanceof MainActivity) {
                 ((MainActivity) context).showPlayerDialog(song, false);
             }

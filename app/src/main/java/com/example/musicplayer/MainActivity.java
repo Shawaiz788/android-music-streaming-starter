@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity
         tvTitle.setText(song.getTitle());
         tvArtist.setText(song.getArtist());
 
-        if (song.getImageUrl() != null) {
+        if (song.getImageUrl() != null) { //dynamic color set here
             Glide.with(this)
                     .asBitmap()
                     .load(song.getImageUrl())

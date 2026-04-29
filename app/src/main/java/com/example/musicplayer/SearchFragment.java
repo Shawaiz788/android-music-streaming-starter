@@ -34,9 +34,24 @@ public class SearchFragment extends Fragment {
     SearchAdapter adapter;
     List<Song> displayList = new ArrayList<>();
     CardView cvProfile;
+    
+    private String currentQuery = "";
+    
+    // Static reference to the active fragment instance
+    private static SearchFragment instance;
 
     public SearchFragment() {
         // Required empty public constructor
+    }
+
+    public static void refreshRecentSearches() {
+        if (instance != null && instance.currentQuery.isEmpty()) {
+            instance.displayList.clear();
+            instance.displayList.addAll(MyApplication.recentSearches);
+            if (instance.adapter != null) {
+                instance.adapter.notifyDataSetChanged();
+            }
+        }
     }
 
     @Override
@@ -48,7 +63,9 @@ public class SearchFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        cvProfile=view.findViewById(R.id.cvProfile);
+        instance = this;
+        
+        cvProfile = view.findViewById(R.id.cvProfile);
         EditText etSearch = view.findViewById(R.id.etSearch);
         rvSearch = view.findViewById(R.id.rvSearch);
         defaultContent = view.findViewById(R.id.defaultContent);
@@ -58,6 +75,13 @@ public class SearchFragment extends Fragment {
         adapter = new SearchAdapter(requireContext(), displayList);
         rvSearch.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvSearch.setAdapter(adapter);
+
+        // Load initial data
+        if (currentQuery.isEmpty()) {
+            displayList.clear();
+            displayList.addAll(MyApplication.recentSearches);
+            adapter.notifyDataSetChanged();
+        }
 
         if (etSearch != null) {
             etSearch.setOnFocusChangeListener((v, hasFocus) -> {
@@ -72,6 +96,7 @@ public class SearchFragment extends Fragment {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                     String query = s.toString();
+                    currentQuery = query;
                     if (query.trim().isEmpty()) {
                         tvSearchHeader.setText("Recent searches");
                     } else {
@@ -90,22 +115,29 @@ public class SearchFragment extends Fragment {
                 return false;
             });
         }
+        
         cvProfile.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.profileFragment);
         });
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        instance = null;
+    }
+
     private void showSearchResults() {
         defaultContent.setVisibility(GONE);
         searchResultContent.setVisibility(VISIBLE);
-        // Initially show all songs or recent searches
-        if (displayList.isEmpty()) {
+        if (currentQuery.isEmpty()) {
             performSearch("");
         }
     }
 
     private void performSearch(String query) {
+        this.currentQuery = query;
         List<Song> results = MyApplication.searchSongs(query);
         displayList.clear();
         displayList.addAll(results);

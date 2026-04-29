@@ -27,6 +27,7 @@ public class MyApplication extends Application {
     // Handlers
     public static FirebaseSongsHandler songsHandler;
     public static FirebaseRecentSearchHandler recentSearchHandler;
+    public static FirebaseRecentSearchHandler recentSearchHandler_older; // keeping unused as requested
     public static FirebaseFavouriteSongsHandler favouriteSongsHandler;
     public static FirebaseFavouriteAlbumsHandler favouriteAlbumsHandler;
     public static FirebaseFavouriteArtistHandler favouriteArtistHandler;
@@ -163,9 +164,7 @@ public class MyApplication extends Application {
 
     public static List<Song> searchSongs(String query) {
         if (query == null || query.trim().isEmpty()) {
-            synchronized (songs) {
-                return new ArrayList<>(songs);
-            }
+            return new ArrayList<>(recentSearches);
         }
 
         String lowerQuery = query.toLowerCase().trim();
