@@ -22,6 +22,7 @@ public class MyApplication extends Application {
     public static ArrayList<Song> favouriteSongs = new ArrayList<>();
     public static ArrayList<Album> favouriteAlbums = new ArrayList<>();
     public static ArrayList<Artist> favouriteArtists = new ArrayList<>();
+    public static User currentUserInfo;
 
     // Handlers
     public static FirebaseSongsHandler songsHandler;
@@ -29,16 +30,22 @@ public class MyApplication extends Application {
     public static FirebaseFavouriteSongsHandler favouriteSongsHandler;
     public static FirebaseFavouriteAlbumsHandler favouriteAlbumsHandler;
     public static FirebaseFavouriteArtistHandler favouriteArtistHandler;
+    public static FirebaseUserHandler userHandler;
 
     public interface OnSongsLoadedListener {
         void onSongsLoaded(ArrayList<Song> songs);
     }
 
-    private static final ArrayList<OnSongsLoadedListener> listeners = new ArrayList<>();
+    public interface OnUserLoadedListener {
+        void onUserLoaded(User user);
+    }
+
+    private static final ArrayList<OnSongsLoadedListener> songListeners = new ArrayList<>();
+    private static final ArrayList<OnUserLoadedListener> userListeners = new ArrayList<>();
 
     public static void subscribe(OnSongsLoadedListener listener) {
-        synchronized (listeners) {
-            listeners.add(listener);
+        synchronized (songListeners) {
+            songListeners.add(listener);
         }
         synchronized (songs) {
             if (!songs.isEmpty()) {
@@ -48,20 +55,47 @@ public class MyApplication extends Application {
     }
 
     public static void unsubscribe(OnSongsLoadedListener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
+        synchronized (songListeners) {
+            songListeners.remove(listener);
+        }
+    }
+
+    public static void subscribeUser(OnUserLoadedListener listener) {
+        synchronized (userListeners) {
+            userListeners.add(listener);
+        }
+        if (currentUserInfo != null) {
+            listener.onUserLoaded(currentUserInfo);
+        }
+    }
+
+    public static void unsubscribeUser(OnUserLoadedListener listener) {
+        synchronized (userListeners) {
+            userListeners.remove(listener);
         }
     }
 
     public static void notifySongsLoaded() {
         List<OnSongsLoadedListener> currentListeners;
-        synchronized (listeners) {
-            currentListeners = new ArrayList<>(listeners);
+        synchronized (songListeners) {
+            currentListeners = new ArrayList<>(songListeners);
         }
         synchronized (songs) {
             ArrayList<Song> copy = new ArrayList<>(songs);
             for (OnSongsLoadedListener listener : currentListeners) {
                 listener.onSongsLoaded(copy);
+            }
+        }
+    }
+
+    public static void notifyUserLoaded() {
+        List<OnUserLoadedListener> currentListeners;
+        synchronized (userListeners) {
+            currentListeners = new ArrayList<>(userListeners);
+        }
+        if (currentUserInfo != null) {
+            for (OnUserLoadedListener listener : currentListeners) {
+                listener.onUserLoaded(currentUserInfo);
             }
         }
     }
@@ -83,11 +117,12 @@ public class MyApplication extends Application {
         // 4. Initialize user-specific handlers if logged in
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
-            //initHandlers(currentUser.getUid());
+            initHandlers(currentUser.getUid());
         }
     }
 
     public static void initHandlers(String userId) {
+        userHandler = new FirebaseUserHandler(userId);
         recentSearchHandler = new FirebaseRecentSearchHandler(userId);
         favouriteSongsHandler = new FirebaseFavouriteSongsHandler(userId);
         favouriteAlbumsHandler = new FirebaseFavouriteAlbumsHandler(userId);

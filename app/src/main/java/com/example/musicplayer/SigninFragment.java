@@ -22,6 +22,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 
 public class SigninFragment extends Fragment {
@@ -52,6 +53,10 @@ public class SigninFragment extends Fragment {
             auth.signInWithEmailAndPassword(email,password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                 @Override
                 public void onSuccess(AuthResult authResult) {
+                    FirebaseUser firebaseUser = authResult.getUser();
+                    if (firebaseUser != null) {
+                        MyApplication.initHandlers(firebaseUser.getUid());
+                    }
                     Toast.makeText(getContext(), "SignIn Successful!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(getActivity(), MainActivity.class));
                     requireActivity().finish();
@@ -62,16 +67,6 @@ public class SigninFragment extends Fragment {
                     Toast.makeText(requireContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
                 }
             });
-//            if(!password.equals(srPref.getString("password",""))){
-//                Toast.makeText(requireContext(),"Invalid Username/Password",Toast.LENGTH_SHORT).show();
-//                return;
-//            }
-//            srPref.edit().putBoolean("is_loggedin",true).commit();
-//            Intent i =new Intent(requireContext(), MainActivity.class);
-//            startActivity(i);
-
-
-
         }));
 
         tvCreateAccount.setOnClickListener(v1 -> {

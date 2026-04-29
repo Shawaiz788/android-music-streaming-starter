@@ -24,9 +24,9 @@ SharedPreferences srPref;
         setContentView(R.layout.activity_splash);
         init();
         new Handler().postDelayed(()->{
-           // checkLoggedIn();
-            startActivity(new Intent(Splash.this, MainActivity.class));
-            finish();
+            checkLoggedIn();
+//            startActivity(new Intent(Splash.this, MainActivity.class));
+//            finish();
         },2000);
     }
 
@@ -49,7 +49,7 @@ SharedPreferences srPref;
 
     public void init(){
         srPref=getSharedPreferences("MyPref",MODE_PRIVATE);
-//        auth=FirebaseAuth.getInstance();
-//        user=auth.getCurrentUser();
+       auth=FirebaseAuth.getInstance();
+        user=auth.getCurrentUser();
     }
 }

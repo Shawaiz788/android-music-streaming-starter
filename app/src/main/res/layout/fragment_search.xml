@@ -34,12 +34,12 @@
             app:cardElevation="0dp"
             android:id="@+id/cvProfile">
 
-            <View
+            <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="3dp"
-                android:background="@drawable/rounded_input"
-                android:backgroundTint="#FBB13C" />
+                android:scaleType="centerCrop"
+                android:src="@drawable/icon_pfp" />
+
         </androidx.cardview.widget.CardView>
     </RelativeLayout>
 

@@ -20,9 +20,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.Firebase;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 
 public class SignUpFragment extends Fragment {
@@ -45,8 +45,8 @@ public class SignUpFragment extends Fragment {
         btnSignup.setOnClickListener((v->{
             String email,password,cpassword;
             email=etEmail.getText().toString().trim();
-            password=etPassword.getText().toString().trim(); //idk if supposed to be trimmed or not
-            cpassword=etCpassword.getText().toString().trim();//idk if supposed to be trimmed or not
+            password=etPassword.getText().toString().trim();
+            cpassword=etCpassword.getText().toString().trim();
 
             if(email.isEmpty()||password.isEmpty()||cpassword.isEmpty()){
                 Toast.makeText(requireContext(),"All fields must be filled",Toast.LENGTH_SHORT).show();
@@ -56,6 +56,18 @@ public class SignUpFragment extends Fragment {
                 auth.createUserWithEmailAndPassword(email,password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                     @Override
                     public void onSuccess(AuthResult authResult) {
+                        FirebaseUser firebaseUser = authResult.getUser();
+                        if (firebaseUser != null) {
+                            String uid = firebaseUser.getUid();
+                            String userEmail = firebaseUser.getEmail();
+                            MyApplication.initHandlers(uid);
+                            //extract name from email for now
+                            String name = userEmail != null ? userEmail.split("@")[0] : "User";
+                            User newUser = new User(uid, name, userEmail, "");
+                            if (MyApplication.userHandler != null) {
+                                MyApplication.userHandler.saveUser(newUser);
+                            }
+                        }
                         sendEmailVerification(authResult);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
@@ -68,9 +80,6 @@ public class SignUpFragment extends Fragment {
                 Toast.makeText(requireContext(),"Passwords do not match",Toast.LENGTH_SHORT).show();
                 return;
             }
-//            srPref.edit().putString("email",email).putString("password",password).putBoolean("is_loggedin",true).commit();
-
-
         }));
 
         tvSignin.setOnClickListener(v1 -> {
@@ -84,21 +93,23 @@ public class SignUpFragment extends Fragment {
     }
 
     private void sendEmailVerification(AuthResult authResult) {
-        authResult.getUser().sendEmailVerification().addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void unused) {
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, new VerifyEmailFragment())
-                        .addToBackStack(null)
-                        .commit();
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(requireContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (authResult.getUser() != null) {
+            authResult.getUser().sendEmailVerification().addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void unused) {
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, new VerifyEmailFragment())
+                            .addToBackStack(null)
+                            .commit();
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
 
