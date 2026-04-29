@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity
     Handler handler = new Handler();
     Runnable progressUpdater;
     Runnable updateSeekBar;
+    ImageView ivPlayPause;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,7 +162,7 @@ public class MainActivity extends AppCompatActivity
         TextView tvTotalTime = view.findViewById(R.id.tv_total_time);
         TextView tvCurrentTime = view.findViewById(R.id.tv_current_time);
         ImageView ivSong = view.findViewById(R.id.iv_song);
-        ImageView ivPlayPause = view.findViewById(R.id.iv_play_pause);
+        ivPlayPause = view.findViewById(R.id.iv_play_pause);
         CardView btnPlayPause = view.findViewById(R.id.btn_play_pause);
         SeekBar seekBar = view.findViewById(R.id.seek_bar);
 
@@ -200,14 +202,19 @@ public class MainActivity extends AppCompatActivity
         if (!resumeOnly) {
             playerManager.play(this, song);
             ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
+            android.util.Log.d("ICON_DEBUG", "Setting PAUSE icon, resumeOnly=false");
             tvCurrentTime.setText("0:00");
             tvTotalTime.setText("0:00");
             seekBar.setMax(0);
         } else {
             seekBar.setMax(playerManager.getDuration());
             tvTotalTime.setText(formatTime(playerManager.getDuration()));
-            ivPlayPause.setImageResource(playerManager.isPlaying() ?
-                    android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+            if (playerManager.isCompleted()) {
+                ivPlayPause.setImageResource(R.drawable.ic_replay);
+            } else {
+                ivPlayPause.setImageResource(playerManager.isPlaying() ?
+                        android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+            }
         }
 
         updateSeekBar = new Runnable() {
@@ -308,7 +315,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override public void onSongChanged(Song song) { showMiniPlayer(song); }
-    @Override public void onPlayStateChanged(boolean isPlaying) {}
+    @Override
+    public void onPlayStateChanged(boolean isPlaying) {
+        if (ivPlayPause != null) {
+            if (isPlaying) {
+                ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
+            } else if (PlayerManager.getInstance().isCompleted()) {
+                ivPlayPause.setImageResource(R.drawable.ic_replay);
+            } else {
+                ivPlayPause.setImageResource(android.R.drawable.ic_media_play);
+            }
+        }
+    }
     @Override public void onStopped() { hideMiniPlayer(); }
 
     @Override

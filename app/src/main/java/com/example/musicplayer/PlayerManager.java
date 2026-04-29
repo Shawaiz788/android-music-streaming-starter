@@ -3,6 +3,7 @@ package com.example.musicplayer;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.widget.Toast;
 import java.io.IOException;
 
 public class PlayerManager {
@@ -11,6 +12,8 @@ public class PlayerManager {
     private MediaPlayer mediaPlayer;
     private Song currentSong;
     private OnPlayerStateChangedListener listener;
+    private boolean completed = false;
+    private boolean prepared = false;
 
     public interface OnPlayerStateChangedListener {
         void onSongChanged(Song song);
@@ -30,26 +33,50 @@ public class PlayerManager {
     }
 
     public void play(Context context, Song song) {
+        completed = false;
+        prepared = false;
+
         if (mediaPlayer != null) {
+            mediaPlayer.setOnCompletionListener(null);
+            mediaPlayer.setOnPreparedListener(null);
+            mediaPlayer.setOnErrorListener(null);
             mediaPlayer.release();
+            mediaPlayer = null;
         }
+
         currentSong = song;
         mediaPlayer = new MediaPlayer();
+
         try {
             mediaPlayer.setDataSource(context, Uri.parse(song.getSongUrl()));
-            
-            // Use prepareAsync for streaming from network URLs
-            mediaPlayer.prepareAsync();
-            
+
             mediaPlayer.setOnPreparedListener(mp -> {
+                prepared = true;
                 mp.start();
-                if (listener != null) listener.onSongChanged(song);
+                if (listener != null) {
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                            listener.onSongChanged(song)
+                    );
+                }
+            });
+
+            mediaPlayer.setOnCompletionListener(mp -> {
+                completed = true;
+                if (listener != null) {
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                            listener.onPlayStateChanged(false)
+                    );
+                }
             });
 
             mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                // Handle errors (e.g., connection issues)
-                return false;
+                completed = false;
+                prepared = false;
+                Toast.makeText(context, "Playback error: " + what + ", " + extra, Toast.LENGTH_LONG).show();
+                return true;
             });
+
+            mediaPlayer.prepareAsync();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,7 +84,7 @@ public class PlayerManager {
     }
 
     public void togglePlayPause() {
-        if (mediaPlayer == null) return;
+        if (mediaPlayer == null || !prepared) return;
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
         } else {
@@ -67,7 +94,12 @@ public class PlayerManager {
     }
 
     public void stop() {
+        completed = false;
+        prepared = false;
         if (mediaPlayer != null) {
+            mediaPlayer.setOnCompletionListener(null);
+            mediaPlayer.setOnPreparedListener(null);
+            mediaPlayer.setOnErrorListener(null);
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
@@ -77,19 +109,19 @@ public class PlayerManager {
     }
 
     public boolean isPlaying() {
-        return mediaPlayer != null && mediaPlayer.isPlaying();
+        return mediaPlayer != null && prepared && mediaPlayer.isPlaying();
     }
 
     public int getCurrentPosition() {
-        return mediaPlayer != null ? mediaPlayer.getCurrentPosition() : 0;
+        return (mediaPlayer != null && prepared) ? mediaPlayer.getCurrentPosition() : 0;
     }
 
     public int getDuration() {
-        return mediaPlayer != null ? mediaPlayer.getDuration() : 0;
+        return (mediaPlayer != null && prepared) ? mediaPlayer.getDuration() : 0;
     }
 
     public void seekTo(int ms) {
-        if (mediaPlayer != null) mediaPlayer.seekTo(ms);
+        if (mediaPlayer != null && prepared) mediaPlayer.seekTo(ms);
     }
 
     public Song getCurrentSong() {
@@ -98,5 +130,13 @@ public class PlayerManager {
 
     public MediaPlayer getMediaPlayer() {
         return mediaPlayer;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public boolean isPrepared() {
+        return prepared;
     }
 }
