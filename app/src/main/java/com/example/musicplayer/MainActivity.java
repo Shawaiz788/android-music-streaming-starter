@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity
                                 if (palette != null) {
                                     int dominantColor = palette.getDominantColor(0xFFA67B5B);
                                     int darkMutedColor = palette.getDarkMutedColor(0xFF2E2016);
-                                    
+
                                     GradientDrawable gd = new GradientDrawable(
                                             GradientDrawable.Orientation.TOP_BOTTOM,
                                             new int[] {dominantColor, darkMutedColor}
@@ -199,20 +199,30 @@ public class MainActivity extends AppCompatActivity
 
         if (!resumeOnly) {
             playerManager.play(this, song);
+            ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
+            tvCurrentTime.setText("0:00");
+            tvTotalTime.setText("0:00");
+            seekBar.setMax(0);
+        } else {
+            seekBar.setMax(playerManager.getDuration());
+            tvTotalTime.setText(formatTime(playerManager.getDuration()));
+            ivPlayPause.setImageResource(playerManager.isPlaying() ?
+                    android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
         }
-
-        ivPlayPause.setImageResource(playerManager.isPlaying() ?
-                android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
-
-        seekBar.setMax(playerManager.getDuration());
-        tvTotalTime.setText(formatTime(playerManager.getDuration()));
 
         updateSeekBar = new Runnable() {
             @Override
             public void run() {
-                if (playerManager.getMediaPlayer() != null && playerManager.isPlaying()) {
-                    seekBar.setProgress(playerManager.getCurrentPosition());
-                    tvCurrentTime.setText(formatTime(playerManager.getCurrentPosition()));
+                if (playerManager.getMediaPlayer() != null) {
+                    // Always update max/total time dynamically
+                    if (seekBar.getMax() == 0 && playerManager.getDuration() > 0) {
+                        seekBar.setMax(playerManager.getDuration());
+                        tvTotalTime.setText(formatTime(playerManager.getDuration()));
+                    }
+                    if (playerManager.isPlaying()) {
+                        seekBar.setProgress(playerManager.getCurrentPosition());
+                        tvCurrentTime.setText(formatTime(playerManager.getCurrentPosition()));
+                    }
                 }
                 handler.postDelayed(this, 1000);
             }

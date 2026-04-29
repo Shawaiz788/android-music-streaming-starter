@@ -12,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.facebook.shimmer.Shimmer;
+import com.facebook.shimmer.ShimmerDrawable;
 
 import java.util.ArrayList;
 
@@ -36,13 +38,23 @@ ArrayList<Song>songs;
 
     @Override
     public void onBindViewHolder(@NonNull ReleaseViewHolder holder, int position) {
+        ShimmerDrawable shimmerDrawable = new ShimmerDrawable();
+        shimmerDrawable.setShimmer(new Shimmer.ColorHighlightBuilder()
+                .setBaseColor(0xFF555555)
+                .setHighlightColor(0xFF888888)
+                .setBaseAlpha(0.9f)
+                .setHighlightAlpha(1f)
+                .setDuration(1000)
+                .build());
         Song song = songs.get(position);
         
         // Use Glide for reliable image loading (Firebase URLs + Local Resources)
         if (song.getImageUrl() != null) {
             Glide.with(context)
-                .load(song.getImageUrl())
-                .into(holder.ivRelease);
+                    .load(song.getImageUrl())
+                    .placeholder(shimmerDrawable)
+                    .error(R.drawable.error_song_cover)
+                    .into(holder.ivRelease);
         }
 
         holder.ivRelease.setOnClickListener((v->{
