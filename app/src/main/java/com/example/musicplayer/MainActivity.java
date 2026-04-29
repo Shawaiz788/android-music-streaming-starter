@@ -7,6 +7,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -165,6 +166,36 @@ public class MainActivity extends AppCompatActivity
         ivPlayPause = view.findViewById(R.id.iv_play_pause);
         CardView btnPlayPause = view.findViewById(R.id.btn_play_pause);
         SeekBar seekBar = view.findViewById(R.id.seek_bar);
+        CardView btnFav = view.findViewById(R.id.fav_btn);
+        ImageView ivFav = view.findViewById(R.id.iv_fav);
+
+        // Set initial fav icon based on current favourites list
+        boolean isFav = false;
+        for (Song s : MyApplication.favouriteSongs) {
+            if (s.getId().equals(song.getId())) {
+                isFav = true;
+                break;
+            }
+        }
+        ivFav.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+
+        btnFav.setOnClickListener(v -> {
+            Log.d("FAV_DEBUG", "Fav button clicked");
+
+            // Check current state BEFORE toggling
+            boolean currentlyFav = false;
+            for (Song s : MyApplication.favouriteSongs) {
+                if (s.getId() != null && s.getId().equals(song.getId())) {
+                    currentlyFav = true;
+                    break;
+                }
+            }
+
+            MyApplication.favouriteSongsHandler.toggleFavourite(song);
+
+            // Flip icon based on what state it WAS (now it'll be the opposite)
+            ivFav.setImageResource(currentlyFav ? R.drawable.ic_fav : R.drawable.icon_favorites);
+        });
 
         PlayerManager playerManager = PlayerManager.getInstance();
 

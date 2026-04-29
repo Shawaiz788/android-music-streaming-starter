@@ -1,6 +1,7 @@
 package com.example.musicplayer;
 
 import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -15,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class MyApplication extends Application {
-    
+    private static MyApplication instance;
     // Global Data Lists
     public static final ArrayList<Song> songs = new ArrayList<>();
     public static ArrayList<Song> recentSearches = new ArrayList<>();
@@ -32,6 +33,7 @@ public class MyApplication extends Application {
     public static FirebaseFavouriteAlbumsHandler favouriteAlbumsHandler;
     public static FirebaseFavouriteArtistHandler favouriteArtistHandler;
     public static FirebaseUserHandler userHandler;
+
 
     public interface OnSongsLoadedListener {
         void onSongsLoaded(ArrayList<Song> songs);
@@ -84,8 +86,12 @@ public class MyApplication extends Application {
         }
     }
 
+    public static MyApplication getInstance() {
+        return instance;
+    }
     @Override
     public void onCreate() {
+        instance = this;
         super.onCreate();
         
         // Ensure we start with a fresh list to trigger the shimmer

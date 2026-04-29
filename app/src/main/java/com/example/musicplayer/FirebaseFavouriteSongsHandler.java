@@ -1,5 +1,8 @@
 package com.example.musicplayer;
 
+import android.util.Log;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -12,7 +15,8 @@ public class FirebaseFavouriteSongsHandler {
     private final DatabaseReference ref;
 
     public FirebaseFavouriteSongsHandler(String userId) {
-        this.ref = FirebaseDatabase.getInstance().getReference("users").child(userId).child("favouriteSongs");
+        this.ref = FirebaseDatabase.getInstance("https://musicplayer-33db9-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                .getReference("users").child(userId).child("favouriteSongs");
         initListener();
     }
 
@@ -34,17 +38,26 @@ public class FirebaseFavouriteSongsHandler {
     }
 
     public void toggleFavourite(Song song) {
+
         ref.child(song.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    ref.child(song.getId()).removeValue();
+                    ref.child(song.getId()).removeValue()
+                            .addOnSuccessListener(unused -> {})
+                            .addOnFailureListener(e ->
+                                    Log.e("FAV_E", "Remove failed: " + e.getMessage()));
                 } else {
-                    ref.child(song.getId()).setValue(song);
+                    ref.child(song.getId()).setValue(song)
+                            .addOnSuccessListener(unused ->{})
+                            .addOnFailureListener(e ->
+                                    Log.e("FAV_E", "Failed: " + e.getMessage()));
                 }
             }
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(MyApplication.getInstance(), "Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
         });
     }
 }

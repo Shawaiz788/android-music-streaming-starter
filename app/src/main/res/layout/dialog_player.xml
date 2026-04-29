@@ -47,11 +47,12 @@
         app:cardBackgroundColor="#40FFFFFF"
         >
         <ImageView
+            android:id="@+id/iv_fav"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_fav"
             android:padding="6dp"
-            />
+            app:tint="@android:color/white" />
 
     </androidx.cardview.widget.CardView>
 
