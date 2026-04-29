@@ -14,6 +14,7 @@ public class PlayerManager {
     private OnPlayerStateChangedListener listener;
     private boolean completed = false;
     private boolean prepared = false;
+    private boolean playWhenReady = true;
 
     public interface OnPlayerStateChangedListener {
         void onSongChanged(Song song);
@@ -35,6 +36,7 @@ public class PlayerManager {
     public void play(Context context, Song song) {
         completed = false;
         prepared = false;
+        playWhenReady = true;
 
         if (mediaPlayer != null) {
             mediaPlayer.setOnCompletionListener(null);
@@ -52,11 +54,14 @@ public class PlayerManager {
 
             mediaPlayer.setOnPreparedListener(mp -> {
                 prepared = true;
-                mp.start();
+                if (playWhenReady) {
+                    mp.start();
+                }
                 if (listener != null) {
-                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
-                            listener.onSongChanged(song)
-                    );
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                        listener.onSongChanged(song);
+                        listener.onPlayStateChanged(isPlaying());
+                    });
                 }
             });
 
@@ -84,11 +89,17 @@ public class PlayerManager {
     }
 
     public void togglePlayPause() {
-        if (mediaPlayer == null || !prepared) return;
+        if (mediaPlayer == null) return;
+        if (!prepared) {
+            playWhenReady = !playWhenReady;
+            if (listener != null) listener.onPlayStateChanged(playWhenReady);
+            return;
+        }
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
         } else {
             mediaPlayer.start();
+            completed = false;
         }
         if (listener != null) listener.onPlayStateChanged(isPlaying());
     }
@@ -138,5 +149,9 @@ public class PlayerManager {
 
     public boolean isPrepared() {
         return prepared;
+    }
+
+    public boolean isPlayWhenReady() {
+        return playWhenReady;
     }
 }

@@ -209,11 +209,12 @@ public class MainActivity extends AppCompatActivity
         } else {
             seekBar.setMax(playerManager.getDuration());
             tvTotalTime.setText(formatTime(playerManager.getDuration()));
-            if (playerManager.isCompleted()) {
+            if (playerManager.isPlaying()) {
+                ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
+            } else if (playerManager.isCompleted()) {
                 ivPlayPause.setImageResource(R.drawable.ic_replay);
             } else {
-                ivPlayPause.setImageResource(playerManager.isPlaying() ?
-                        android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+                ivPlayPause.setImageResource(android.R.drawable.ic_media_play);
             }
         }
 
@@ -320,11 +321,13 @@ public class MainActivity extends AppCompatActivity
         if (ivPlayPause != null) {
             if (isPlaying) {
                 ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
-            } else if (PlayerManager.getInstance().isCompleted()) {
+            } else if (PlayerManager.getInstance().isCompleted()
+                    && !PlayerManager.getInstance().isPlaying()) { // add this guard
                 ivPlayPause.setImageResource(R.drawable.ic_replay);
             } else {
                 ivPlayPause.setImageResource(android.R.drawable.ic_media_play);
             }
+
         }
     }
     @Override public void onStopped() { hideMiniPlayer(); }

@@ -53,6 +53,7 @@ ArrayList<Song>songs;
             Glide.with(context)
                     .load(song.getImageUrl())
                     .placeholder(shimmerDrawable)
+                    .centerCrop()
                     .error(R.drawable.error_song_cover)
                     .into(holder.ivRelease);
         }

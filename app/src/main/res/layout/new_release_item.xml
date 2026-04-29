@@ -2,9 +2,10 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="155dp"
-    android:layout_height="wrap_content"
+    android:layout_height="155dp"
     android:layout_marginEnd="16dp"
     android:layout_marginVertical="8dp"
+    android:clipChildren="false"
     app:cardCornerRadius="30dp"
     app:cardElevation="0dp"
     app:cardBackgroundColor="@android:color/transparent">
@@ -12,7 +13,7 @@
     <ImageView
         android:id="@+id/ivRelease"
         android:layout_width="match_parent"
-        android:layout_height="155dp"
+        android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:src="@drawable/hungama" />
 
