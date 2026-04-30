@@ -32,6 +32,7 @@ public class HomeFragment extends Fragment {
     RvReleasesAdapter adapter;
     ShimmerFrameLayout shimmerContainer;
     MyApplication.OnSongsLoadedListener songsLoadedListener;
+    MyApplication.OnUserLoadedListener userLoadedListener;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -49,14 +50,16 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         ivPfp = view.findViewById(R.id.ivPfp);
         
-        // Use Glide for reliable image loading (handles both URLs and local resources/placeholders)
-        if (MyApplication.currentUserInfo != null && MyApplication.currentUserInfo.getProfileImageUrl() != null && !MyApplication.currentUserInfo.getProfileImageUrl().isEmpty()) {
-            Glide.with(this)
-                .load(MyApplication.currentUserInfo.getProfileImageUrl())
-                .placeholder(R.drawable.icon_pfp)
-                .error(R.drawable.icon_pfp)
-                .into(ivPfp);
-        }
+        userLoadedListener = user -> {
+            if (isAdded() && user != null && user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+                Glide.with(this)
+                    .load(user.getProfileImageUrl())
+                    .placeholder(R.drawable.icon_pfp)
+                    .error(R.drawable.icon_pfp)
+                    .into(ivPfp);
+            }
+        };
+        MyApplication.subscribeUser(userLoadedListener);
 
         tvViewAll = view.findViewById(R.id.tvViewAll);
         cvProfile = view.findViewById(R.id.cvProfile);
@@ -69,15 +72,14 @@ public class HomeFragment extends Fragment {
         }
         rvReleases.setHasFixedSize(true);
         
-        adapter = new RvReleasesAdapter(requireContext(), MyApplication.songs);
+        adapter = new RvReleasesAdapter(requireContext(), MyApplication.newReleases);
         rvReleases.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
         rvReleases.setAdapter(adapter);
 
         songsLoadedListener = songs -> {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    // Only hide the shimmer once we have at least 2 songs
-                    if (songs != null && songs.size() >= 2) {
+                    if (songs != null && !songs.isEmpty()) {
                         if (adapter != null) {
                             adapter.notifyDataSetChanged();
                         }
@@ -108,6 +110,9 @@ public class HomeFragment extends Fragment {
         super.onDestroyView();
         if (songsLoadedListener != null) {
             MyApplication.unsubscribe(songsLoadedListener);
+        }
+        if (userLoadedListener != null) {
+            MyApplication.unsubscribeUser(userLoadedListener);
         }
     }
 }

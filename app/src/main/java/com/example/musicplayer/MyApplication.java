@@ -1,15 +1,12 @@
 package com.example.musicplayer;
 
 import android.app.Application;
-import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +16,7 @@ public class MyApplication extends Application {
     private static MyApplication instance;
     // Global Data Lists
     public static final ArrayList<Song> songs = new ArrayList<>();
+    public static final ArrayList<Song> newReleases = new ArrayList<>();
     public static ArrayList<Song> recentSearches = new ArrayList<>();
     public static ArrayList<Song> favouriteSongs = new ArrayList<>();
     public static ArrayList<Album> favouriteAlbums = new ArrayList<>();
@@ -51,8 +49,8 @@ public class MyApplication extends Application {
             songListeners.add(listener);
         }
         
-        if (!songs.isEmpty()) {
-            listener.onSongsLoaded(new ArrayList<>(songs));
+        if (!newReleases.isEmpty()) {
+            listener.onSongsLoaded(new ArrayList<>(newReleases));
         }
     }
 
@@ -72,7 +70,7 @@ public class MyApplication extends Application {
     }
 
     public static void notifySongsLoaded() {
-        ArrayList<Song> copy = new ArrayList<>(songs);
+        ArrayList<Song> copy = new ArrayList<>(newReleases);
         for (OnSongsLoadedListener listener : songListeners) {
             listener.onSongsLoaded(copy);
         }
@@ -96,12 +94,13 @@ public class MyApplication extends Application {
         
         // Ensure we start with a fresh list to trigger the shimmer
         songs.clear();
+        newReleases.clear();
         
         // 1. Initialize Songs Handler
         songsHandler = new FirebaseSongsHandler();
 
         // 2. Add local songs
-        // addLocalSongs();
+         addLocalSongs();
 
         // 3. Sync local songs with Firebase and Load from Cloud
         songsHandler.syncLocalSongs(new ArrayList<>(songs));
@@ -123,29 +122,52 @@ public class MyApplication extends Application {
     }
 
     private void addLocalSongs() {
-        songs.add(new Song(
-                "local_1",
-                "RUDE",
-                "AnimeVibe",
-                "Chill",
-                "Pop",
-                "No lyrics available",
-                206000,
-                getResourceUri(R.raw.rude),
-                getResourceUri(R.drawable.rude)
-        ));
-
-        songs.add(new Song(
-                "local_2",
-                "hungama",
-                "Hassan Raheem",
-                "Hungama",
-                "Pop",
-                "دکھے مجھ میں کیا...\n (lyrics truncated)",
-                179000,
-                getResourceUri(R.raw.hungama),
-                getResourceUri(R.drawable.hungama)
-        ));
+//        songs.add(new Song(
+//                "local_1",
+//                "RUDE",
+//                "AnimeVibe",
+//                "Chill",
+//                "Pop",
+//                "No lyrics available",
+//                206000,
+//                getResourceUri(R.raw.rude),
+//                getResourceUri(R.drawable.rude)
+//        ));
+//
+//        songs.add(new Song(
+//                "local_2",
+//                "hungama",
+//                "Hassan Raheem",
+//                "Hungama",
+//                "Pop",
+//                "دکھے مجھ میں کیا...\n (lyrics truncated)",
+//                179000,
+//                getResourceUri(R.raw.hungama),
+//                getResourceUri(R.drawable.hungama)
+//        ));
+//        songs.add(new Song(
+//                "local_3",
+//                "Arz Kiya Hai",
+//                "Anuv Jain",
+//                "Coke Studio Bharat (Season 3)",
+//                "Indie-Pop",
+//                "No lyrics available",
+//                294000,
+//                getResourceUri(R.raw.arzkiyahai),
+//                getResourceUri(R.drawable.arzkiyahai)
+//        ));
+//
+//        songs.add(new Song(
+//                "local_4",
+//                "Alag Asmaan",
+//                "Anuv Jain",
+//                "Coke Studio Bharat (Season 3)",
+//                "Indie-Pop",
+//                "No lyrics available",
+//                213000,
+//                getResourceUri(R.raw.alagasmaan),
+//                getResourceUri(R.drawable.alagasmaan)
+//        ));
     }
 
     public String getResourceUri(int resId) {

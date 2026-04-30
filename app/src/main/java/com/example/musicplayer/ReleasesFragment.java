@@ -38,7 +38,7 @@ public class ReleasesFragment extends Fragment {
             navController.navigate(R.id.homeFragment);
         });
         rvReleases=view.findViewById(R.id.rvReleases);
-        adapter=new RvReleasesAdapter(requireContext(),MyApplication.songs);
+        adapter=new RvReleasesAdapter(requireContext(),MyApplication.newReleases);
         rvReleases.setLayoutManager(new GridLayoutManager(requireContext(),2,GridLayoutManager.VERTICAL,false));
         rvReleases.setAdapter(adapter);
 

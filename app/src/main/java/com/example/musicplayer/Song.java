@@ -13,7 +13,6 @@ public class Song implements Serializable { //implemented serialisable so ican p
     private String songUrl;
     private String imageUrl;
 
-
     public Song() {}
 
     public Song(String id, String title, String artist, String album, String genre, String lyrics, int duration, String songUrl, String imageUrl) {
@@ -39,7 +38,7 @@ public class Song implements Serializable { //implemented serialisable so ican p
     public String getSongUrl() { return songUrl; }
     public String getImageUrl() { return imageUrl; }
 
-
+    // Setters
     public void setId(String id) { this.id = id; }
     public void setTitle(String title) { this.title = title; }
     public void setArtist(String artist) { this.artist = artist; }

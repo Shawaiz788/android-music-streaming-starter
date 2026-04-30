@@ -8,6 +8,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
+import java.util.List;
 
 public class FirebaseSongsHandler {
     private final DatabaseReference databaseReference;
@@ -20,31 +21,36 @@ public class FirebaseSongsHandler {
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Clear the global lists before repopulating to ensure consistency
+                MyApplication.songs.clear();
+                MyApplication.newReleases.clear();
+
                 for (DataSnapshot bucketSnapshot : snapshot.getChildren()) {
+                    ArrayList<Song> bucketSongs = new ArrayList<>();
                     for (DataSnapshot songSnapshot : bucketSnapshot.getChildren()) {
                         Song cloudSong = songSnapshot.getValue(Song.class);
                         if (cloudSong != null) {
                             cloudSong.setId(songSnapshot.getKey());
-                            updateOrAddSong(cloudSong);
+                            bucketSongs.add(cloudSong);
+                            MyApplication.songs.add(cloudSong);
+                        }
+                    }
+
+                    // Extract new releases from this bucket
+                    // Taking approximately 25% of the newest songs (last children in Firebase)
+                    int totalInBucket = bucketSongs.size();
+                    if (totalInBucket > 0) {
+                        int countToTake = Math.max(1, (int) Math.ceil(totalInBucket * 0.25));
+                        for (int i = totalInBucket - countToTake; i < totalInBucket; i++) {
+                            MyApplication.newReleases.add(bucketSongs.get(i));
                         }
                     }
                 }
+                
+                // Shuffle new releases so the list isn't strictly alphabetical by bucket
+                java.util.Collections.shuffle(MyApplication.newReleases);
+                
                 MyApplication.notifySongsLoaded();
-            }
-
-            private void updateOrAddSong(Song cloudSong) {
-                boolean alreadyPresent = false;
-                for (int i = 0; i < MyApplication.songs.size(); i++) {
-                    Song s = MyApplication.songs.get(i);
-                    if (s.getTitle().equalsIgnoreCase(cloudSong.getTitle()) && s.getArtist().equalsIgnoreCase(cloudSong.getArtist())) {
-                        alreadyPresent = true;
-                        MyApplication.songs.set(i, cloudSong);
-                        break;
-                    }
-                }
-                if (!alreadyPresent) {
-                    MyApplication.songs.add(cloudSong);
-                }
             }
 
             @Override
@@ -78,7 +84,6 @@ public class FirebaseSongsHandler {
                         addNewSong(localSong);
                     }
                 }
-                MyApplication.notifySongsLoaded();
             }
 
             @Override
