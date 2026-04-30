@@ -50,7 +50,14 @@ public class PlayerManager {
         mediaPlayer = new MediaPlayer();
 
         try {
-            mediaPlayer.setDataSource(context, Uri.parse(song.getSongUrl()));
+            String songUrl = song.getSongUrl();
+            if (songUrl.startsWith("/")) {
+                // It's a local file path
+                mediaPlayer.setDataSource(songUrl);
+            } else {
+                // It's an internet URL
+                mediaPlayer.setDataSource(context, Uri.parse(songUrl));
+            }
 
             mediaPlayer.setOnPreparedListener(mp -> {
                 prepared = true;

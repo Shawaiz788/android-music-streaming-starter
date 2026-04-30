@@ -41,9 +41,12 @@ public class DBManager {
         }
     }
 
-   //Downloads the song files and saves the metadata to the offline database.
+    public interface OnDownloadListener {
+        void onDownloadComplete();
+        void onDownloadFailed(Exception e);
+    }
 
-    public void AddSongs(Song song) {
+    public void AddSongs(Song song, OnDownloadListener listener) {
        //download the audio file
         DownloadUtils.getLocalPath(context, song, new DownloadUtils.DownloadCallback() {
             @Override
@@ -54,19 +57,20 @@ public class DBManager {
                     public void onDownloadComplete(String localCoverPath) {
                         //save to database
                         saveSongToDb(song, localAudioPath, localCoverPath);
+                        if (listener != null) listener.onDownloadComplete();
                     }
 
                     @Override
                     public void onDownloadFailed(Exception e) {//cover save failed
-                        Toast.makeText(context,e.getMessage(),Toast.LENGTH_SHORT).show();
                         saveSongToDb(song, localAudioPath, null);
+                        if (listener != null) listener.onDownloadComplete();
                     }
                 });
             }
 
             @Override
             public void onDownloadFailed(Exception e) {//audio save failed
-                Toast.makeText(context,e.getMessage(),Toast.LENGTH_SHORT).show();
+                if (listener != null) listener.onDownloadFailed(e);
             }
         });
     }
@@ -86,7 +90,56 @@ public class DBManager {
         cv.put(COLUMN_TIMESTAMP, System.currentTimeMillis());
         // Use insertWithOnConflict to handle updates if the song is downloaded again
         writeDB.insertWithOnConflict(TABLE_NAME, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
-        Toast.makeText(context,"Song downloaded Successfully",Toast.LENGTH_SHORT).show();
+    }
+
+    public boolean isDownloaded(String songId) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        String query = "SELECT 1 FROM " + TABLE_NAME + " WHERE " + COLUMN_ID + " = ?";
+        android.database.Cursor cursor = db.rawQuery(query, new String[]{songId});
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        return exists;
+    }
+
+    public String[] getSongPaths(String songId) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        String[] paths = new String[2]; // [audioPath, coverPath]
+        String query = "SELECT " + COLUMN_LOCAL_PATH + ", " + COLUMN_COVER_PATH + " FROM " + TABLE_NAME + " WHERE " + COLUMN_ID + " = ?";
+        android.database.Cursor cursor = db.rawQuery(query, new String[]{songId});
+        if (cursor.moveToFirst()) {
+            paths[0] = cursor.getString(0);
+            paths[1] = cursor.getString(1);
+        }
+        cursor.close();
+        return paths;
+    }
+
+    public void deleteSong(String songId) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.delete(TABLE_NAME, COLUMN_ID + " = ?", new String[]{songId});
+    }
+
+    public java.util.ArrayList<Song> getAllDownloadedSongs() {
+        java.util.ArrayList<Song> songs = new java.util.ArrayList<>();
+        SQLiteDatabase db = helper.getReadableDatabase();
+        android.database.Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+        if (cursor.moveToFirst()) {
+            do {
+                Song song = new Song();
+                song.setId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+                song.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE)));
+                song.setArtist(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ARTIST)));
+                song.setAlbum(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ALBUM)));
+                song.setGenre(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_GENRE)));
+                song.setLyrics(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LYRICS)));
+                song.setDuration(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_DURATION)));
+                song.setSongUrl(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LOCAL_PATH)));
+                song.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COVER_PATH)));
+                songs.add(song);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return songs;
     }
 
     private class DBHelper extends SQLiteOpenHelper {
