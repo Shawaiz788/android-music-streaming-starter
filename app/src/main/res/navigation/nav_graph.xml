@@ -25,4 +25,16 @@
     <fragment
         android:id="@+id/ReleasesFragment"
         android:name="com.example.musicplayer.ReleasesFragment" />
+
+    <fragment
+        android:id="@+id/FavouriteAlbumsFragment"
+        android:name="com.example.musicplayer.FavouriteAlbumsFragment" />
+
+    <fragment
+        android:id="@+id/albumDetailsFragment"
+        android:name="com.example.musicplayer.AlbumDetailsFragment">
+        <argument
+            android:name="album"
+            app:argType="com.example.musicplayer.Album" />
+    </fragment>
 </navigation>
