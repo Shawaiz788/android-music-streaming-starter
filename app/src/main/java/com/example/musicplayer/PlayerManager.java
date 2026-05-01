@@ -150,6 +150,13 @@ public class PlayerManager {
         return mediaPlayer;
     }
 
+    public int getAudioSessionId() {
+        if (mediaPlayer != null) {
+            return mediaPlayer.getAudioSessionId();
+        }
+        return 0;
+    }
+
     public boolean isCompleted() {
         return completed;
     }

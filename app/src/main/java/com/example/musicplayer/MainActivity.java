@@ -4,18 +4,22 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.media.audiofx.Equalizer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -24,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.cardview.widget.CardView;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
@@ -37,6 +42,7 @@ import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 public class MainActivity extends AppCompatActivity
         implements PlayerManager.OnPlayerStateChangedListener {
@@ -391,39 +397,67 @@ public class MainActivity extends AppCompatActivity
 
         // --- Bottom Sheet Setup ---
         View moreMenuSheet = view.findViewById(R.id.more_menu_sheet);
+        View equalizerSheet = view.findViewById(R.id.equalizer_sheet);
+        View lyricsSheet = view.findViewById(R.id.lyrics_sheet);
         View playerContent = view.findViewById(R.id.player_content);
+
         BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(moreMenuSheet);
+        BottomSheetBehavior<View> eqBehavior = BottomSheetBehavior.from(equalizerSheet);
+        BottomSheetBehavior<View> lyricsBehavior = BottomSheetBehavior.from(lyricsSheet);
 
         // Calculate 40% of screen height for the intermediate stop
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         int targetPeekHeight = (int) (displayMetrics.heightPixels * 0.4);
 
-        behavior.setFitToContents(true); // Menu only as big as its buttons
+        // Configure Menu Behavior
+        behavior.setFitToContents(true);
         behavior.setPeekHeight(targetPeekHeight);
         behavior.setHideable(true);
-        behavior.setSkipCollapsed(false); 
+        behavior.setSkipCollapsed(false);
         behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-        behavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+        // Configure Equalizer Behavior
+        eqBehavior.setFitToContents(true);
+        eqBehavior.setHideable(true);
+        eqBehavior.setSkipCollapsed(true);
+        eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        // Configure Lyrics Behavior
+        lyricsBehavior.setFitToContents(true);
+        lyricsBehavior.setHideable(true);
+        lyricsBehavior.setSkipCollapsed(true);
+        lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        BottomSheetBehavior.BottomSheetCallback commonCallback = new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-                    playerContent.animate().alpha(1f).setDuration(200).start();
+                    // Check if any other sheet is visible before showing player content
+                    if (behavior.getState() == BottomSheetBehavior.STATE_HIDDEN &&
+                        eqBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN &&
+                        lyricsBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
+                        playerContent.animate().alpha(1f).setDuration(200).start();
+                    }
                 }
             }
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                // slideOffset: -1 (HIDDEN) to 1 (EXPANDED)
                 float alpha = 1.0f - (slideOffset + 1.0f) / 2.0f;
                 if (alpha < 0) alpha = 0;
                 if (alpha > 1) alpha = 1;
                 playerContent.setAlpha(alpha);
             }
-        });
+        };
+
+        behavior.addBottomSheetCallback(commonCallback);
+        eqBehavior.addBottomSheetCallback(commonCallback);
+        lyricsBehavior.addBottomSheetCallback(commonCallback);
 
         view.findViewById(R.id.menu_more).setOnClickListener(v -> {
+            eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             int state = behavior.getState();
             if (state == BottomSheetBehavior.STATE_HIDDEN) {
                 behavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
@@ -443,6 +477,94 @@ public class MainActivity extends AppCompatActivity
             startActivity(Intent.createChooser(shareIntent, "Share via"));
         });
 
+        // --- Equalizer Integration ---
+        view.findViewById(R.id.equalizer).setOnClickListener(v -> {
+            behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            
+            // Setup Equalizer View
+            SwitchCompat eqSwitch = equalizerSheet.findViewById(R.id.equalizer_switch);
+            LinearLayout container = equalizerSheet.findViewById(R.id.equalizer_container);
+            container.removeAllViews(); // Clear previous views if any
+
+            int sessionId = PlayerManager.getInstance().getAudioSessionId();
+            if (sessionId != 0) {
+                final Equalizer equalizer = new Equalizer(0, sessionId);
+                eqSwitch.setChecked(equalizer.getEnabled());
+                eqSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> equalizer.setEnabled(isChecked));
+
+                short bands = equalizer.getNumberOfBands();
+                final short minEQLevel = equalizer.getBandLevelRange()[0];
+                final short maxEQLevel = equalizer.getBandLevelRange()[1];
+
+                for (short i = 0; i < bands; i++) {
+                    final short band = i;
+                    TextView freqText = new TextView(this);
+                    freqText.setTextColor(Color.WHITE);
+                    freqText.setPadding(0, 20, 0, 10);
+                    freqText.setText((equalizer.getCenterFreq(band) / 1000) + " Hz");
+                    container.addView(freqText);
+
+                    SeekBar bar = new SeekBar(this);
+                    bar.setMax(maxEQLevel - minEQLevel);
+                    bar.setProgress(equalizer.getBandLevel(band) - minEQLevel);
+                    bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            if (fromUser) equalizer.setBandLevel(band, (short) (progress + minEQLevel));
+                        }
+                        @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                        @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+                    });
+                    container.addView(bar);
+                }
+            }
+            eqBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        });
+
+        // --- Go to Artist ---
+        view.findViewById(R.id.btn_go_to_artist).setOnClickListener(v -> {
+            dialog.dismiss();
+            // Since we don't have an ArtistDetailsFragment yet, we can filter search or show a toast
+            // If we have an Artist object, we could navigate. For now, let's toast.
+            Toast.makeText(this, "Going to artist: " + song.getArtist(), Toast.LENGTH_SHORT).show();
+        });
+
+        // --- Go to Album ---
+        view.findViewById(R.id.btn_go_to_album).setOnClickListener(v -> {
+            Album targetAlbum = null;
+            for (Album a : MyApplication.allAlbums) {
+                if (a.getTitle().equalsIgnoreCase(song.getAlbum())) {
+                    targetAlbum = a;
+                    break;
+                }
+            }
+            if (targetAlbum != null) {
+                dialog.dismiss();
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("album", targetAlbum);
+                navController.navigate(R.id.albumDetailsFragment, bundle);
+            } else {
+                Toast.makeText(this, "Album details not available", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // --- Song Lyrics ---
+        view.findViewById(R.id.btn_lyrics).setOnClickListener(v -> {
+            String lyrics = song.getLyrics();
+            if (lyrics == null || lyrics.isEmpty()) {
+                lyrics = "Lyrics not available for this song.";
+            }
+
+            ((TextView) lyricsSheet.findViewById(R.id.tv_lyrics_title)).setText(song.getTitle());
+            ((TextView) lyricsSheet.findViewById(R.id.tv_lyrics_artist)).setText(song.getArtist());
+            ((TextView) lyricsSheet.findViewById(R.id.tv_lyrics_content)).setText(lyrics);
+
+            behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            lyricsBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        });
+
         view.findViewById(R.id.btn_music_list).setOnClickListener(v1 -> {
             playerManager.stop();
             handler.removeCallbacks(updateSeekBar);
@@ -454,8 +576,10 @@ public class MainActivity extends AppCompatActivity
             float totalDeltaY = 0;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                // If the bottom sheet is showing, ignore the dialog-dismiss swipe
-                if (behavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
+                // If any bottom sheet is showing, ignore the dialog-dismiss swipe
+                if (behavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                    eqBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                    lyricsBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
                     return false;
                 }
 
@@ -503,6 +627,87 @@ public class MainActivity extends AppCompatActivity
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
         return String.format("%d:%02d", minutes, seconds);
+    }
+
+    private void showEqualizerDialog() {
+        View eqView = LayoutInflater.from(this).inflate(R.layout.dialog_equalizer, null);
+        BottomSheetDialog eqDialog = new BottomSheetDialog(this, R.style.TransparentDialog);
+        eqDialog.setContentView(eqView);
+
+        // Ensure it opens at the bottom and is swipeable
+        BottomSheetBehavior<?> behavior = eqDialog.getBehavior();
+        behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        behavior.setHideable(true);
+        behavior.setSkipCollapsed(true);
+
+        SwitchCompat eqSwitch = eqView.findViewById(R.id.equalizer_switch);
+        LinearLayout container = eqView.findViewById(R.id.equalizer_container);
+
+        int sessionId = PlayerManager.getInstance().getAudioSessionId();
+        if (sessionId == 0) {
+            Toast.makeText(this, "No active audio session", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final Equalizer equalizer = new Equalizer(0, sessionId);
+        eqSwitch.setChecked(equalizer.getEnabled());
+        eqSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> equalizer.setEnabled(isChecked));
+
+        short bands = equalizer.getNumberOfBands();
+        final short minEQLevel = equalizer.getBandLevelRange()[0];
+        final short maxEQLevel = equalizer.getBandLevelRange()[1];
+
+        for (short i = 0; i < bands; i++) {
+            final short band = i;
+
+            TextView freqText = new TextView(this);
+            freqText.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            freqText.setGravity(Gravity.CENTER);
+            freqText.setTextColor(Color.WHITE);
+            freqText.setPadding(0, 20, 0, 10);
+            freqText.setText((equalizer.getCenterFreq(band) / 1000) + " Hz");
+            container.addView(freqText);
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+
+            TextView minDb = new TextView(this);
+            minDb.setText((minEQLevel / 100) + " dB");
+            minDb.setTextColor(Color.WHITE);
+            minDb.setTextSize(10);
+
+            SeekBar bar = new SeekBar(this);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+            bar.setLayoutParams(params);
+            bar.setMax(maxEQLevel - minEQLevel);
+            bar.setProgress(equalizer.getBandLevel(band) - minEQLevel);
+
+            TextView maxDb = new TextView(this);
+            maxDb.setText((maxEQLevel / 100) + " dB");
+            maxDb.setTextColor(Color.WHITE);
+            maxDb.setTextSize(10);
+
+            row.addView(minDb);
+            row.addView(bar);
+            row.addView(maxDb);
+
+            bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    equalizer.setBandLevel(band, (short) (progress + minEQLevel));
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
+
+            container.addView(row);
+        }
+
+        eqDialog.show();
     }
 
     @Override public void onSongChanged(Song song) { showMiniPlayer(song); }
