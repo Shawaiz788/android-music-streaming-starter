@@ -51,6 +51,7 @@
         </RelativeLayout>
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cvTopPlaylist"
             android:layout_width="match_parent"
             android:layout_height="180dp"
             android:layout_marginBottom="24dp"
@@ -70,23 +71,26 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tvTopPlaylistTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Did you like it"
+                        android:text="No Playlists"
                         android:textColor="@android:color/white"
                         android:textSize="26sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvTopPlaylistTracks"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="843 tracks"
+                        android:text="0 tracks"
                         android:textColor="#D9FFFFFF"
                         android:textSize="14sp" />
                 </LinearLayout>
 
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cvTopPlaylistPlay"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:layout_alignParentEnd="true"

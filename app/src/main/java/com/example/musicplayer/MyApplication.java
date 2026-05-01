@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class MyApplication extends Application {
     private static MyApplication instance;
@@ -26,6 +27,7 @@ public class MyApplication extends Application {
     public static ArrayList<Playlist> favouritePlaylists = new ArrayList<>();
 
     public static User currentUserInfo;
+    public static long sessionSeed; // Shared seed for consistent random colors
 
     // Handlers
     public static FirebaseSongsHandler songsHandler;
@@ -112,17 +114,16 @@ public class MyApplication extends Application {
     }
 
     public static void notifySongsLoaded() {
-        ArrayList<Song> copy = new ArrayList<>(songs);
-        
-
+        // System-wide update: Recalculate all playlist durations once songs are available
         for (Playlist p : favouritePlaylists) {
             p.calculateAndSetDuration(songs);
         }
         
+        ArrayList<Song> copy = new ArrayList<>(newReleases);
         for (OnSongsLoadedListener listener : songListeners) {
-            listener.onSongsLoaded(new ArrayList<>(newReleases));
+            listener.onSongsLoaded(copy);
         }
-
+        
         notifyPlaylistsLoaded();
     }
 
@@ -155,6 +156,8 @@ public class MyApplication extends Application {
     public void onCreate() {
         instance = this;
         super.onCreate();
+        
+        sessionSeed = new Random().nextLong();
         
         // Ensure we start with a fresh list to trigger the shimmer
         songs.clear();
