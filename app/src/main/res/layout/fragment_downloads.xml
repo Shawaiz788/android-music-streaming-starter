@@ -7,12 +7,14 @@
     android:background="@drawable/bg_gradient"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".DownloadsFragment">
+    tools:context=".DownloadsFragment"
+    android:paddingTop="30dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="24dp"
+        android:layout_marginTop="30dp">
 
         <ImageView
             android:id="@+id/ivBack"
