@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class MyApplication extends Application {
     private static MyApplication instance;
@@ -23,8 +24,10 @@ public class MyApplication extends Application {
     public static ArrayList<Song> favouriteSongs = new ArrayList<>();
     public static ArrayList<Album> favouriteAlbums = new ArrayList<>();
     public static ArrayList<Artist> favouriteArtists = new ArrayList<>();
+    public static ArrayList<Playlist> favouritePlaylists = new ArrayList<>();
 
     public static User currentUserInfo;
+    public static long sessionSeed; // Shared seed for consistent random colors
 
     // Handlers
     public static FirebaseSongsHandler songsHandler;
@@ -35,6 +38,7 @@ public class MyApplication extends Application {
     public static FirebaseAlbumsHandler albumHandler;
     public static FirebaseFavouriteArtistHandler favouriteArtistHandler;
     public static FirebaseUserHandler userHandler;
+    public static FirebasePlaylistHandler playlistHandler;
 
 
     public interface OnSongsLoadedListener {
@@ -49,9 +53,14 @@ public class MyApplication extends Application {
         void onAlbumsLoaded(ArrayList<Album> albums);
     }
 
+    public interface OnPlaylistsLoadedListener {
+        void onPlaylistsLoaded(ArrayList<Playlist> playlists);
+    }
+
     private static final ArrayList<OnSongsLoadedListener> songListeners = new ArrayList<>();
     private static final ArrayList<OnUserLoadedListener> userListeners = new ArrayList<>();
     private static final ArrayList<OnAlbumsLoadedListener> albumListeners = new ArrayList<>();
+    private static final ArrayList<OnPlaylistsLoadedListener> playlistListeners = new ArrayList<>();
 
     public static void subscribe(OnSongsLoadedListener listener) {
         if (!songListeners.contains(listener)) {
@@ -91,11 +100,31 @@ public class MyApplication extends Application {
         albumListeners.remove(listener);
     }
 
+    public static void subscribePlaylists(OnPlaylistsLoadedListener listener) {
+        if (!playlistListeners.contains(listener)) {
+            playlistListeners.add(listener);
+        }
+        if (!favouritePlaylists.isEmpty()) {
+            listener.onPlaylistsLoaded(new ArrayList<>(favouritePlaylists));
+        }
+    }
+
+    public static void unsubscribePlaylists(OnPlaylistsLoadedListener listener) {
+        playlistListeners.remove(listener);
+    }
+
     public static void notifySongsLoaded() {
+        // System-wide update: Recalculate all playlist durations once songs are available
+        for (Playlist p : favouritePlaylists) {
+            p.calculateAndSetDuration(songs);
+        }
+        
         ArrayList<Song> copy = new ArrayList<>(newReleases);
         for (OnSongsLoadedListener listener : songListeners) {
             listener.onSongsLoaded(copy);
         }
+        
+        notifyPlaylistsLoaded();
     }
 
     public static void notifyUserLoaded() {
@@ -113,6 +142,13 @@ public class MyApplication extends Application {
         }
     }
 
+    public static void notifyPlaylistsLoaded() {
+        ArrayList<Playlist> copy = new ArrayList<>(favouritePlaylists);
+        for (OnPlaylistsLoadedListener listener : playlistListeners) {
+            listener.onPlaylistsLoaded(copy);
+        }
+    }
+
     public static MyApplication getInstance() {
         return instance;
     }
@@ -120,6 +156,8 @@ public class MyApplication extends Application {
     public void onCreate() {
         instance = this;
         super.onCreate();
+        
+        sessionSeed = new Random().nextLong();
         
         // Ensure we start with a fresh list to trigger the shimmer
         songs.clear();
@@ -191,6 +229,7 @@ public class MyApplication extends Application {
         favouriteSongsHandler = new FirebaseFavouriteSongsHandler(userId);
         favouriteAlbumsHandler = new FirebaseFavouriteAlbumsHandler(userId);
         favouriteArtistHandler = new FirebaseFavouriteArtistHandler(userId);
+        playlistHandler = new FirebasePlaylistHandler(userId);
         albumHandler = new FirebaseAlbumsHandler();
     }
 

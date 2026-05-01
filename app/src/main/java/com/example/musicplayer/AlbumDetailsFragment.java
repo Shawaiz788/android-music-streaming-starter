@@ -33,6 +33,7 @@ public class AlbumDetailsFragment extends Fragment {
     private Toolbar toolbar;
     private Album currentAlbum;
     private AlbumSongAdapter adapter;
+
     private List<Song> albumSongs = new ArrayList<>();
 
     @Nullable
@@ -66,8 +67,15 @@ public class AlbumDetailsFragment extends Fragment {
         });
 
         btnFavorite.setOnClickListener(v -> {
-            // Handle favorite album logic
-            Toast.makeText(getContext(), "Added to favorites", Toast.LENGTH_SHORT).show();
+            if (MyApplication.favouriteAlbumsHandler != null) {
+                boolean isCurrentlyFav = isAlbumFavourite(currentAlbum);
+                MyApplication.favouriteAlbumsHandler.toggleFavourite(currentAlbum);
+                
+                // Immediate UI update for better UX
+                updateFavoriteIcon(!isCurrentlyFav);
+            } else {
+                Toast.makeText(getContext(), "Please sign in to favorite albums", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -91,11 +99,30 @@ public class AlbumDetailsFragment extends Fragment {
                 .load(currentAlbum.getImageUrl())
                 .placeholder(R.drawable.hungama)
                 .into(ivAlbumArt);
+
+        updateFavoriteIcon(isAlbumFavourite(currentAlbum));
+    }
+
+    private boolean isAlbumFavourite(Album album) {
+        if (MyApplication.favouriteAlbums == null) return false;
+        for (Album fav : MyApplication.favouriteAlbums) {
+            if (fav.getId() != null && fav.getId().equals(album.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateFavoriteIcon(boolean isFav) {
+        if (isFav) {
+            btnFavorite.setImageResource(R.drawable.icon_save_filled);
+        } else {
+            btnFavorite.setImageResource(R.drawable.icon_save);
+        }
     }
 
     private void loadAlbumSongs() {
         albumSongs.clear();
-        // Filter global songs list for songs belonging to this album
         for (Song song : MyApplication.songs) {
             if (song.getAlbumId() != null && song.getAlbumId().equals(currentAlbum.getId())) {
                 albumSongs.add(song);

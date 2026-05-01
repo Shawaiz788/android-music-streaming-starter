@@ -7,7 +7,7 @@
     android:background="@drawable/bg_gradient"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".DownloadsFragment"
+    tools:context=".FavouriteTracksFragment"
     android:paddingTop="30dp">
 
     <RelativeLayout
@@ -28,25 +28,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Downloads"
+            android:text="Favourite Tracks"
             android:textColor="@android:color/white"
             android:textSize="24sp"
             android:textStyle="bold" />
     </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvDownloads"
+        android:id="@+id/rvFavourites"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:listitem="@layout/item_recent_search" />
 
     <TextView
-        android:id="@+id/tvNoDownloads"
+        android:id="@+id/tvNoFavourites"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="100dp"
-        android:text="No downloaded songs yet"
+        android:text="No favourite tracks yet"
         android:textColor="#88FFFFFF"
         android:textSize="18sp"
         android:visibility="gone" />

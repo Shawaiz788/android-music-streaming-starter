@@ -4,10 +4,13 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -35,6 +38,26 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
         holder.tvSongTitle.setText(song.getTitle());
         holder.tvSongArtist.setText(song.getArtist());
 
+        // Load song cover image
+        if (song.getImageUrl() != null && !song.getImageUrl().isEmpty()) {
+            Glide.with(context)
+                    .load(song.getImageUrl())
+                    .placeholder(R.drawable.hungama)
+                    .error(R.drawable.error_song_cover)
+                    .into(holder.ivSongCover);
+        } else {
+            holder.ivSongCover.setImageResource(R.drawable.hungama);
+        }
+
+        // Show "NOW" if the song is currently playing
+        if (PlayerManager.getInstance().getCurrentSong() != null &&
+                PlayerManager.getInstance().getCurrentSong().getId().equals(song.getId())) {
+            holder.tvStatus.setVisibility(View.VISIBLE);
+            holder.tvStatus.setText("NOW");
+        } else {
+            holder.tvStatus.setVisibility(View.GONE);
+        }
+
         // Using the layout hook to set the click listener in bind
         holder.itemLayout.setOnClickListener(v -> {
             if (context instanceof MainActivity) {
@@ -50,12 +73,14 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
 
     public static class SongViewHolder extends RecyclerView.ViewHolder {
         TextView tvIndex, tvSongTitle, tvSongArtist, tvStatus;
+        ImageView ivSongCover;
         View itemLayout; // Layout hook
 
         public SongViewHolder(@NonNull View itemView) {
             super(itemView);
             itemLayout = itemView; // Root layout of item_song_album.xml
             tvIndex = itemView.findViewById(R.id.tvIndex);
+            ivSongCover = itemView.findViewById(R.id.ivSongCover);
             tvSongTitle = itemView.findViewById(R.id.tvSongTitle);
             tvSongArtist = itemView.findViewById(R.id.tvSongArtist);
             tvStatus = itemView.findViewById(R.id.tvStatus);

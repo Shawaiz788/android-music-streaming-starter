@@ -10,6 +10,7 @@ import android.media.audiofx.Equalizer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -17,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -36,13 +38,18 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.palette.graphics.Palette;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements PlayerManager.OnPlayerStateChangedListener {
@@ -65,7 +72,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Mini player setup
+
         miniPlayer = findViewById(R.id.mini_player);
         miniTitle = findViewById(R.id.mini_tv_title);
         miniArtist = findViewById(R.id.mini_tv_artist);
@@ -85,7 +92,8 @@ public class MainActivity extends AppCompatActivity
                 (NavHostFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.nav_host_fragment);
 
-        if (navHostFragment == null) return;
+        if (navHostFragment == null)
+            return;
 
         navController = navHostFragment.getNavController();
 
@@ -195,7 +203,9 @@ public class MainActivity extends AppCompatActivity
 
         // Initial Favorite State for Menu
         ImageView ivFavMenu = view.findViewById(R.id.iv_fav_menu);
-        ivFavMenu.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+        if (ivFavMenu != null) {
+            ivFavMenu.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+        }
 
         view.findViewById(R.id.fav_btn).setOnClickListener(v -> {
             boolean currentlyFav = false;
@@ -208,23 +218,30 @@ public class MainActivity extends AppCompatActivity
             MyApplication.favouriteSongsHandler.toggleFavourite(song);
             boolean newFav = !currentlyFav;
             ivFav.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
-            ivFavMenu.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+            if (ivFavMenu != null) {
+                ivFavMenu.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+            }
         });
 
         // Favorite Button in Menu (Sync)
-        view.findViewById(R.id.fav_btn_menu_container).setOnClickListener(v -> {
-            boolean currentlyFav = false;
-            for (Song s : MyApplication.favouriteSongs) {
-                if (s.getId() != null && s.getId().equals(song.getId())) {
-                    currentlyFav = true;
-                    break;
+        View favBtnMenu = view.findViewById(R.id.fav_btn_menu_container);
+        if (favBtnMenu != null) {
+            favBtnMenu.setOnClickListener(v -> {
+                boolean currentlyFav = false;
+                for (Song s : MyApplication.favouriteSongs) {
+                    if (s.getId() != null && s.getId().equals(song.getId())) {
+                        currentlyFav = true;
+                        break;
+                    }
                 }
-            }
-            MyApplication.favouriteSongsHandler.toggleFavourite(song);
-            boolean newFav = !currentlyFav;
-            ivFav.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
-            ivFavMenu.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
-        });
+                MyApplication.favouriteSongsHandler.toggleFavourite(song);
+                boolean newFav = !currentlyFav;
+                ivFav.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+                if (ivFavMenu != null) {
+                    ivFavMenu.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+                }
+            });
+        }
 
         // --- Download / Delete Button Logic ---
         com.google.android.material.button.MaterialButton btnDownload = view.findViewById(R.id.btn_download);
@@ -468,6 +485,12 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        // Add to Playlist Button
+        view.findViewById(R.id.btn_add_to_playlist).setOnClickListener(v -> {
+            behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            showAddToPlaylistDialog(song);
+        });
+
         // --- Share Functionality ---
         view.findViewById(R.id.share_btn).setOnClickListener(v -> {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -481,7 +504,7 @@ public class MainActivity extends AppCompatActivity
         view.findViewById(R.id.equalizer).setOnClickListener(v -> {
             behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-            
+
             // Setup Equalizer View
             SwitchCompat eqSwitch = equalizerSheet.findViewById(R.id.equalizer_switch);
             LinearLayout container = equalizerSheet.findViewById(R.id.equalizer_container);
@@ -597,7 +620,7 @@ public class MainActivity extends AppCompatActivity
                         }
                         return true;
                     case MotionEvent.ACTION_UP:
-                        if (totalDeltaY < 10) {
+                        if (totalDeltaY < 20) {
                             v.performClick();
                         } else if (totalDeltaY > 300) {
                             view.animate()
@@ -620,6 +643,59 @@ public class MainActivity extends AppCompatActivity
         view.setTranslationY(2000f);
         view.animate().translationY(0f).setDuration(350)
                 .setInterpolator(new DecelerateInterpolator()).start();
+    }
+
+    private void showAddToPlaylistDialog(Song song) {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this, R.style.TransparentDialog);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_to_playlist, null);
+        bottomSheetDialog.setContentView(dialogView);
+
+        RecyclerView rvPlaylists = dialogView.findViewById(R.id.rv_existing_playlists);
+        MaterialButton btnCreate = dialogView.findViewById(R.id.btn_create_new);
+
+        rvPlaylists.setLayoutManager(new LinearLayoutManager(this));
+        PlaylistSmallAdapter adapter = new PlaylistSmallAdapter(this, MyApplication.favouritePlaylists, playlist -> {
+            if (!playlist.getSongIds().contains(song.getId())) {
+                playlist.getSongIds().add(song.getId());
+                playlist.setTrackCount(playlist.getSongIds().size());
+                MyApplication.playlistHandler.updatePlaylist(playlist);
+                Toast.makeText(this, "Added to " + playlist.getTitle(), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Song already in playlist", Toast.LENGTH_SHORT).show();
+            }
+            bottomSheetDialog.dismiss();
+        });
+        rvPlaylists.setAdapter(adapter);
+
+        btnCreate.setOnClickListener(v -> {
+            showCreatePlaylistDialog(song, bottomSheetDialog);
+        });
+
+        bottomSheetDialog.show();
+    }
+
+    private void showCreatePlaylistDialog(Song song, BottomSheetDialog parentDialog) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("New Playlist");
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setHint("Playlist Name");
+        builder.setView(input);
+
+        builder.setPositiveButton("Create", (dialog, which) -> {
+            String name = input.getText().toString().trim();
+            if (!name.isEmpty()) {
+                Playlist newPlaylist = new Playlist(null, name, 1, "0 min");
+                newPlaylist.getSongIds().add(song.getId());
+                MyApplication.playlistHandler.addPlaylist(newPlaylist);
+                Toast.makeText(this, "Playlist created", Toast.LENGTH_SHORT).show();
+                parentDialog.dismiss();
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
     }
 
     private String formatTime(int millis) {

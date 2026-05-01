@@ -10,12 +10,13 @@
     <!-- Menu Handle -->
     <View
         android:id="@+id/menu_handle"
-        android:layout_width="40dp"
+        android:layout_width="45dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="24dp"
-        android:background="#80FFFFFF" />
+        android:background="@android:color/white"
+        android:elevation="12dp" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -25,12 +26,12 @@
         <!-- Favourite Button (Left) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/fav_btn_menu_container"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             app:cardBackgroundColor="#40FFFFFF"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="25dp"
             app:cardElevation="0dp">
 
             <ImageView
@@ -39,7 +40,7 @@
                 android:layout_height="match_parent"
                 android:padding="8dp"
                 android:src="@drawable/ic_fav"
-                app:tint="@color/white" />
+                app:tint="@android:color/white" />
         </androidx.cardview.widget.CardView>
 
         <!-- Song Image -->
@@ -55,12 +56,12 @@
         <!-- Share Button (Right) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/share_btn"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             app:cardBackgroundColor="#40FFFFFF"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="25dp"
             app:cardElevation="0dp">
 
             <ImageView
@@ -68,7 +69,7 @@
                 android:layout_height="match_parent"
                 android:padding="8dp"
                 android:src="@android:drawable/ic_menu_share"
-                app:tint="@color/white" />
+                app:tint="@android:color/white" />
         </androidx.cardview.widget.CardView>
     </RelativeLayout>
 
@@ -98,16 +99,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Podval Caplella"
-            android:textColor="@color/mid_gray"
-            android:textSize="14sp" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="4dp"
             android:text="."
-            android:textColor="@color/mid_gray"
-            android:textSize="14sp"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
@@ -115,8 +116,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="2:43"
-            android:textColor="@color/mid_gray"
-            android:textSize="14sp" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
     </LinearLayout>
 
     <!-- Menu Options -->

@@ -31,6 +31,12 @@
     <fragment
         android:id="@+id/FavouriteAlbumsFragment"
         android:name="com.example.musicplayer.FavouriteAlbumsFragment" />
+    <fragment
+        android:id="@+id/favouriteTracksFragment"
+        android:name="com.example.musicplayer.FavouriteTracksFragment" />
+    <fragment
+        android:id="@+id/favouritePlaylistFragment"
+        android:name="com.example.musicplayer.FavouritePlaylistFragment" />
 
     <fragment
         android:id="@+id/albumDetailsFragment"
@@ -38,5 +44,13 @@
         <argument
             android:name="album"
             app:argType="com.example.musicplayer.Album" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/playlistDetailsFragment"
+        android:name="com.example.musicplayer.PlaylistDetailsFragment">
+        <argument
+            android:name="playlist"
+            app:argType="com.example.musicplayer.Playlist" />
     </fragment>
 </navigation>
