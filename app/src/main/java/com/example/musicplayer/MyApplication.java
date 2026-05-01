@@ -23,6 +23,7 @@ public class MyApplication extends Application {
     public static ArrayList<Song> favouriteSongs = new ArrayList<>();
     public static ArrayList<Album> favouriteAlbums = new ArrayList<>();
     public static ArrayList<Artist> favouriteArtists = new ArrayList<>();
+    public static ArrayList<Playlist> favouritePlaylists = new ArrayList<>();
 
     public static User currentUserInfo;
 
@@ -35,6 +36,7 @@ public class MyApplication extends Application {
     public static FirebaseAlbumsHandler albumHandler;
     public static FirebaseFavouriteArtistHandler favouriteArtistHandler;
     public static FirebaseUserHandler userHandler;
+    public static FirebasePlaylistHandler playlistHandler;
 
 
     public interface OnSongsLoadedListener {
@@ -49,9 +51,14 @@ public class MyApplication extends Application {
         void onAlbumsLoaded(ArrayList<Album> albums);
     }
 
+    public interface OnPlaylistsLoadedListener {
+        void onPlaylistsLoaded(ArrayList<Playlist> playlists);
+    }
+
     private static final ArrayList<OnSongsLoadedListener> songListeners = new ArrayList<>();
     private static final ArrayList<OnUserLoadedListener> userListeners = new ArrayList<>();
     private static final ArrayList<OnAlbumsLoadedListener> albumListeners = new ArrayList<>();
+    private static final ArrayList<OnPlaylistsLoadedListener> playlistListeners = new ArrayList<>();
 
     public static void subscribe(OnSongsLoadedListener listener) {
         if (!songListeners.contains(listener)) {
@@ -91,6 +98,19 @@ public class MyApplication extends Application {
         albumListeners.remove(listener);
     }
 
+    public static void subscribePlaylists(OnPlaylistsLoadedListener listener) {
+        if (!playlistListeners.contains(listener)) {
+            playlistListeners.add(listener);
+        }
+        if (!favouritePlaylists.isEmpty()) {
+            listener.onPlaylistsLoaded(new ArrayList<>(favouritePlaylists));
+        }
+    }
+
+    public static void unsubscribePlaylists(OnPlaylistsLoadedListener listener) {
+        playlistListeners.remove(listener);
+    }
+
     public static void notifySongsLoaded() {
         ArrayList<Song> copy = new ArrayList<>(newReleases);
         for (OnSongsLoadedListener listener : songListeners) {
@@ -110,6 +130,13 @@ public class MyApplication extends Application {
         ArrayList<Album> copy = new ArrayList<>(allAlbums);
         for (OnAlbumsLoadedListener listener : albumListeners) {
             listener.onAlbumsLoaded(copy);
+        }
+    }
+
+    public static void notifyPlaylistsLoaded() {
+        ArrayList<Playlist> copy = new ArrayList<>(favouritePlaylists);
+        for (OnPlaylistsLoadedListener listener : playlistListeners) {
+            listener.onPlaylistsLoaded(copy);
         }
     }
 
@@ -191,6 +218,7 @@ public class MyApplication extends Application {
         favouriteSongsHandler = new FirebaseFavouriteSongsHandler(userId);
         favouriteAlbumsHandler = new FirebaseFavouriteAlbumsHandler(userId);
         favouriteArtistHandler = new FirebaseFavouriteArtistHandler(userId);
+        playlistHandler = new FirebasePlaylistHandler(userId);
         albumHandler = new FirebaseAlbumsHandler();
     }
 

@@ -111,7 +111,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_weight="1"
-                android:src="@android:drawable/ic_menu_sort_alphabetically"
+                android:src="@drawable/icon_equaliser"
                 app:tint="#E6FFFFFF" />
 
             <ImageView
@@ -147,10 +147,10 @@
 
             <ImageView
                 android:id="@+id/menu_more"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
                 android:layout_weight="1"
-                android:src="@android:drawable/ic_menu_more"
+                android:src="@drawable/icon_options"
                 app:tint="#E6FFFFFF" />
         </LinearLayout>
 

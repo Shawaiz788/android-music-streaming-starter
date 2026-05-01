@@ -33,6 +33,7 @@ public class FavoritesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         LLTracks = view.findViewById(R.id.LLTracks);
         LLAlbums = view.findViewById(R.id.LLAlbums);
+        LLPlaylists = view.findViewById(R.id.LLPlaylists);
         LLDownload = view.findViewById(R.id.LLDownload);
         cvProfile = view.findViewById(R.id.cvProfile);
         
@@ -44,6 +45,11 @@ public class FavoritesFragment extends Fragment {
         LLAlbums.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.FavouriteAlbumsFragment);
+        });
+
+        LLPlaylists.setOnClickListener(v -> {
+            NavController navController = NavHostFragment.findNavController(this);
+            navController.navigate(R.id.favouritePlaylistFragment);
         });
 
         LLDownload.setOnClickListener(v -> {
