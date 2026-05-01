@@ -66,7 +66,7 @@ public class FavoritesFragment extends Fragment {
         };
         MyApplication.subscribePlaylists(playlistListener);
         
-        // Initial load
+
         updateTopPlaylistUI(MyApplication.favouritePlaylists);
 
         // Click listeners

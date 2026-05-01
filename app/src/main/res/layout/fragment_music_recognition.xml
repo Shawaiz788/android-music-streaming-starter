@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_gradient"
-    tools:context=".MusicRecognitionFragment">
+    tools:context=".MusicRecognitionFragment"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
     <ImageView
         android:id="@+id/btnBack"
@@ -31,44 +33,49 @@
         app:layout_constraintBottom_toTopOf="@+id/recognitionContainer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginBottom="40dp" />
+        android:layout_marginBottom="24dp" />
 
     <FrameLayout
         android:id="@+id/recognitionContainer"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="400dp"
+        android:layout_height="400dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.4">
 
         <!-- Pulse effect circles -->
         <View
             android:id="@+id/pulseView1"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:layout_gravity="center"
             android:background="@drawable/glow_circle"
             android:visibility="invisible" />
 
         <View
             android:id="@+id/pulseView2"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:layout_gravity="center"
             android:background="@drawable/glow_circle"
             android:visibility="invisible" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/btnIdentify"
-            android:layout_width="220dp"
-            android:layout_height="220dp"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
             android:layout_gravity="center"
             app:cardBackgroundColor="#F38025"
-            app:cardCornerRadius="110dp"
+            app:cardCornerRadius="100dp"
             app:cardElevation="12dp">
 
             <ImageView
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
                 android:layout_gravity="center"
                 android:src="@drawable/icon_search_music"
                 app:tint="@android:color/white" />
@@ -84,7 +91,8 @@
         android:gravity="center"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/recognitionContainer"
-        android:layout_marginTop="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.2"
         android:paddingHorizontal="24dp">
 
         <TextView

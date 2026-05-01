@@ -1,10 +1,15 @@
 package com.example.musicplayer;
 
+import android.Manifest;
 import android.animation.AnimatorSet;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
+import android.content.pm.PackageManager;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,19 +22,47 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.google.android.material.button.MaterialButton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class MusicRecognitionFragment extends Fragment {
+
+    private static final String TAG = "MusicRecognition";
+    private static final int PERMISSION_REQUEST_CODE = 101;
+    // For demo/test purposes. Get a real token at https://audd.io/
+    private static final String AUDD_API_TOKEN = "21888d16d53c17b1820ec1026206428c";
 
     private ImageView btnBack;
     private TextView tvStatus, tvResultTitle, tvResultArtist;
     private CardView btnIdentify;
     private View pulseView1, pulseView2;
     private LinearLayout resultLayout;
+    private MaterialButton btnPlayResult;
     private boolean isListening = false;
     private AnimatorSet pulseAnimatorSet;
+
+    private MediaRecorder mediaRecorder;
+    private String audioFilePath;
+    private final OkHttpClient client = new OkHttpClient();
 
     public MusicRecognitionFragment() {
         // Required empty public constructor
@@ -53,6 +86,9 @@ public class MusicRecognitionFragment extends Fragment {
         resultLayout = view.findViewById(R.id.resultLayout);
         tvResultTitle = view.findViewById(R.id.tvResultTitle);
         tvResultArtist = view.findViewById(R.id.tvResultArtist);
+        btnPlayResult = view.findViewById(R.id.btnPlayResult);
+
+        audioFilePath = requireContext().getCacheDir().getAbsolutePath() + "/recognition_sample.mp4";
 
         btnBack.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(MusicRecognitionFragment.this);
@@ -61,11 +97,32 @@ public class MusicRecognitionFragment extends Fragment {
 
         btnIdentify.setOnClickListener(v -> {
             if (!isListening) {
-                startListening();
+                checkPermissionAndStart();
             } else {
                 stopListening();
             }
         });
+    }
+
+    private void checkPermissionAndStart() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) 
+                == PackageManager.PERMISSION_GRANTED) {
+            startListening();
+        } else {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startListening();
+            } else {
+                Toast.makeText(requireContext(), "Microphone permission is required to identify music", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void startListening() {
@@ -73,18 +130,112 @@ public class MusicRecognitionFragment extends Fragment {
         tvStatus.setText("Listening...");
         resultLayout.setVisibility(View.GONE);
         
-        // Start pulse animation
         pulseView1.setVisibility(View.VISIBLE);
         pulseView2.setVisibility(View.VISIBLE);
-        
         startPulseAnimation();
 
-        // Simulate recognition process
-        new Handler().postDelayed(() -> {
-            if (isAdded()) {
-                showResult("Burning", "Podval Caplella");
+        try {
+            startRecording();
+            // Automatically stop and identify after 10 seconds of recording
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (isListening && isAdded()) {
+                    stopRecordingAndIdentify();
+                }
+            }, 10000);
+        } catch (IOException e) {
+            Log.e(TAG, "Recording failed", e);
+            stopListening();
+            Toast.makeText(requireContext(), "Recording failed", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void startRecording() throws IOException {
+        mediaRecorder = new MediaRecorder();
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        mediaRecorder.setOutputFile(audioFilePath);
+        mediaRecorder.prepare();
+        mediaRecorder.start();
+    }
+
+    private void stopRecordingAndIdentify() {
+        if (mediaRecorder != null) {
+            try {
+                mediaRecorder.stop();
+            } catch (RuntimeException e) {
+                Log.e(TAG, "MediaRecorder stop failed", e);
             }
-        }, 5000);
+            mediaRecorder.release();
+            mediaRecorder = null;
+        }
+        
+        tvStatus.setText("Identifying...");
+        performAuddRequest();
+    }
+
+    private void performAuddRequest() {
+        File file = new File(audioFilePath);
+        if (!file.exists()) {
+            stopListening();
+            return;
+        }
+
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("api_token", AUDD_API_TOKEN)
+                .addFormDataPart("file", file.getName(),
+                        RequestBody.create(file, MediaType.parse("audio/mp4")))
+                .build();
+
+        Request request = new Request.Builder()
+                .url("https://api.audd.io/")
+                .post(requestBody)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (isAdded()) {
+                        stopListening();
+                        Toast.makeText(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.body() == null) return;
+                String responseData = response.body().string();
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (isAdded()) {
+                        parseAuddResponse(responseData);
+                    }
+                });
+            }
+        });
+    }
+
+    private void parseAuddResponse(String jsonResponse) {
+        try {
+            JSONObject jsonObject = new JSONObject(jsonResponse);
+            String status = jsonObject.optString("status", "error");
+
+            if ("success".equals(status) && !jsonObject.isNull("result")) {
+                JSONObject result = jsonObject.getJSONObject("result");
+                String title = result.getString("title");
+                String artist = result.getString("artist");
+                showResult(title, artist);
+            } else {
+                stopListening();
+                tvStatus.setText("No match found");
+            }
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON parsing error", e);
+            stopListening();
+            tvStatus.setText("Recognition failed");
+        }
     }
 
     private void stopListening() {
@@ -95,6 +246,14 @@ public class MusicRecognitionFragment extends Fragment {
         }
         pulseView1.setVisibility(View.INVISIBLE);
         pulseView2.setVisibility(View.INVISIBLE);
+        
+        if (mediaRecorder != null) {
+            try {
+                mediaRecorder.stop();
+            } catch (Exception ignored) {}
+            mediaRecorder.release();
+            mediaRecorder = null;
+        }
     }
 
     private void startPulseAnimation() {
@@ -139,7 +298,13 @@ public class MusicRecognitionFragment extends Fragment {
         tvResultArtist.setText(artist);
         resultLayout.setVisibility(View.VISIBLE);
         
-        // Optional: Animation for result layout
+        btnPlayResult.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("initialQuery", title);
+            NavController navController = NavHostFragment.findNavController(MusicRecognitionFragment.this);
+            navController.navigate(R.id.searchFragment, bundle);
+        });
+
         resultLayout.setAlpha(0f);
         resultLayout.setTranslationY(50f);
         resultLayout.animate()
@@ -147,5 +312,17 @@ public class MusicRecognitionFragment extends Fragment {
                 .translationY(0f)
                 .setDuration(500)
                 .start();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mediaRecorder != null) {
+            mediaRecorder.release();
+            mediaRecorder = null;
+        }
+        if (pulseAnimatorSet != null) {
+            pulseAnimatorSet.cancel();
+        }
     }
 }
