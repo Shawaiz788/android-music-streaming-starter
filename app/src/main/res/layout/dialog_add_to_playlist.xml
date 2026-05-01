@@ -3,10 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@drawable/bg_bottom_sheet_dark"
     android:orientation="vertical"
     android:padding="24dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="45dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="24dp"
+        android:background="#80FFFFFF" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -24,7 +32,7 @@
         android:layout_height="56dp"
         android:text="Create New Playlist"
         android:textColor="@android:color/white"
-        app:strokeColor="@android:color/white"
+        app:strokeColor="#4DFFFFFF"
         app:icon="@android:drawable/ic_menu_add"
         app:iconTint="@android:color/white"
         app:cornerRadius="12dp"
@@ -33,8 +41,8 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_existing_playlists"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:maxHeight="300dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         tools:listitem="@layout/item_playlist_small" />
 
 </LinearLayout>

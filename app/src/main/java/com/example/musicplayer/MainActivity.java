@@ -17,6 +17,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -650,6 +651,15 @@ public class MainActivity extends AppCompatActivity
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_to_playlist, null);
         bottomSheetDialog.setContentView(dialogView);
 
+        // Correctly handle full-height expansion
+        android.widget.FrameLayout bottomSheet = bottomSheetDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+        if (bottomSheet != null) {
+            BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
+            behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            behavior.setSkipCollapsed(true);
+            bottomSheet.getLayoutParams().height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+        }
+
         RecyclerView rvPlaylists = dialogView.findViewById(R.id.rv_existing_playlists);
         MaterialButton btnCreate = dialogView.findViewById(R.id.btn_create_new);
 
@@ -675,27 +685,31 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showCreatePlaylistDialog(Song song, BottomSheetDialog parentDialog) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("New Playlist");
+        BottomSheetDialog createDialog = new BottomSheetDialog(this, R.style.TransparentDialog);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_playlist, null);
+        createDialog.setContentView(dialogView);
 
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        input.setHint("Playlist Name");
-        builder.setView(input);
+        EditText input = dialogView.findViewById(R.id.et_playlist_name);
+        MaterialButton btnCreate = dialogView.findViewById(R.id.btn_create);
+        MaterialButton btnCancel = dialogView.findViewById(R.id.btn_cancel);
 
-        builder.setPositiveButton("Create", (dialog, which) -> {
+        btnCreate.setOnClickListener(v -> {
             String name = input.getText().toString().trim();
             if (!name.isEmpty()) {
                 Playlist newPlaylist = new Playlist(null, name, 1, "0 min");
                 newPlaylist.getSongIds().add(song.getId());
                 MyApplication.playlistHandler.addPlaylist(newPlaylist);
                 Toast.makeText(this, "Playlist created", Toast.LENGTH_SHORT).show();
+                createDialog.dismiss();
                 parentDialog.dismiss();
+            } else {
+                input.setError("Name cannot be empty");
             }
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
-        builder.show();
+        btnCancel.setOnClickListener(v -> createDialog.dismiss());
+
+        createDialog.show();
     }
 
     private String formatTime(int millis) {
