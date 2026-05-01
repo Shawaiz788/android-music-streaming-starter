@@ -31,6 +31,9 @@
     <fragment
         android:id="@+id/FavouriteAlbumsFragment"
         android:name="com.example.musicplayer.FavouriteAlbumsFragment" />
+    <fragment
+        android:id="@+id/favouriteTracksFragment"
+        android:name="com.example.musicplayer.FavouriteTracksFragment" />
 
     <fragment
         android:id="@+id/albumDetailsFragment"

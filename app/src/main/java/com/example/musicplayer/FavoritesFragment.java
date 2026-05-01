@@ -34,20 +34,17 @@ public class FavoritesFragment extends Fragment {
         LLTracks = view.findViewById(R.id.LLTracks);
         LLAlbums = view.findViewById(R.id.LLAlbums);
         LLDownload = view.findViewById(R.id.LLDownload);
-        cvProfile=view.findViewById(R.id.cvProfile);
+        cvProfile = view.findViewById(R.id.cvProfile);
         
         LLTracks.setOnClickListener(v -> {
-
-            if (MyApplication.songs != null && !MyApplication.songs.isEmpty()) {
-                Song song = MyApplication.songs.get(0);
-                ((MainActivity) requireActivity()).showPlayerDialog(song, false);
-            }
+            NavController navController = NavHostFragment.findNavController(this);
+            navController.navigate(R.id.favouriteTracksFragment);
         });
-        LLAlbums.setOnClickListener((v->{
+
+        LLAlbums.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.FavouriteAlbumsFragment);
-
-        }));
+        });
 
         LLDownload.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
