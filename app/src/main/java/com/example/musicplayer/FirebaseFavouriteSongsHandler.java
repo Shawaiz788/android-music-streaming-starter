@@ -37,21 +37,24 @@ public class FirebaseFavouriteSongsHandler {
         });
     }
 
-    public void toggleFavourite(Song song) {
-
+    public void toggleFavourite(Song song, Runnable onComplete) {
         ref.child(song.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
+                    // Optimistically remove from local list immediately
+                    MyApplication.favouriteSongs.removeIf(s -> s.getId().equals(song.getId()));
+                    if (onComplete != null) onComplete.run();
+
                     ref.child(song.getId()).removeValue()
-                            .addOnSuccessListener(unused -> {})
-                            .addOnFailureListener(e ->
-                                    Log.e("FAV_E", "Remove failed: " + e.getMessage()));
+                            .addOnFailureListener(e -> Log.e("FAV_E", "Remove failed: " + e.getMessage()));
                 } else {
+                    // Optimistically add to local list immediately
+                    MyApplication.favouriteSongs.add(song);
+                    if (onComplete != null) onComplete.run();
+
                     ref.child(song.getId()).setValue(song)
-                            .addOnSuccessListener(unused ->{})
-                            .addOnFailureListener(e ->
-                                    Log.e("FAV_E", "Failed: " + e.getMessage()));
+                            .addOnFailureListener(e -> Log.e("FAV_E", "Failed: " + e.getMessage()));
                 }
             }
             @Override
@@ -59,5 +62,10 @@ public class FirebaseFavouriteSongsHandler {
                 Toast.makeText(MyApplication.getInstance(), "Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    // Keep old signature working for any other callers
+    public void toggleFavourite(Song song) {
+        toggleFavourite(song, null);
     }
 }
