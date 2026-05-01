@@ -36,9 +36,21 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         holder.tvTitle.setText(song.getTitle());
         holder.tvArtist.setText(song.getArtist());
 
-        if (song.getImageUrl() != null) {
+        // --- Offline Image Loading Logic ---
+        Object imageSource = song.getImageUrl();
+        DBManager dbManager = new DBManager(context);
+        dbManager.Open();
+        if (dbManager.isDownloaded(song.getId())) {
+            String[] paths = dbManager.getSongPaths(song.getId());
+            if (paths[1] != null && new java.io.File(paths[1]).exists()) {
+                imageSource = new java.io.File(paths[1]);
+            }
+        }
+        dbManager.Close();
+
+        if (imageSource != null) {
             Glide.with(context)
-                    .load(song.getImageUrl())
+                    .load(imageSource)
                     .placeholder(android.R.color.darker_gray)
                     .into(holder.ivSong);
         }

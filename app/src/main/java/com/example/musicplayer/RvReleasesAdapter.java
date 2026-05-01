@@ -48,10 +48,22 @@ ArrayList<Song>songs;
                 .build());
         Song song = songs.get(position);
         
+        // --- Offline Image Loading Logic ---
+        Object imageSource = song.getImageUrl();
+        DBManager dbManager = new DBManager(context);
+        dbManager.Open();
+        if (dbManager.isDownloaded(song.getId())) {
+            String[] paths = dbManager.getSongPaths(song.getId());
+            if (paths[1] != null && new java.io.File(paths[1]).exists()) {
+                imageSource = new java.io.File(paths[1]);
+            }
+        }
+        dbManager.Close();
+
         // Use Glide for reliable image loading (Firebase URLs + Local Resources)
-        if (song.getImageUrl() != null) {
+        if (imageSource != null) {
             Glide.with(context)
-                    .load(song.getImageUrl())
+                    .load(imageSource)
                     .placeholder(shimmerDrawable)
                     .centerCrop()
                     .error(R.drawable.error_song_cover)

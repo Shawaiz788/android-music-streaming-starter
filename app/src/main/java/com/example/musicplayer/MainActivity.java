@@ -1,12 +1,14 @@
 package com.example.musicplayer;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -23,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
@@ -33,6 +36,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 public class MainActivity extends AppCompatActivity
         implements PlayerManager.OnPlayerStateChangedListener {
@@ -163,6 +167,10 @@ public class MainActivity extends AppCompatActivity
         TextView tvTotalTime = view.findViewById(R.id.tv_total_time);
         TextView tvCurrentTime = view.findViewById(R.id.tv_current_time);
         ImageView ivSong = view.findViewById(R.id.iv_song);
+        ImageView ivSongMenu = view.findViewById(R.id.iv_song_menu);
+        TextView tvSongNameMenu = view.findViewById(R.id.tv_song_name);
+        TextView tvArtistNameMenu = view.findViewById(R.id.tv_artist_name);
+        TextView tvDurationMenu = view.findViewById(R.id.tv_duration);
         ivPlayPause = view.findViewById(R.id.iv_play_pause);
         CardView btnPlayPause = view.findViewById(R.id.btn_play_pause);
         SeekBar seekBar = view.findViewById(R.id.seek_bar);
@@ -179,10 +187,11 @@ public class MainActivity extends AppCompatActivity
         }
         ivFav.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
 
-        btnFav.setOnClickListener(v -> {
-            Log.d("FAV_DEBUG", "Fav button clicked");
+        // Initial Favorite State for Menu
+        ImageView ivFavMenu = view.findViewById(R.id.iv_fav_menu);
+        ivFavMenu.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
 
-            // Check current state BEFORE toggling
+        view.findViewById(R.id.fav_btn).setOnClickListener(v -> {
             boolean currentlyFav = false;
             for (Song s : MyApplication.favouriteSongs) {
                 if (s.getId() != null && s.getId().equals(song.getId())) {
@@ -190,26 +199,97 @@ public class MainActivity extends AppCompatActivity
                     break;
                 }
             }
-
             MyApplication.favouriteSongsHandler.toggleFavourite(song);
+            boolean newFav = !currentlyFav;
+            ivFav.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+            ivFavMenu.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+        });
 
-            // Flip icon based on what state it WAS (now it'll be the opposite)
-            ivFav.setImageResource(currentlyFav ? R.drawable.ic_fav : R.drawable.icon_favorites);
+        // Favorite Button in Menu (Sync)
+        view.findViewById(R.id.fav_btn_menu_container).setOnClickListener(v -> {
+            boolean currentlyFav = false;
+            for (Song s : MyApplication.favouriteSongs) {
+                if (s.getId() != null && s.getId().equals(song.getId())) {
+                    currentlyFav = true;
+                    break;
+                }
+            }
+            MyApplication.favouriteSongsHandler.toggleFavourite(song);
+            boolean newFav = !currentlyFav;
+            ivFav.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+            ivFavMenu.setImageResource(newFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+        });
+
+        // --- Download / Delete Button Logic ---
+        com.google.android.material.button.MaterialButton btnDownload = view.findViewById(R.id.btn_download);
+        DBManager dbManager = new DBManager(this);
+        dbManager.Open();
+
+        Runnable updateDownloadButton = () -> {
+            boolean downloaded = dbManager.isDownloaded(song.getId());
+            btnDownload.setText(downloaded ? "Delete" : "Download");
+            btnDownload.setIconResource(downloaded ? android.R.drawable.ic_menu_delete : android.R.drawable.stat_sys_download);
+        };
+        updateDownloadButton.run();
+
+        btnDownload.setOnClickListener(v -> {
+            if (dbManager.isDownloaded(song.getId())) {
+                // Delete Logic
+                String[] paths = dbManager.getSongPaths(song.getId());
+                if (paths[0] != null) new java.io.File(paths[0]).delete();
+                if (paths[1] != null) new java.io.File(paths[1]).delete();
+                dbManager.deleteSong(song.getId());
+                Toast.makeText(this, "Song deleted from device", Toast.LENGTH_SHORT).show();
+                updateDownloadButton.run();
+            } else {
+                // Download Logic
+                btnDownload.setEnabled(false);
+                btnDownload.setText("Downloading...");
+                dbManager.AddSongs(song, new DBManager.OnDownloadListener() {
+                    @Override
+                    public void onDownloadComplete() {
+                        runOnUiThread(() -> {
+                            updateDownloadButton.run();
+                            btnDownload.setEnabled(true);
+                            Toast.makeText(MainActivity.this, "Song downloaded successfully", Toast.LENGTH_SHORT).show();
+                        });
+                    }
+
+                    @Override
+                    public void onDownloadFailed(Exception e) {
+                        runOnUiThread(() -> {
+                            updateDownloadButton.run();
+                            btnDownload.setEnabled(true);
+                        });
+                    }
+                });            }
         });
 
         PlayerManager playerManager = PlayerManager.getInstance();
 
         tvTitle.setText(song.getTitle());
         tvArtist.setText(song.getArtist());
+        tvSongNameMenu.setText(song.getTitle());
+        tvArtistNameMenu.setText(song.getArtist());
 
-        if (song.getImageUrl() != null) { //dynamic color set here
+        // Check for local cover image
+        Object imageSource = song.getImageUrl();
+        if (dbManager.isDownloaded(song.getId())) {
+            String[] paths = dbManager.getSongPaths(song.getId());
+            if (paths[1] != null && new java.io.File(paths[1]).exists()) {
+                imageSource = new java.io.File(paths[1]);
+            }
+        }
+
+        if (imageSource != null) { //dynamic color set here
             Glide.with(this)
                     .asBitmap()
-                    .load(song.getImageUrl())
+                    .load(imageSource)
                     .into(new CustomTarget<Bitmap>() {
                         @Override
                         public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                             ivSong.setImageBitmap(resource);
+                            ivSongMenu.setImageBitmap(resource);
                             Palette.from(resource).generate(palette -> {
                                 if (palette != null) {
                                     int dominantColor = palette.getDominantColor(0xFFA67B5B);
@@ -231,15 +311,29 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (!resumeOnly) {
+            // Offline Playback Logic: Check if song exists locally
+            String originalUrl = song.getSongUrl();
+            if (dbManager.isDownloaded(song.getId())) {
+                String[] paths = dbManager.getSongPaths(song.getId());
+                if (paths[0] != null && new java.io.File(paths[0]).exists()) {
+                    song.setSongUrl(paths[0]); // Temporarily use local path
+                }
+            }
+
             playerManager.play(this, song);
+            song.setSongUrl(originalUrl); // Restore original URL for metadata consistency
+
             ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
             android.util.Log.d("ICON_DEBUG", "Setting PAUSE icon, resumeOnly=false");
             tvCurrentTime.setText("0:00");
             tvTotalTime.setText("0:00");
+            tvDurationMenu.setText("0:00");
             seekBar.setMax(0);
         } else {
             seekBar.setMax(playerManager.getDuration());
-            tvTotalTime.setText(formatTime(playerManager.getDuration()));
+            String totalTime = formatTime(playerManager.getDuration());
+            tvTotalTime.setText(totalTime);
+            tvDurationMenu.setText(totalTime);
             if (playerManager.isPlaying()) {
                 ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
             } else if (playerManager.isCompleted()) {
@@ -256,11 +350,17 @@ public class MainActivity extends AppCompatActivity
                     // Always update max/total time dynamically
                     if (seekBar.getMax() == 0 && playerManager.getDuration() > 0) {
                         seekBar.setMax(playerManager.getDuration());
-                        tvTotalTime.setText(formatTime(playerManager.getDuration()));
+                        String totalTime = formatTime(playerManager.getDuration());
+                        tvTotalTime.setText(totalTime);
+                        tvDurationMenu.setText(totalTime);
                     }
                     if (playerManager.isPlaying()) {
-                        seekBar.setProgress(playerManager.getCurrentPosition());
-                        tvCurrentTime.setText(formatTime(playerManager.getCurrentPosition()));
+                        int position = playerManager.getCurrentPosition();
+                        int duration = playerManager.getDuration();
+
+                        int clampedPosition = Math.min(position, duration);
+                        seekBar.setProgress(clampedPosition);
+                        tvCurrentTime.setText(formatTime(clampedPosition));
                     }
                 }
                 handler.postDelayed(this, 1000);
@@ -289,6 +389,60 @@ public class MainActivity extends AppCompatActivity
                 .setView(view)
                 .create();
 
+        // --- Bottom Sheet Setup ---
+        View moreMenuSheet = view.findViewById(R.id.more_menu_sheet);
+        View playerContent = view.findViewById(R.id.player_content);
+        BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(moreMenuSheet);
+
+        // Calculate 40% of screen height for the intermediate stop
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int targetPeekHeight = (int) (displayMetrics.heightPixels * 0.4);
+
+        behavior.setFitToContents(true); // Menu only as big as its buttons
+        behavior.setPeekHeight(targetPeekHeight);
+        behavior.setHideable(true);
+        behavior.setSkipCollapsed(false); 
+        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        behavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    playerContent.animate().alpha(1f).setDuration(200).start();
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                // slideOffset: -1 (HIDDEN) to 1 (EXPANDED)
+                float alpha = 1.0f - (slideOffset + 1.0f) / 2.0f;
+                if (alpha < 0) alpha = 0;
+                if (alpha > 1) alpha = 1;
+                playerContent.setAlpha(alpha);
+            }
+        });
+
+        view.findViewById(R.id.menu_more).setOnClickListener(v -> {
+            int state = behavior.getState();
+            if (state == BottomSheetBehavior.STATE_HIDDEN) {
+                behavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            } else if (state == BottomSheetBehavior.STATE_COLLAPSED) {
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            } else {
+                behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            }
+        });
+
+        // --- Share Functionality ---
+        view.findViewById(R.id.share_btn).setOnClickListener(v -> {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            String shareMessage = "Check out this song: " + song.getTitle() + " by " + song.getArtist() + "\n" + song.getSongUrl();
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
+            startActivity(Intent.createChooser(shareIntent, "Share via"));
+        });
+
         view.findViewById(R.id.btn_music_list).setOnClickListener(v1 -> {
             playerManager.stop();
             handler.removeCallbacks(updateSeekBar);
@@ -300,6 +454,11 @@ public class MainActivity extends AppCompatActivity
             float totalDeltaY = 0;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                // If the bottom sheet is showing, ignore the dialog-dismiss swipe
+                if (behavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
+                    return false;
+                }
+
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         touchStartY = event.getRawY();

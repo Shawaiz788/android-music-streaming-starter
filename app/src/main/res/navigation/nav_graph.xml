@@ -25,7 +25,9 @@
     <fragment
         android:id="@+id/ReleasesFragment"
         android:name="com.example.musicplayer.ReleasesFragment" />
-
+    <fragment
+        android:id="@+id/downloadsFragment"
+        android:name="com.example.musicplayer.DownloadsFragment" />
     <fragment
         android:id="@+id/FavouriteAlbumsFragment"
         android:name="com.example.musicplayer.FavouriteAlbumsFragment" />
