@@ -2,6 +2,7 @@ package com.example.musicplayer;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
@@ -32,19 +34,6 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
             Color.parseColor("#FF5722"), // Deep Orange
             Color.parseColor("#3F51B5")  // Indigo
     };
-    
-    private final int[] darkColors = {
-            Color.parseColor("#1B5E20"),
-            Color.parseColor("#B71C1C"),
-            Color.parseColor("#0D47A1"),
-            Color.parseColor("#E65100"),
-            Color.parseColor("#4A148C"),
-            Color.parseColor("#006064"),
-            Color.parseColor("#880E4F"),
-            Color.parseColor("#311B92"),
-            Color.parseColor("#BF360C"),
-            Color.parseColor("#1A237E")
-    };
 
     public PlaylistAdapter(Context context, List<Playlist> playlists) {
         this.context = context;
@@ -63,30 +52,27 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
     public void onBindViewHolder(@NonNull PlaylistViewHolder holder, int position) {
         Playlist playlist = playlists.get(position);
         holder.tvTitle.setText(playlist.getTitle());
-        holder.tvInfo.setText(playlist.getSongIds().size() + " tracks • " + playlist.getDuration());
+        holder.tvInfo.setText(playlist.getSongIds().size() + " tracks • " + (playlist.getDuration() != null ? playlist.getDuration() : "0 min"));
 
         Random random = new Random(playlist.getId().hashCode() ^ sessionSeed);
-        
         int bgIndex = random.nextInt(colors.length);
-        
-        int circleIndex;
-        if (colors.length > 1) {
-            circleIndex = random.nextInt(colors.length);
-            if (circleIndex == bgIndex) {
-                circleIndex = (circleIndex + 1) % colors.length;
-            }
-        } else {
-            circleIndex = 0;
-        }
-        
-        holder.layoutBackground.setBackgroundColor(colors[bgIndex]);
+        int circleIndex = (bgIndex + (colors.length / 2)) % colors.length;
+        int finalBgColor = colors[bgIndex];
+        int finalCircleColor = colors[circleIndex];
+
+        holder.layoutBackground.setBackgroundColor(finalBgColor);
         
         if (holder.viewCircle.getBackground() != null) {
-            holder.viewCircle.getBackground().mutate().setTint(darkColors[circleIndex]);
+            holder.viewCircle.getBackground().mutate().setTint(finalCircleColor);
+            holder.viewCircle.setAlpha(0.5f);
         }
 
         holder.itemLayout.setOnClickListener(v -> {
-            // Handle playlist click
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("playlist", playlist);
+            bundle.putInt("bgColor", finalBgColor);
+            bundle.putInt("circleColor", finalCircleColor);
+            Navigation.findNavController(v).navigate(R.id.playlistDetailsFragment, bundle);
         });
     }
 

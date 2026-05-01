@@ -45,4 +45,12 @@
             android:name="album"
             app:argType="com.example.musicplayer.Album" />
     </fragment>
+
+    <fragment
+        android:id="@+id/playlistDetailsFragment"
+        android:name="com.example.musicplayer.PlaylistDetailsFragment">
+        <argument
+            android:name="playlist"
+            app:argType="com.example.musicplayer.Playlist" />
+    </fragment>
 </navigation>

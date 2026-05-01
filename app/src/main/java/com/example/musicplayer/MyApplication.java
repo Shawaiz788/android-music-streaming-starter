@@ -112,10 +112,18 @@ public class MyApplication extends Application {
     }
 
     public static void notifySongsLoaded() {
-        ArrayList<Song> copy = new ArrayList<>(newReleases);
-        for (OnSongsLoadedListener listener : songListeners) {
-            listener.onSongsLoaded(copy);
+        ArrayList<Song> copy = new ArrayList<>(songs);
+        
+
+        for (Playlist p : favouritePlaylists) {
+            p.calculateAndSetDuration(songs);
         }
+        
+        for (OnSongsLoadedListener listener : songListeners) {
+            listener.onSongsLoaded(new ArrayList<>(newReleases));
+        }
+
+        notifyPlaylistsLoaded();
     }
 
     public static void notifyUserLoaded() {
