@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="@drawable/bg_bottom_sheet_dark"
     android:orientation="vertical"
     android:padding="24dp">
@@ -41,8 +41,8 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_existing_playlists"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false"
         tools:listitem="@layout/item_playlist_small" />
 
 </LinearLayout>

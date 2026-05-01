@@ -248,6 +248,14 @@
         <include layout="@layout/dialog_lyrics" />
     </androidx.core.widget.NestedScrollView>
 
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/playlist_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+        <include layout="@layout/dialog_add_to_playlist" />
+    </androidx.core.widget.NestedScrollView>
+
     <!-- Persistent Header Handle -->
     <View
         android:id="@+id/top_handle"

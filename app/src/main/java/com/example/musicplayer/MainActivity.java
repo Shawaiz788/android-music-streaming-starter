@@ -417,11 +417,13 @@ public class MainActivity extends AppCompatActivity
         View moreMenuSheet = view.findViewById(R.id.more_menu_sheet);
         View equalizerSheet = view.findViewById(R.id.equalizer_sheet);
         View lyricsSheet = view.findViewById(R.id.lyrics_sheet);
+        View playlistSheet = view.findViewById(R.id.playlist_sheet);
         View playerContent = view.findViewById(R.id.player_content);
 
         BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(moreMenuSheet);
         BottomSheetBehavior<View> eqBehavior = BottomSheetBehavior.from(equalizerSheet);
         BottomSheetBehavior<View> lyricsBehavior = BottomSheetBehavior.from(lyricsSheet);
+        BottomSheetBehavior<View> playlistBehavior = BottomSheetBehavior.from(playlistSheet);
 
         // Calculate 40% of screen height for the intermediate stop
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -447,6 +449,12 @@ public class MainActivity extends AppCompatActivity
         lyricsBehavior.setSkipCollapsed(true);
         lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
+        // Configure Playlist Behavior
+        playlistBehavior.setFitToContents(true);
+        playlistBehavior.setHideable(true);
+        playlistBehavior.setSkipCollapsed(true);
+        playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
         BottomSheetBehavior.BottomSheetCallback commonCallback = new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
@@ -454,7 +462,8 @@ public class MainActivity extends AppCompatActivity
                     // Check if any other sheet is visible before showing player content
                     if (behavior.getState() == BottomSheetBehavior.STATE_HIDDEN &&
                         eqBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN &&
-                        lyricsBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
+                        lyricsBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN &&
+                        playlistBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN) {
                         playerContent.animate().alpha(1f).setDuration(200).start();
                     }
                 }
@@ -472,10 +481,12 @@ public class MainActivity extends AppCompatActivity
         behavior.addBottomSheetCallback(commonCallback);
         eqBehavior.addBottomSheetCallback(commonCallback);
         lyricsBehavior.addBottomSheetCallback(commonCallback);
+        playlistBehavior.addBottomSheetCallback(commonCallback);
 
         view.findViewById(R.id.menu_more).setOnClickListener(v -> {
             eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             int state = behavior.getState();
             if (state == BottomSheetBehavior.STATE_HIDDEN) {
                 behavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
@@ -486,10 +497,13 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        // Add to Playlist Button
+        // Add to Playlist Button (Logic integrated into sheet)
         view.findViewById(R.id.btn_add_to_playlist).setOnClickListener(v -> {
             behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-            showAddToPlaylistDialog(song);
+            eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN); // Added for consistency
+            showAddToPlaylistDialog(song, playlistBehavior, playlistSheet);
         });
 
         // --- Share Functionality ---
@@ -505,6 +519,7 @@ public class MainActivity extends AppCompatActivity
         view.findViewById(R.id.equalizer).setOnClickListener(v -> {
             behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
             // Setup Equalizer View
             SwitchCompat eqSwitch = equalizerSheet.findViewById(R.id.equalizer_switch);
@@ -586,6 +601,7 @@ public class MainActivity extends AppCompatActivity
 
             behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             lyricsBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         });
 
@@ -600,12 +616,13 @@ public class MainActivity extends AppCompatActivity
             float totalDeltaY = 0;
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                // If any bottom sheet is showing, ignore the dialog-dismiss swipe
-                if (behavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
-                    eqBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
-                    lyricsBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
-                    return false;
-                }
+            // If any bottom sheet is showing, ignore the dialog-dismiss swipe
+            if (behavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                eqBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                lyricsBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                playlistBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
+                return false;
+            }
 
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
@@ -639,6 +656,9 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        dialog.getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        dialog.getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         dialog.show();
 
         view.setTranslationY(2000f);
@@ -646,22 +666,9 @@ public class MainActivity extends AppCompatActivity
                 .setInterpolator(new DecelerateInterpolator()).start();
     }
 
-    private void showAddToPlaylistDialog(Song song) {
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this, R.style.TransparentDialog);
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_to_playlist, null);
-        bottomSheetDialog.setContentView(dialogView);
-
-        // Correctly handle full-height expansion
-        android.widget.FrameLayout bottomSheet = bottomSheetDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
-        if (bottomSheet != null) {
-            BottomSheetBehavior<View> behavior = BottomSheetBehavior.from(bottomSheet);
-            behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-            behavior.setSkipCollapsed(true);
-            bottomSheet.getLayoutParams().height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-        }
-
-        RecyclerView rvPlaylists = dialogView.findViewById(R.id.rv_existing_playlists);
-        MaterialButton btnCreate = dialogView.findViewById(R.id.btn_create_new);
+    private void showAddToPlaylistDialog(Song song, BottomSheetBehavior<View> playlistBehavior, View playlistSheet) {
+        RecyclerView rvPlaylists = playlistSheet.findViewById(R.id.rv_existing_playlists);
+        MaterialButton btnCreate = playlistSheet.findViewById(R.id.btn_create_new);
 
         rvPlaylists.setLayoutManager(new LinearLayoutManager(this));
         PlaylistSmallAdapter adapter = new PlaylistSmallAdapter(this, MyApplication.favouritePlaylists, playlist -> {
@@ -673,21 +680,30 @@ public class MainActivity extends AppCompatActivity
             } else {
                 Toast.makeText(this, "Song already in playlist", Toast.LENGTH_SHORT).show();
             }
-            bottomSheetDialog.dismiss();
+            playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         });
         rvPlaylists.setAdapter(adapter);
 
         btnCreate.setOnClickListener(v -> {
-            showCreatePlaylistDialog(song, bottomSheetDialog);
+            playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            showCreatePlaylistDialog(song); 
         });
 
-        bottomSheetDialog.show();
+        playlistBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
     }
 
-    private void showCreatePlaylistDialog(Song song, BottomSheetDialog parentDialog) {
+    private void showCreatePlaylistDialog(Song song) {
         BottomSheetDialog createDialog = new BottomSheetDialog(this, R.style.TransparentDialog);
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_create_playlist, null);
         createDialog.setContentView(dialogView);
+
+        // Content-based height for create playlist dialog
+        android.widget.FrameLayout bottomSheet = createDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+        if (bottomSheet != null) {
+            bottomSheet.getLayoutParams().height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+            // Also ensure navigation bar transparency for this dialog
+            createDialog.getWindow().setNavigationBarColor(Color.TRANSPARENT);
+        }
 
         EditText input = dialogView.findViewById(R.id.et_playlist_name);
         MaterialButton btnCreate = dialogView.findViewById(R.id.btn_create);
@@ -701,7 +717,6 @@ public class MainActivity extends AppCompatActivity
                 MyApplication.playlistHandler.addPlaylist(newPlaylist);
                 Toast.makeText(this, "Playlist created", Toast.LENGTH_SHORT).show();
                 createDialog.dismiss();
-                parentDialog.dismiss();
             } else {
                 input.setError("Name cannot be empty");
             }
