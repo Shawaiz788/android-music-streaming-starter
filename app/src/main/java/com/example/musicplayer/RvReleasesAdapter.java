@@ -72,7 +72,7 @@ ArrayList<Song>songs;
 
         holder.ivRelease.setOnClickListener((v->{
             if (MyApplication.songs != null && !MyApplication.songs.isEmpty()) {
-                ((MainActivity) context).showPlayerDialog(song, false);
+                ((MainActivity) context).showPlayerDialog(song, false, songs, position);
             }
         }));
     }

@@ -60,7 +60,7 @@ public class AlbumDetailsFragment extends Fragment {
 
         btnPlay.setOnClickListener(v -> {
             if (!albumSongs.isEmpty()) {
-                ((MainActivity) requireActivity()).showPlayerDialog(albumSongs.get(0), true);
+                ((MainActivity) requireActivity()).showPlayerDialog(albumSongs.get(0), false, albumSongs, 0);
             } else {
                 Toast.makeText(getContext(), "No songs in this album", Toast.LENGTH_SHORT).show();
             }

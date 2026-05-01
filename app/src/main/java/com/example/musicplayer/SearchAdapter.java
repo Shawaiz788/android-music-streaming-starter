@@ -62,7 +62,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
             }
 
             if (context instanceof MainActivity) {
-                ((MainActivity) context).showPlayerDialog(song, false);
+                ((MainActivity) context).showPlayerDialog(song, false, songs, position);
             }
         });
     }

@@ -67,6 +67,8 @@ public class MainActivity extends AppCompatActivity
     Runnable progressUpdater;
     Runnable updateSeekBar;
     ImageView ivPlayPause;
+    private AlertDialog playerDialog;
+    private View playerDialogView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,7 +177,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void showPlayerDialog(Song song, boolean resumeOnly) {
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_player, null);
+        showPlayerDialog(song, resumeOnly, java.util.Collections.singletonList(song), 0);
+    }
+
+    public void showPlayerDialog(Song song, boolean resumeOnly, java.util.List<Song> queue, int index) {
+        if (playerDialog != null && playerDialog.isShowing()) {
+            if (!resumeOnly) {
+                // Not just a UI refresh, we want to play a new song
+                PlayerManager.getInstance().play(this, queue, index);
+            }
+            // Update the existing UI with new song details
+            updatePlayerDialogUI(PlayerManager.getInstance().getCurrentSong());
+            return;
+        }
+
+        playerDialogView = LayoutInflater.from(this).inflate(R.layout.dialog_player, null);
+        View view = playerDialogView;
 
         TextView tvTitle = view.findViewById(R.id.tv_title);
         TextView tvArtist = view.findViewById(R.id.tv_artist);
@@ -344,7 +361,7 @@ public class MainActivity extends AppCompatActivity
                 }
             }
 
-            playerManager.play(this, song);
+            playerManager.play(this, queue, index);
             song.setSongUrl(originalUrl); // Restore original URL for metadata consistency
 
             ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
@@ -354,6 +371,12 @@ public class MainActivity extends AppCompatActivity
             tvDurationMenu.setText("0:00");
             seekBar.setMax(0);
         } else {
+            // Update UI elements for the current song in the queue (e.g. after auto-advance)
+            tvTitle.setText(song.getTitle());
+            tvArtist.setText(song.getArtist());
+            tvSongNameMenu.setText(song.getTitle());
+            tvArtistNameMenu.setText(song.getArtist());
+
             seekBar.setMax(playerManager.getDuration());
             String totalTime = formatTime(playerManager.getDuration());
             tvTotalTime.setText(totalTime);
@@ -409,9 +432,38 @@ public class MainActivity extends AppCompatActivity
                     android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
         });
 
-        AlertDialog dialog = new AlertDialog.Builder(this, R.style.TransparentDialog)
+        ImageView btnPrev = view.findViewById(R.id.btn_prev);
+        ImageView btnNext = view.findViewById(R.id.btn_next);
+
+        Runnable updateNavigationButtons = () -> {
+            boolean hasPrev = playerManager.hasPrevious();
+            boolean hasNext = playerManager.hasNext();
+            btnPrev.setEnabled(hasPrev);
+            btnPrev.setAlpha(hasPrev ? 1.0f : 0.3f);
+            btnNext.setEnabled(hasNext);
+            btnNext.setAlpha(hasNext ? 1.0f : 0.3f);
+        };
+
+        updateNavigationButtons.run();
+
+        playerDialog = new AlertDialog.Builder(this, R.style.TransparentDialog)
                 .setView(view)
                 .create();
+        AlertDialog dialog = playerDialog;
+
+        btnPrev.setOnClickListener(v -> {
+            playerManager.playPrevious(this);
+            updateNavigationButtons.run();
+            // No longer dismissing and recreating
+            updatePlayerDialogUI(playerManager.getCurrentSong());
+        });
+
+        btnNext.setOnClickListener(v -> {
+            playerManager.playNext(this);
+            updateNavigationButtons.run();
+            // No longer dismissing and recreating
+            updatePlayerDialogUI(playerManager.getCurrentSong());
+        });
 
         // --- Bottom Sheet Setup ---
         View moreMenuSheet = view.findViewById(R.id.more_menu_sheet);
@@ -666,6 +718,107 @@ public class MainActivity extends AppCompatActivity
                 .setInterpolator(new DecelerateInterpolator()).start();
     }
 
+    private void updatePlayerDialogUI(Song song) {
+        if (playerDialogView == null || song == null) return;
+
+        TextView tvTitle = playerDialogView.findViewById(R.id.tv_title);
+        TextView tvArtist = playerDialogView.findViewById(R.id.tv_artist);
+        TextView tvTotalTime = playerDialogView.findViewById(R.id.tv_total_time);
+        TextView tvCurrentTime = playerDialogView.findViewById(R.id.tv_current_time);
+        ImageView ivSong = playerDialogView.findViewById(R.id.iv_song);
+        ImageView ivSongMenu = playerDialogView.findViewById(R.id.iv_song_menu);
+        TextView tvSongNameMenu = playerDialogView.findViewById(R.id.tv_song_name);
+        TextView tvArtistNameMenu = playerDialogView.findViewById(R.id.tv_artist_name);
+        TextView tvDurationMenu = playerDialogView.findViewById(R.id.tv_duration);
+        SeekBar seekBar = playerDialogView.findViewById(R.id.seek_bar);
+        ImageView ivFav = playerDialogView.findViewById(R.id.iv_fav);
+        ImageView ivFavMenu = playerDialogView.findViewById(R.id.iv_fav_menu);
+
+        tvTitle.setText(song.getTitle());
+        tvArtist.setText(song.getArtist());
+        tvSongNameMenu.setText(song.getTitle());
+        tvArtistNameMenu.setText(song.getArtist());
+
+        // Update Fav icon
+        boolean isFav = false;
+        for (Song s : MyApplication.favouriteSongs) {
+            if (s.getId().equals(song.getId())) {
+                isFav = true;
+                break;
+            }
+        }
+        ivFav.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+        if (ivFavMenu != null) {
+            ivFavMenu.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
+        }
+
+        // Reset Seekbar and times
+        tvCurrentTime.setText("0:00");
+        tvTotalTime.setText("0:00");
+        tvDurationMenu.setText("0:00");
+        seekBar.setMax(0);
+        seekBar.setProgress(0);
+
+        PlayerManager playerManager = PlayerManager.getInstance();
+        if (playerManager.isPrepared()) {
+            seekBar.setMax(playerManager.getDuration());
+            String totalTime = formatTime(playerManager.getDuration());
+            tvTotalTime.setText(totalTime);
+            tvDurationMenu.setText(totalTime);
+        }
+
+        DBManager dbManager = new DBManager(this);
+        dbManager.Open();
+        Object imageSource = song.getImageUrl();
+        if (dbManager.isDownloaded(song.getId())) {
+            String[] paths = dbManager.getSongPaths(song.getId());
+            if (paths[1] != null && new java.io.File(paths[1]).exists()) {
+                imageSource = new java.io.File(paths[1]);
+            }
+        }
+        dbManager.Close();
+
+        Glide.with(this)
+                .asBitmap()
+                .load(imageSource)
+                .into(new CustomTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                        ivSong.setImageBitmap(resource);
+                        ivSongMenu.setImageBitmap(resource);
+                        Palette.from(resource).generate(palette -> {
+                            if (palette != null) {
+                                int dominantColor = palette.getDominantColor(0xFFA67B5B);
+                                int darkMutedColor = palette.getDarkMutedColor(0xFF2E2016);
+                                GradientDrawable gd = new GradientDrawable(
+                                        GradientDrawable.Orientation.TOP_BOTTOM,
+                                        new int[] {dominantColor, darkMutedColor}
+                                );
+                                gd.setCornerRadius(0f);
+                                playerDialogView.setBackground(gd);
+                            }
+                        });
+                    }
+                    @Override public void onLoadCleared(@Nullable Drawable placeholder) { }
+                });
+
+        // Update Prev/Next buttons
+        ImageView btnPrev = playerDialogView.findViewById(R.id.btn_prev);
+        ImageView btnNext = playerDialogView.findViewById(R.id.btn_next);
+        boolean hasPrev = playerManager.hasPrevious();
+        boolean hasNext = playerManager.hasNext();
+        btnPrev.setEnabled(hasPrev);
+        btnPrev.setAlpha(hasPrev ? 1.0f : 0.3f);
+        btnNext.setEnabled(hasNext);
+        btnNext.setAlpha(hasNext ? 1.0f : 0.3f);
+
+        // Update Play/Pause icon
+        if (ivPlayPause != null) {
+            ivPlayPause.setImageResource(playerManager.isPlaying() ?
+                    android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+        }
+    }
+
     private void showAddToPlaylistDialog(Song song, BottomSheetBehavior<View> playlistBehavior, View playlistSheet) {
         RecyclerView rvPlaylists = playlistSheet.findViewById(R.id.rv_existing_playlists);
         MaterialButton btnCreate = playlistSheet.findViewById(R.id.btn_create_new);
@@ -815,7 +968,14 @@ public class MainActivity extends AppCompatActivity
         eqDialog.show();
     }
 
-    @Override public void onSongChanged(Song song) { showMiniPlayer(song); }
+    @Override
+    public void onSongChanged(Song song) {
+        showMiniPlayer(song);
+        // Use the new update helper instead of recreating dialog
+        if (playerDialog != null && playerDialog.isShowing()) {
+            updatePlayerDialogUI(song);
+        }
+    }
     @Override
     public void onPlayStateChanged(boolean isPlaying) {
         if (ivPlayPause != null) {

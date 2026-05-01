@@ -64,7 +64,7 @@ public class PlaylistDetailsFragment extends Fragment {
 
         btnPlay.setOnClickListener(v -> {
             if (!playlistSongs.isEmpty()) {
-                ((MainActivity) requireActivity()).showPlayerDialog(playlistSongs.get(0), true);
+                ((MainActivity) requireActivity()).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0);
             } else {
                 Toast.makeText(getContext(), "No songs in this playlist", Toast.LENGTH_SHORT).show();
             }

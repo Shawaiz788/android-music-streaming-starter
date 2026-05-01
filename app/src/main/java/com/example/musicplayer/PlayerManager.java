@@ -11,6 +11,8 @@ public class PlayerManager {
     private static PlayerManager instance;
     private MediaPlayer mediaPlayer;
     private Song currentSong;
+    private java.util.List<Song> currentQueue = new java.util.ArrayList<>();
+    private int currentIndex = -1;
     private OnPlayerStateChangedListener listener;
     private boolean completed = false;
     private boolean prepared = false;
@@ -34,6 +36,18 @@ public class PlayerManager {
     }
 
     public void play(Context context, Song song) {
+        play(context, java.util.Collections.singletonList(song), 0);
+    }
+
+    public void play(Context context, java.util.List<Song> queue, int index) {
+        if (queue == null || queue.isEmpty() || index < 0 || index >= queue.size()) {
+            return;
+        }
+
+        this.currentQueue = new java.util.ArrayList<>(queue);
+        this.currentIndex = index;
+        Song song = currentQueue.get(currentIndex);
+
         completed = false;
         prepared = false;
         playWhenReady = true;
@@ -50,12 +64,20 @@ public class PlayerManager {
         mediaPlayer = new MediaPlayer();
 
         try {
+            DBManager dbManager = new DBManager(context);
+            dbManager.Open();
             String songUrl = song.getSongUrl();
+            if (dbManager.isDownloaded(song.getId())) {
+                String[] paths = dbManager.getSongPaths(song.getId());
+                if (paths[0] != null && new java.io.File(paths[0]).exists()) {
+                    songUrl = paths[0];
+                }
+            }
+            dbManager.Close();
+
             if (songUrl.startsWith("/")) {
-                // It's a local file path
                 mediaPlayer.setDataSource(songUrl);
             } else {
-                // It's an internet URL
                 mediaPlayer.setDataSource(context, Uri.parse(songUrl));
             }
 
@@ -66,7 +88,7 @@ public class PlayerManager {
                 }
                 if (listener != null) {
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                        listener.onSongChanged(song);
+                        listener.onSongChanged(currentSong);
                         listener.onPlayStateChanged(isPlaying());
                     });
                 }
@@ -78,6 +100,10 @@ public class PlayerManager {
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
                             listener.onPlayStateChanged(false)
                     );
+                }
+                // Auto play next
+                if (hasNext()) {
+                    playNext(context);
                 }
             });
 
@@ -93,6 +119,34 @@ public class PlayerManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void playNext(Context context) {
+        if (hasNext()) {
+            play(context, currentQueue, currentIndex + 1);
+        }
+    }
+
+    public void playPrevious(Context context) {
+        if (hasPrevious()) {
+            play(context, currentQueue, currentIndex - 1);
+        }
+    }
+
+    public boolean hasNext() {
+        return currentIndex < currentQueue.size() - 1;
+    }
+
+    public boolean hasPrevious() {
+        return currentIndex > 0;
+    }
+
+    public java.util.List<Song> getCurrentQueue() {
+        return currentQueue;
+    }
+
+    public int getCurrentIndex() {
+        return currentIndex;
     }
 
     public void togglePlayPause() {

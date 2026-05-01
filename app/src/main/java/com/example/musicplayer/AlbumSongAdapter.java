@@ -61,7 +61,7 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
         // Using the layout hook to set the click listener in bind
         holder.itemLayout.setOnClickListener(v -> {
             if (context instanceof MainActivity) {
-                ((MainActivity) context).showPlayerDialog(song, false);
+                ((MainActivity) context).showPlayerDialog(song, false, songs, position);
             }
         });
     }
