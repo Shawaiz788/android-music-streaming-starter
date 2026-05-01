@@ -1,6 +1,5 @@
 package com.example.musicplayer;
 
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -9,6 +8,7 @@ import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,10 +28,13 @@ public class HomeFragment extends Fragment {
     ImageView ivPfp;
     TextView tvViewAll;
     CardView cvProfile;
-    RecyclerView rvReleases;
-    RvReleasesAdapter adapter;
+    RecyclerView rvReleases, rvAlbums;
+    RvReleasesAdapter releasesAdapter;
+    AlbumAdapter albumAdapter;
     ShimmerFrameLayout shimmerContainer;
     MyApplication.OnSongsLoadedListener songsLoadedListener;
+    MyApplication.OnUserLoadedListener userLoadedListener;
+    MyApplication.OnAlbumsLoadedListener albumsLoadedListener;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -49,37 +52,45 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         ivPfp = view.findViewById(R.id.ivPfp);
         
-        // Use Glide for reliable image loading (handles both URLs and local resources/placeholders)
-        if (MyApplication.currentUserInfo != null && MyApplication.currentUserInfo.getProfileImageUrl() != null && !MyApplication.currentUserInfo.getProfileImageUrl().isEmpty()) {
-            Glide.with(this)
-                .load(MyApplication.currentUserInfo.getProfileImageUrl())
-                .placeholder(R.drawable.icon_pfp)
-                .error(R.drawable.icon_pfp)
-                .into(ivPfp);
-        }
+        userLoadedListener = user -> {
+            if (isAdded() && user != null && user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty()) {
+                Glide.with(this)
+                    .load(user.getProfileImageUrl())
+                    .placeholder(R.drawable.icon_pfp)
+                    .error(R.drawable.icon_pfp)
+                    .into(ivPfp);
+            }
+        };
+        MyApplication.subscribeUser(userLoadedListener);
 
         tvViewAll = view.findViewById(R.id.tvViewAll);
         cvProfile = view.findViewById(R.id.cvProfile);
         rvReleases = view.findViewById(R.id.rvReleases);
+        rvAlbums = view.findViewById(R.id.rvAlbums);
         shimmerContainer = view.findViewById(R.id.shimmer_view_container);
 
         rvReleases.setVisibility(View.GONE);
         if (shimmerContainer != null) {
             shimmerContainer.startShimmer();
         }
-        rvReleases.setHasFixedSize(true);
         
-        adapter = new RvReleasesAdapter(requireContext(), MyApplication.songs);
+        // Setup New Releases Adapter
+        releasesAdapter = new RvReleasesAdapter(requireContext(), MyApplication.newReleases);
         rvReleases.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
-        rvReleases.setAdapter(adapter);
+        rvReleases.setAdapter(releasesAdapter);
+
+        // Setup Albums Adapter (Grid Layout span 2)
+        albumAdapter = new AlbumAdapter(requireContext(), MyApplication.allAlbums);
+        rvAlbums.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        rvAlbums.setAdapter(albumAdapter);
+        rvAlbums.setNestedScrollingEnabled(false);
 
         songsLoadedListener = songs -> {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    // Only hide the shimmer once we have at least 2 songs
-                    if (songs != null && songs.size() >= 2) {
-                        if (adapter != null) {
-                            adapter.notifyDataSetChanged();
+                    if (songs != null && !songs.isEmpty()) {
+                        if (releasesAdapter != null) {
+                            releasesAdapter.notifyDataSetChanged();
                         }
                         if (shimmerContainer != null) {
                             shimmerContainer.stopShimmer();
@@ -91,7 +102,18 @@ public class HomeFragment extends Fragment {
             }
         };
 
+        albumsLoadedListener = albums -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (albumAdapter != null) {
+                        albumAdapter.notifyDataSetChanged();
+                    }
+                });
+            }
+        };
+
         MyApplication.subscribe(songsLoadedListener);
+        MyApplication.subscribeAlbums(albumsLoadedListener);
 
         cvProfile.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
@@ -108,6 +130,12 @@ public class HomeFragment extends Fragment {
         super.onDestroyView();
         if (songsLoadedListener != null) {
             MyApplication.unsubscribe(songsLoadedListener);
+        }
+        if (userLoadedListener != null) {
+            MyApplication.unsubscribeUser(userLoadedListener);
+        }
+        if (albumsLoadedListener != null) {
+            MyApplication.unsubscribeAlbums(albumsLoadedListener);
         }
     }
 }

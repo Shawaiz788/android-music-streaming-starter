@@ -1,28 +1,29 @@
 package com.example.musicplayer;
 
 import android.app.Application;
-import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class MyApplication extends Application {
     private static MyApplication instance;
     // Global Data Lists
     public static final ArrayList<Song> songs = new ArrayList<>();
+    public static final ArrayList<Song> newReleases = new ArrayList<>();
+    public static final ArrayList<Album> allAlbums = new ArrayList<>();
     public static ArrayList<Song> recentSearches = new ArrayList<>();
     public static ArrayList<Song> favouriteSongs = new ArrayList<>();
     public static ArrayList<Album> favouriteAlbums = new ArrayList<>();
     public static ArrayList<Artist> favouriteArtists = new ArrayList<>();
+
     public static User currentUserInfo;
 
     // Handlers
@@ -31,6 +32,7 @@ public class MyApplication extends Application {
     public static FirebaseRecentSearchHandler recentSearchHandler_older; // keeping unused as requested
     public static FirebaseFavouriteSongsHandler favouriteSongsHandler;
     public static FirebaseFavouriteAlbumsHandler favouriteAlbumsHandler;
+    public static FirebaseAlbumsHandler albumHandler;
     public static FirebaseFavouriteArtistHandler favouriteArtistHandler;
     public static FirebaseUserHandler userHandler;
 
@@ -43,16 +45,21 @@ public class MyApplication extends Application {
         void onUserLoaded(User user);
     }
 
+    public interface OnAlbumsLoadedListener {
+        void onAlbumsLoaded(ArrayList<Album> albums);
+    }
+
     private static final ArrayList<OnSongsLoadedListener> songListeners = new ArrayList<>();
     private static final ArrayList<OnUserLoadedListener> userListeners = new ArrayList<>();
+    private static final ArrayList<OnAlbumsLoadedListener> albumListeners = new ArrayList<>();
 
     public static void subscribe(OnSongsLoadedListener listener) {
         if (!songListeners.contains(listener)) {
             songListeners.add(listener);
         }
         
-        if (!songs.isEmpty()) {
-            listener.onSongsLoaded(new ArrayList<>(songs));
+        if (!newReleases.isEmpty()) {
+            listener.onSongsLoaded(new ArrayList<>(newReleases));
         }
     }
 
@@ -71,8 +78,21 @@ public class MyApplication extends Application {
         userListeners.remove(listener);
     }
 
+    public static void subscribeAlbums(OnAlbumsLoadedListener listener) {
+        if (!albumListeners.contains(listener)) {
+            albumListeners.add(listener);
+        }
+        if (!allAlbums.isEmpty()) {
+            listener.onAlbumsLoaded(new ArrayList<>(allAlbums));
+        }
+    }
+
+    public static void unsubscribeAlbums(OnAlbumsLoadedListener listener) {
+        albumListeners.remove(listener);
+    }
+
     public static void notifySongsLoaded() {
-        ArrayList<Song> copy = new ArrayList<>(songs);
+        ArrayList<Song> copy = new ArrayList<>(newReleases);
         for (OnSongsLoadedListener listener : songListeners) {
             listener.onSongsLoaded(copy);
         }
@@ -86,6 +106,13 @@ public class MyApplication extends Application {
         }
     }
 
+    public static void notifyAlbumsLoaded() {
+        ArrayList<Album> copy = new ArrayList<>(allAlbums);
+        for (OnAlbumsLoadedListener listener : albumListeners) {
+            listener.onAlbumsLoaded(copy);
+        }
+    }
+
     public static MyApplication getInstance() {
         return instance;
     }
@@ -96,16 +123,18 @@ public class MyApplication extends Application {
         
         // Ensure we start with a fresh list to trigger the shimmer
         songs.clear();
+        newReleases.clear();
+        allAlbums.clear();
         
-        // 1. Initialize Songs Handler
+        // 1. Initialize Handlers
         songsHandler = new FirebaseSongsHandler();
+        albumHandler = new FirebaseAlbumsHandler();
 
-        // 2. Add local songs
-        // addLocalSongs();
+        // 2. Add local data
+         addLocal();
 
-        // 3. Sync local songs with Firebase and Load from Cloud
-        songsHandler.syncLocalSongs(new ArrayList<>(songs));
-        songsHandler.loadSongs();
+        // 3. Sync and Load from Firebase
+        syncData();
 
         // 4. Initialize user-specific handlers if logged in
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -114,38 +143,106 @@ public class MyApplication extends Application {
         }
     }
 
+    private void syncData() {
+        // Step 1: Sync Albums first to get their Firebase IDs
+        albumHandler.syncLocalAlbums(new ArrayList<>(allAlbums), albumIdMap -> {
+            Log.d("Sync", "Albums synced. ID Map: " + albumIdMap);
+
+            // Step 2: Update all local songs with the new Album IDs
+            for (Song song : songs) {
+                if (song.getAlbumId() != null && albumIdMap.containsKey(song.getAlbumId())) {
+                    song.setAlbumId(albumIdMap.get(song.getAlbumId()));
+                }
+            }
+
+            // Step 3: Sync Songs now that they have correct Album IDs
+            songsHandler.syncLocalSongs(new ArrayList<>(songs), songIdMap -> {
+                Log.d("Sync", "Songs synced. ID Map: " + songIdMap);
+
+                // Step 4: Update Albums with corrected Song IDs
+                for (Album album : allAlbums) {
+                    List<String> newSongIds = new ArrayList<>();
+                    boolean changed = false;
+                    for (String oldSongId : album.getSongIds()) {
+                        if (songIdMap.containsKey(oldSongId)) {
+                            newSongIds.add(songIdMap.get(oldSongId));
+                            changed = true;
+                        } else {
+                            newSongIds.add(oldSongId);
+                        }
+                    }
+                    if (changed) {
+                        album.setSongIds(newSongIds);
+                        // Push updated album back to Firebase
+                        albumHandler.updateAlbum(album);
+                    }
+                }
+
+                // Step 5: Finalize and load everything from cloud
+                songsHandler.loadSongs();
+                albumHandler.loadAlbums();
+            });
+        });
+    }
+
     public static void initHandlers(String userId) {
         userHandler = new FirebaseUserHandler(userId);
         recentSearchHandler = new FirebaseRecentSearchHandler(userId);
         favouriteSongsHandler = new FirebaseFavouriteSongsHandler(userId);
         favouriteAlbumsHandler = new FirebaseFavouriteAlbumsHandler(userId);
         favouriteArtistHandler = new FirebaseFavouriteArtistHandler(userId);
+        albumHandler = new FirebaseAlbumsHandler();
     }
 
-    private void addLocalSongs() {
-        songs.add(new Song(
-                "local_1",
-                "RUDE",
-                "AnimeVibe",
-                "Chill",
-                "Pop",
-                "No lyrics available",
-                206000,
-                getResourceUri(R.raw.rude),
-                getResourceUri(R.drawable.rude)
-        ));
+    private void addLocal() {
 
-        songs.add(new Song(
-                "local_2",
-                "hungama",
-                "Hassan Raheem",
-                "Hungama",
-                "Pop",
-                "دکھے مجھ میں کیا...\n (lyrics truncated)",
-                179000,
-                getResourceUri(R.raw.hungama),
-                getResourceUri(R.drawable.hungama)
-        ));
+        String cokeStudioId = "local_album_1";
+        String anuvJainId = "local_artist_1";
+
+
+        Album cokeStudioAlbum = new Album(
+                cokeStudioId,
+                "Coke Studio Bharat (Season 3)",
+                "Anuv Jain",
+                getResourceUri(R.drawable.bharat3),
+                "2025"
+        );
+
+        Song song1 = new Song(
+                "local_song_1",
+                "Arz Kiya Hai",
+                "Anuv Jain",
+                "Coke Studio Bharat (Season 3)",
+                "Indie-Pop",
+                "No lyrics available",
+                294000,
+                "https://drive.google.com/uc?export=download&id=1TCmh2XdGRj0_I9BumsGfT7Sr6WVKHEYI",
+                "https://drive.google.com/uc?export=download&id=1ZoFJ27h9PKXQi3ufe-FOJiqx-ipOoFyo",
+                cokeStudioId,
+                anuvJainId
+        );
+
+        Song song2 = new Song(
+                "local_song_2",
+                "Alag Asmaan",
+                "Anuv Jain",
+                "Coke Studio Bharat (Season 3)",
+                "Indie-Pop",
+                "No lyrics available",
+                213000,
+                "https://drive.google.com/uc?export=download&id=18oKabt5zEsmt9EIDsdtVF6591M_c6-VW",
+                "https://drive.google.com/uc?export=download&id=1MlwcQy2uLcKAIjZlsa9exjWC0169JjGd",
+                cokeStudioId,
+                anuvJainId
+        );
+
+
+        allAlbums.add(cokeStudioAlbum);
+        songs.add(song1);
+        songs.add(song2);
+
+        cokeStudioAlbum.getSongIds().add(song1.getId());
+        cokeStudioAlbum.getSongIds().add(song2.getId());
     }
 
     public String getResourceUri(int resId) {

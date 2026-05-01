@@ -16,7 +16,7 @@ public class FirebaseRecentSearchHandler {
     public FirebaseRecentSearchHandler(String userId) {
         this.ref = FirebaseDatabase.getInstance("https://musicplayer-33db9-default-rtdb.asia-southeast1.firebasedatabase.app/")
                 .getReference("users").child(userId).child("recentSearches");
-        
+
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {

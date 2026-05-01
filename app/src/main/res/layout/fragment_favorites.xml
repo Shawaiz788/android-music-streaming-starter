@@ -120,6 +120,8 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingHorizontal="20dp"
+                android:clickable="true"
+                android:focusable="true"
                 >
 
                 <ImageView
@@ -138,6 +140,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/LLArtists"
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
                 android:layout_marginBottom="12dp"
@@ -145,7 +148,9 @@
                 android:backgroundTint="#222222"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="20dp">
+                android:paddingHorizontal="20dp"
+                android:clickable="true"
+                android:focusable="true">
 
                 <ImageView
                     android:layout_width="24dp"
@@ -163,6 +168,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/LLAlbums"
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
                 android:layout_marginBottom="12dp"
@@ -170,7 +176,9 @@
                 android:backgroundTint="#222222"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="20dp">
+                android:paddingHorizontal="20dp"
+                android:clickable="true"
+                android:focusable="true">
 
                 <ImageView
                     android:layout_width="24dp"
@@ -188,6 +196,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/LLPlaylists"
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
                 android:layout_marginBottom="12dp"
@@ -195,7 +204,9 @@
                 android:backgroundTint="#222222"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="20dp">
+                android:paddingHorizontal="20dp"
+                android:clickable="true"
+                android:focusable="true">
 
                 <ImageView
                     android:layout_width="24dp"
@@ -213,6 +224,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/LLDownloads"
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
                 android:layout_marginBottom="12dp"
@@ -220,7 +232,9 @@
                 android:backgroundTint="#222222"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="20dp">
+                android:paddingHorizontal="20dp"
+                android:clickable="true"
+                android:focusable="true">
 
                 <ImageView
                     android:layout_width="24dp"

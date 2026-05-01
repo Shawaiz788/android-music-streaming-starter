@@ -15,7 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 public class FavoritesFragment extends Fragment {
 
-    LinearLayout LLTracks;
+    LinearLayout LLTracks, LLArtists, LLAlbums, LLPlaylists, LLDownloads;
     CardView cvProfile;
 
     public FavoritesFragment() {
@@ -32,6 +32,8 @@ public class FavoritesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         LLTracks = view.findViewById(R.id.LLTracks);
+        LLAlbums = view.findViewById(R.id.LLAlbums);
+
         cvProfile=view.findViewById(R.id.cvProfile);
         
         LLTracks.setOnClickListener(v -> {
@@ -41,6 +43,12 @@ public class FavoritesFragment extends Fragment {
                 ((MainActivity) requireActivity()).showPlayerDialog(song, false);
             }
         });
+
+        LLAlbums.setOnClickListener((v->{
+            NavController navController = NavHostFragment.findNavController(this);
+            navController.navigate(R.id.FavouriteAlbumsFragment);
+
+        }));
 
         cvProfile.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
