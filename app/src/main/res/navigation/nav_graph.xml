@@ -16,7 +16,13 @@
 
     <fragment
         android:id="@+id/searchFragment"
-        android:name="com.example.musicplayer.SearchFragment" />
+        android:name="com.example.musicplayer.SearchFragment">
+        <argument
+            android:name="initialQuery"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"
@@ -37,6 +43,9 @@
     <fragment
         android:id="@+id/favouritePlaylistFragment"
         android:name="com.example.musicplayer.FavouritePlaylistFragment" />
+    <fragment
+        android:id="@+id/fragment_music_recognition"
+        android:name="com.example.musicplayer.MusicRecognitionFragment" />
 
     <fragment
         android:id="@+id/albumDetailsFragment"

@@ -20,7 +20,7 @@ import java.util.Random;
 
 public class FavoritesFragment extends Fragment {
 
-    LinearLayout LLTracks, LLArtists, LLAlbums, LLPlaylists, LLDownload;
+    LinearLayout LLTracks, LLFYNF, LLAlbums, LLPlaylists, LLDownload;
     CardView cvProfile, cvTopPlaylist;
     TextView tvTopPlaylistTitle, tvTopPlaylistTracks;
     MyApplication.OnPlaylistsLoadedListener playlistListener;
@@ -47,12 +47,12 @@ public class FavoritesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        // Initialize views
         LLTracks = view.findViewById(R.id.LLTracks);
         LLAlbums = view.findViewById(R.id.LLAlbums);
         LLPlaylists = view.findViewById(R.id.LLPlaylists);
         LLDownload = view.findViewById(R.id.LLDownload);
         cvProfile = view.findViewById(R.id.cvProfile);
+        LLFYNF=view.findViewById(R.id.LLFYNF);
         
         cvTopPlaylist = view.findViewById(R.id.cvTopPlaylist);
         tvTopPlaylistTitle = view.findViewById(R.id.tvTopPlaylistTitle);
@@ -66,7 +66,7 @@ public class FavoritesFragment extends Fragment {
         };
         MyApplication.subscribePlaylists(playlistListener);
         
-        // Initial load
+
         updateTopPlaylistUI(MyApplication.favouritePlaylists);
 
         // Click listeners
@@ -88,6 +88,10 @@ public class FavoritesFragment extends Fragment {
         LLDownload.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.downloadsFragment);
+        });
+        LLFYNF.setOnClickListener(v -> {
+            NavController navController = NavHostFragment.findNavController(this);
+            navController.navigate(R.id.fragment_music_recognition);
         });
 
         cvProfile.setOnClickListener(v -> {

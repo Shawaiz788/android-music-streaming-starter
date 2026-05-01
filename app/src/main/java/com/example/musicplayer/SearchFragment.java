@@ -34,6 +34,7 @@ public class SearchFragment extends Fragment {
     SearchAdapter adapter;
     List<Song> displayList = new ArrayList<>();
     CardView cvProfile;
+    EditText etSearch;
     
     private String currentQuery = "";
     
@@ -66,7 +67,7 @@ public class SearchFragment extends Fragment {
         instance = this;
         
         cvProfile = view.findViewById(R.id.cvProfile);
-        EditText etSearch = view.findViewById(R.id.etSearch);
+        etSearch = view.findViewById(R.id.etSearch);
         rvSearch = view.findViewById(R.id.rvSearch);
         defaultContent = view.findViewById(R.id.defaultContent);
         searchResultContent = view.findViewById(R.id.searchResultContent);
@@ -76,8 +77,18 @@ public class SearchFragment extends Fragment {
         rvSearch.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvSearch.setAdapter(adapter);
 
-        // Load initial data
-        if (currentQuery.isEmpty()) {
+        // Check for initial query from navigation arguments
+        String initialQuery = null;
+        if (getArguments() != null) {
+            initialQuery = getArguments().getString("initialQuery");
+        }
+
+        if (initialQuery != null && !initialQuery.isEmpty()) {
+            etSearch.setText(initialQuery);
+            showSearchResults();
+            performSearch(initialQuery);
+        } else if (currentQuery.isEmpty()) {
+            // Load initial data (recent searches)
             displayList.clear();
             displayList.addAll(MyApplication.recentSearches);
             adapter.notifyDataSetChanged();
