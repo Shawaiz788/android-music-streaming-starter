@@ -69,13 +69,30 @@ public class ProfileFragment extends Fragment {
         try {
             InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
             Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-            String base64Image = encodeImageToBase64(bitmap);
-            if (base64Image != null) {
-                if (MyApplication.userHandler != null) {
-                    MyApplication.userHandler.setProfileImageUrl(base64Image);
+            
+            // Show loading state
+            Toast.makeText(requireContext(), "Uploading to Drive...", Toast.LENGTH_SHORT).show();
+            
+            String fileName = "profile_" + (user != null ? user.getUid() : "unknown");
+            
+            DriveUploader.uploadImage(bitmap, fileName, new DriveUploader.UploadCallback() {
+                @Override
+                public void onSuccess(String directLink) {
+                    requireActivity().runOnUiThread(() -> {
+                        if (MyApplication.userHandler != null) {
+                            MyApplication.userHandler.setProfileImageUrl(directLink);
+                            Toast.makeText(requireContext(), "Profile picture updated!", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
-                Toast.makeText(requireContext(), "Image updated!", Toast.LENGTH_SHORT).show();
-            }
+
+                @Override
+                public void onFailure(Exception e) {
+                    requireActivity().runOnUiThread(() -> {
+                        Toast.makeText(requireContext(), "Upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+                }
+            });
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Failed to process image", Toast.LENGTH_SHORT).show();
         }
