@@ -63,6 +63,11 @@ public class PlayerManager {
         currentSong = song;
         mediaPlayer = new MediaPlayer();
 
+        // Increment Global Play Count on Firebase
+        if (MyApplication.songsHandler != null) {
+            MyApplication.songsHandler.incrementPlayCount(song.getId());
+        }
+
         try {
             DBManager dbManager = new DBManager(context);
             dbManager.Open();
