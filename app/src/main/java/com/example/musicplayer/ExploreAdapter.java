@@ -1,0 +1,95 @@
+package com.example.musicplayer;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.facebook.shimmer.Shimmer;
+import com.facebook.shimmer.ShimmerDrawable;
+
+import java.util.List;
+
+public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.ViewHolder> {
+    private final List<Song> songs;
+    private final Context context;
+
+    public ExploreAdapter(Context context, List<Song> songs) {
+        this.songs = songs;
+        this.context = context;
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_explore_song, parent, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Song song = songs.get(position);
+        holder.tvTitle.setText(song.getTitle());
+        holder.tvArtist.setText(song.getArtist());
+
+        ShimmerDrawable shimmerDrawable = new ShimmerDrawable();
+        shimmerDrawable.setShimmer(new Shimmer.ColorHighlightBuilder()
+                .setBaseColor(0xFF555555)
+                .setHighlightColor(0xFF888888)
+                .setBaseAlpha(0.9f)
+                .setHighlightAlpha(1f)
+                .setDuration(1000)
+                .build());
+
+        // Offline Image Loading Logic (consistent with SearchAdapter)
+        Object imageSource = song.getImageUrl();
+        DBManager dbManager = new DBManager(context);
+        dbManager.Open();
+        if (dbManager.isDownloaded(song.getId())) {
+            String[] paths = dbManager.getSongPaths(song.getId());
+            if (paths[1] != null && new java.io.File(paths[1]).exists()) {
+                imageSource = new java.io.File(paths[1]);
+            }
+        }
+        dbManager.Close();
+
+        if (imageSource != null && (!(imageSource instanceof String) || !((String) imageSource).isEmpty())) {
+            Glide.with(context)
+                    .load(imageSource)
+                    .placeholder(shimmerDrawable)
+                    .error(R.drawable.error_song_cover)
+                    .into(holder.ivSong);
+        } else {
+            holder.ivSong.setImageResource(android.R.color.darker_gray);
+        }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (context instanceof MainActivity) {
+                ((MainActivity) context).showPlayerDialog(song, false, songs, position);
+            }
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return songs.size();
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView ivSong;
+        TextView tvTitle, tvArtist;
+
+        ViewHolder(View view) {
+            super(view);
+            ivSong = view.findViewById(R.id.ivSongCover);
+            tvTitle = view.findViewById(R.id.tvSongTitle);
+            tvArtist = view.findViewById(R.id.tvSongArtist);
+        }
+    }
+}

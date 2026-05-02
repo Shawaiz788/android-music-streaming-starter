@@ -75,4 +75,6 @@
     <string name="top">Top</string>
     <string name="favorites">Favorites</string>
     <string name="change_profile_photo">Change Profile Photo</string>
+
+    <string name="Amplify">Amplify</string>
 </resources>

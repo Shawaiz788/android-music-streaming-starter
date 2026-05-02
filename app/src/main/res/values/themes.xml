@@ -8,7 +8,7 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowBackground">@drawable/bg_gradient</item>
+        <item name="android:windowBackground">@color/black</item>
     </style>
 
     <style name="Theme.MyApplication" parent="Base.Theme.MyApplication" />

@@ -27,7 +27,7 @@ SharedPreferences srPref;
             checkLoggedIn();
 //            startActivity(new Intent(Splash.this, MainActivity.class));
 //            finish();
-        },2000);
+        },1);
     }
 
     private void checkLoggedIn() {
