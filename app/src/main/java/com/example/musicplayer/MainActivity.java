@@ -400,6 +400,18 @@ public class MainActivity extends AppCompatActivity
 
         ImageView btnPrev = view.findViewById(R.id.btn_prev);
         ImageView btnNext = view.findViewById(R.id.btn_next);
+        ImageView btnRepeat = view.findViewById(R.id.btn_repeat);
+
+        Runnable updateRepeatButton = () -> {
+            boolean repeat = playerManager.isRepeatEnabled();
+            btnRepeat.setAlpha(repeat ? 1.0f : 0.4f);
+        };
+        updateRepeatButton.run();
+
+        btnRepeat.setOnClickListener(v -> {
+            playerManager.setRepeatEnabled(!playerManager.isRepeatEnabled());
+            updateRepeatButton.run();
+        });
 
         Runnable updateNavigationButtons = () -> {
             boolean hasPrev = playerManager.hasPrevious();
@@ -724,6 +736,22 @@ public class MainActivity extends AppCompatActivity
             tvDurationMenu.setText(totalTime);
         }
 
+        // Update navigation and repeat buttons
+        ImageView btnPrev = playerDialogView.findViewById(R.id.btn_prev);
+        ImageView btnNext = playerDialogView.findViewById(R.id.btn_next);
+        ImageView btnRepeat = playerDialogView.findViewById(R.id.btn_repeat);
+        if (btnPrev != null && btnNext != null) {
+            boolean hasPrev = playerManager.hasPrevious();
+            boolean hasNext = playerManager.hasNext();
+            btnPrev.setEnabled(hasPrev);
+            btnPrev.setAlpha(hasPrev ? 1.0f : 0.3f);
+            btnNext.setEnabled(hasNext);
+            btnNext.setAlpha(hasNext ? 1.0f : 0.3f);
+        }
+        if (btnRepeat != null) {
+            btnRepeat.setAlpha(playerManager.isRepeatEnabled() ? 1.0f : 0.4f);
+        }
+
         // Update album art and background gradient
         DBManager dbManager = new DBManager(this);
         dbManager.Open();
@@ -758,16 +786,6 @@ public class MainActivity extends AppCompatActivity
                     }
                     @Override public void onLoadCleared(@Nullable Drawable placeholder) {}
                 });
-
-        // Update Prev/Next buttons
-        ImageView btnPrev = playerDialogView.findViewById(R.id.btn_prev);
-        ImageView btnNext = playerDialogView.findViewById(R.id.btn_next);
-        boolean hasPrev = playerManager.hasPrevious();
-        boolean hasNext = playerManager.hasNext();
-        btnPrev.setEnabled(hasPrev);
-        btnPrev.setAlpha(hasPrev ? 1.0f : 0.3f);
-        btnNext.setEnabled(hasNext);
-        btnNext.setAlpha(hasNext ? 1.0f : 0.3f);
 
         // Update play/pause icon
         if (ivPlayPause != null) {

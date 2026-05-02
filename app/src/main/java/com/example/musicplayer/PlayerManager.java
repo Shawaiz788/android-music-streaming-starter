@@ -17,6 +17,7 @@ public class PlayerManager {
     private boolean completed = false;
     private boolean prepared = false;
     private boolean playWhenReady = true;
+    private boolean repeatEnabled = false;
 
     public interface OnPlayerStateChangedListener {
         void onSongChanged(Song song);
@@ -106,8 +107,10 @@ public class PlayerManager {
                             listener.onPlayStateChanged(false)
                     );
                 }
-                // Auto play next
-                if (hasNext()) {
+                // Auto play next or repeat
+                if (repeatEnabled) {
+                    play(context, currentQueue, currentIndex);
+                } else if (hasNext()) {
                     playNext(context);
                 }
             });
@@ -226,5 +229,13 @@ public class PlayerManager {
 
     public boolean isPlayWhenReady() {
         return playWhenReady;
+    }
+
+    public boolean isRepeatEnabled() {
+        return repeatEnabled;
+    }
+
+    public void setRepeatEnabled(boolean repeatEnabled) {
+        this.repeatEnabled = repeatEnabled;
     }
 }

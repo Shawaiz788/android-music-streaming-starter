@@ -108,6 +108,15 @@
                     android:textColor="@android:color/white"
                     android:textSize="12sp" />
 
+                <ImageView
+                    android:id="@+id/btn_repeat"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/ic_replay"
+                    android:alpha="0.4"
+                    app:tint="@android:color/white" />
+
                 <TextView
                     android:id="@+id/tv_total_time"
                     android:layout_width="wrap_content"
