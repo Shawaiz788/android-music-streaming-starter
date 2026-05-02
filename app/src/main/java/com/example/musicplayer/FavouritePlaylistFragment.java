@@ -14,6 +14,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.musicplayer.Playlist;
+
 import java.util.ArrayList;
 
 public class FavouritePlaylistFragment extends Fragment {
@@ -33,6 +35,8 @@ public class FavouritePlaylistFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        
+        ThemeHelper.applyTheme(view);
 
         rvPlaylists = view.findViewById(R.id.rvPlaylists);
         ivBack = view.findViewById(R.id.ivBack);
@@ -47,7 +51,7 @@ public class FavouritePlaylistFragment extends Fragment {
 
         playlistsLoadedListener = playlists -> {
             if (isAdded()) {
-                getActivity().runOnUiThread(this::updateUI);
+                requireActivity().runOnUiThread(this::updateUI);
             }
         };
 

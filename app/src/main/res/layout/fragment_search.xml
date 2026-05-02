@@ -26,21 +26,22 @@
             android:textStyle="bold" />
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cvProfile"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             app:cardBackgroundColor="@android:color/white"
             app:cardCornerRadius="24dp"
-            app:cardElevation="0dp"
-            android:id="@+id/cvProfile">
+            app:cardElevation="0dp">
 
             <ImageView
                 android:id="@+id/ivPfp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@drawable/icon_pfp" />
+                android:src="@drawable/icon_pfp"
+                android:contentDescription="Profile Picture" />
 
         </androidx.cardview.widget.CardView>
     </RelativeLayout>
@@ -57,14 +58,12 @@
         android:drawableStart="@drawable/icon_search"
         android:drawablePadding="12dp"
         android:imeOptions="actionSearch"
-        android:inputType="text"
-        />
+        android:inputType="text" />
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Default Content -->
         <ScrollView
             android:id="@+id/defaultContent"
             android:layout_width="match_parent"
@@ -114,7 +113,8 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:scaleType="centerCrop"
-                                    android:alpha="0.7"/>
+                                    android:alpha="0.7"
+                                    android:contentDescription="Album Background" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -167,38 +167,37 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
+                        android:layout_marginBottom="16dp"> <androidx.cardview.widget.CardView
+                        android:id="@+id/cvMadeForYou"
+                        android:layout_width="0dp"
+                        android:layout_height="100dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        app:cardBackgroundColor="#6A4C93"
+                        app:cardCornerRadius="8dp">
 
-                        <androidx.cardview.widget.CardView
-                            android:id="@+id/cvMadeForYou"
-                            android:layout_width="0dp"
-                            android:layout_height="100dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            app:cardBackgroundColor="#6A4C93"
-                            app:cardCornerRadius="8dp">
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
 
-                            <FrameLayout
+                            <ImageView
+                                android:id="@+id/ivMadeForYouBg"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent">
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:alpha="0.7"
+                                android:contentDescription="Made For You Background" />
 
-                                <ImageView
-                                    android:id="@+id/ivMadeForYouBg"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:scaleType="centerCrop"
-                                    android:alpha="0.7"/>
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Made For You"
-                                    android:textColor="@android:color/white"
-                                    android:textStyle="bold"
-                                    android:textSize="16sp"
-                                    android:layout_margin="12dp"/>
-                            </FrameLayout>
-                        </androidx.cardview.widget.CardView>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Made For You"
+                                android:textColor="@android:color/white"
+                                android:textStyle="bold"
+                                android:textSize="16sp"
+                                android:layout_margin="12dp"/>
+                        </FrameLayout>
+                    </androidx.cardview.widget.CardView>
 
                         <androidx.cardview.widget.CardView
                             android:id="@+id/cvNewReleases"
@@ -218,7 +217,8 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:scaleType="centerCrop"
-                                    android:alpha="0.7"/>
+                                    android:alpha="0.7"
+                                    android:contentDescription="New Releases Background" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -232,6 +232,40 @@
                         </androidx.cardview.widget.CardView>
                     </LinearLayout>
                 </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="24dp">
+
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="48dp"
+                        android:layout_height="4dp"
+                        app:cardBackgroundColor="#26FFFFFF"
+                        app:cardCornerRadius="2dp"
+                        app:cardElevation="0dp" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/tvExplore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Explore"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvExplore"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/item_explore_song"
+                    tools:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                    tools:spanCount="2" />
+
             </LinearLayout>
         </ScrollView>
 

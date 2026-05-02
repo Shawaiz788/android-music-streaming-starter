@@ -77,6 +77,8 @@ public class MusicRecognitionFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        
+        ThemeHelper.applyTheme(view);
 
         btnBack = view.findViewById(R.id.btnBack);
         tvStatus = view.findViewById(R.id.tvStatus);

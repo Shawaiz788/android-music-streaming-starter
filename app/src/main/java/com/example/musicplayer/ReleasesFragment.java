@@ -32,6 +32,9 @@ public class ReleasesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        
+        ThemeHelper.applyTheme(view);
+
         btn_back=view.findViewById(R.id.btn_back);
         btn_back.setOnClickListener(v -> {
             NavHostFragment.findNavController(this).navigateUp();

@@ -14,6 +14,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.musicplayer.Song;
+
 import java.util.ArrayList;
 
 public class DownloadsFragment extends Fragment {
@@ -33,6 +35,8 @@ public class DownloadsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        
+        ThemeHelper.applyTheme(view);
 
         rvDownloads = view.findViewById(R.id.rvDownloads);
         tvNoDownloads = view.findViewById(R.id.tvNoDownloads);

@@ -21,23 +21,30 @@ import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.musicplayer.Album;
+import com.example.musicplayer.Song;
+import com.example.musicplayer.User;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 public class SearchFragment extends Fragment {
 
-    RecyclerView rvSearch;
+    RecyclerView rvSearch, rvExplore;
     View defaultContent;
     View searchResultContent;
     TextView tvSearchHeader, tvClearAll;
     SearchAdapter adapter;
+    ExploreAdapter exploreAdapter;
     List<Song> displayList = new ArrayList<>();
+    List<Song> exploreList = new ArrayList<>();
     CardView cvProfile;
     ImageView ivPfp;
     EditText etSearch;
@@ -99,6 +106,7 @@ public class SearchFragment extends Fragment {
         ivPfp = view.findViewById(R.id.ivPfp);
         etSearch = view.findViewById(R.id.etSearch);
         rvSearch = view.findViewById(R.id.rvSearch);
+        rvExplore = view.findViewById(R.id.rvExplore);
         defaultContent = view.findViewById(R.id.defaultContent);
         searchResultContent = view.findViewById(R.id.searchResultContent);
         tvSearchHeader = view.findViewById(R.id.tvSearchHeader);
@@ -116,6 +124,7 @@ public class SearchFragment extends Fragment {
         viewPlaylistCircle = view.findViewById(R.id.viewPlaylistCircle);
 
         setupCategoryCards();
+        setupExploreSection();
 
         userLoadedListener = user -> {
             if (isAdded() && user != null && user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty() && ivPfp != null) {
@@ -246,6 +255,8 @@ public class SearchFragment extends Fragment {
                 Song randomNew = songs.get(new Random().nextInt(songs.size()));
                 Glide.with(this).load(randomNew.getImageUrl()).into(ivNewReleasesBg);
             }
+            // Also refresh explore section if needed
+            setupExploreSection();
         };
         MyApplication.subscribe(songsLoadedListener);
 
@@ -257,6 +268,28 @@ public class SearchFragment extends Fragment {
             }
         };
         MyApplication.subscribeFavouriteSongs(favouriteSongsLoadedListener);
+    }
+
+    private void setupExploreSection() {
+        if (!isAdded()) return;
+
+        exploreList.clear();
+        ArrayList<Song> allSongs = new ArrayList<>(MyApplication.songs);
+        if (allSongs.size() > 0) {
+            Collections.shuffle(allSongs);
+            int count = Math.min(allSongs.size(), 20);
+            for (int i = 0; i < count; i++) {
+                exploreList.add(allSongs.get(i));
+            }
+        }
+
+        if (exploreAdapter == null) {
+            exploreAdapter = new ExploreAdapter(requireContext(), exploreList);
+            rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+            rvExplore.setAdapter(exploreAdapter);
+        } else {
+            exploreAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override

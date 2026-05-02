@@ -34,6 +34,8 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ProfileFragment extends Fragment {
@@ -47,6 +49,8 @@ public class ProfileFragment extends Fragment {
 
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private MyApplication.OnUserLoadedListener userListener;
+
+    private Map<String, View> themeViews = new HashMap<>();
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -150,6 +154,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        // ThemeHelper.applyTheme(view); // Removed as per user request
         btnQuit = view.findViewById(R.id.btnQuit);
         btnClose = view.findViewById(R.id.closeBtn);
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
@@ -162,6 +167,24 @@ public class ProfileFragment extends Fragment {
 
         userListener = this::updateUI;
         MyApplication.subscribeUser(userListener);
+
+        // Theme selection views
+        themeViews.put("teal", view.findViewById(R.id.colorTeal));
+        themeViews.put("orange", view.findViewById(R.id.colorOrange));
+        themeViews.put("purple", view.findViewById(R.id.colorPurple));
+        themeViews.put("blue", view.findViewById(R.id.colorBlue));
+        themeViews.put("red", view.findViewById(R.id.colorRed));
+        themeViews.put("black", view.findViewById(R.id.colorBlack));
+
+        for (Map.Entry<String, View> entry : themeViews.entrySet()) {
+            if (entry.getValue() != null) {
+                entry.getValue().setOnClickListener(v -> updateTheme(entry.getKey(), view));
+            }
+        }
+
+        // Highlight currently selected theme
+        String currentTheme = ThemeHelper.getTheme(requireContext());
+        highlightSelectedTheme(currentTheme);
 
         btnEditProfile.setOnClickListener((v) -> showEditProfileDialog());
 
@@ -176,6 +199,26 @@ public class ProfileFragment extends Fragment {
             startActivity(i);
             requireActivity().finish();
         });
+    }
+
+    private void highlightSelectedTheme(String selectedTheme) {
+        for (Map.Entry<String, View> entry : themeViews.entrySet()) {
+            View view = entry.getValue();
+            if (view == null) continue;
+
+            if (entry.getKey().equals(selectedTheme)) {
+                view.setScaleX(1.2f);
+                view.setScaleY(1.2f);
+                view.setAlpha(1.0f);
+                // To show a border, we can't easily change the stroke of the background drawable
+                // without affecting others since they share the same resource.
+                // But we can use alpha and scale to make it stand out.
+            } else {
+                view.setScaleX(1.0f);
+                view.setScaleY(1.0f);
+                view.setAlpha(0.6f);
+            }
+        }
     }
 
     @Override
@@ -201,6 +244,19 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    private void updateTheme(String themeName, View view) {
+        // 1. Save the theme preference globally or in SharedPreferences
+        ThemeHelper.saveTheme(requireContext(), themeName);
+
+        // 2. Update UI selection
+        highlightSelectedTheme(themeName);
+
+        // 3. Optional: Notify the user
+        Toast.makeText(requireContext(), "Theme changed to " + themeName, Toast.LENGTH_SHORT).show();
+
+        // 4. To reflect theme change in the background of ProfileFragment immediately if needed:
+        // ThemeHelper.applyTheme(view.findViewById(R.id.profileRoot));
+    }
     private void showEditProfileDialog() {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_profile, null);
         EditText etName = dialogView.findViewById(R.id.etName);
