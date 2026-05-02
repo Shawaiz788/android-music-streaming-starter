@@ -139,11 +139,31 @@ public class PlaylistDetailsFragment extends Fragment {
 
         if (adapter == null) {
             adapter = new AlbumSongAdapter(requireContext(), playlistSongs);
+            adapter.setOnOptionsClickListener((song, view) -> showSongOptions(song, view));
             rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
             rvSongs.setAdapter(adapter);
         } else {
             adapter.notifyDataSetChanged();
         }
+    }
+
+    private void showSongOptions(Song song, View view) {
+        androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(requireContext(), view);
+        popup.getMenu().add("Remove from Playlist");
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getTitle().equals("Remove from Playlist")) {
+                if (currentPlaylist != null && currentPlaylist.getSongIds() != null) {
+                    currentPlaylist.getSongIds().remove(song.getId());
+                    currentPlaylist.setTrackCount(currentPlaylist.getSongIds().size());
+                    MyApplication.playlistHandler.updatePlaylist(currentPlaylist);
+                    Toast.makeText(getContext(), "Removed from playlist", Toast.LENGTH_SHORT).show();
+                    loadPlaylistSongs();
+                }
+                return true;
+            }
+            return false;
+        });
+        popup.show();
     }
 
     private void showOptionsMenu(View v) {

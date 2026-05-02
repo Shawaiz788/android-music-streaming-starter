@@ -82,7 +82,7 @@
         android:id="@+id/ivOptions"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@android:drawable/ic_menu_more"
+        android:src="@drawable/ic_settings_playlist"
         app:tint="#80FFFFFF" />
 
 </LinearLayout>

@@ -18,10 +18,19 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
 
     private final Context context;
     private final List<Song> songs;
+    private OnOptionsClickListener onOptionsClickListener;
+
+    public interface OnOptionsClickListener {
+        void onOptionsClick(Song song, View view);
+    }
 
     public AlbumSongAdapter(Context context, List<Song> songs) {
         this.context = context;
         this.songs = songs;
+    }
+
+    public void setOnOptionsClickListener(OnOptionsClickListener listener) {
+        this.onOptionsClickListener = listener;
     }
 
     @NonNull
@@ -64,6 +73,12 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
                 ((MainActivity) context).showPlayerDialog(song, false, songs, position);
             }
         });
+
+        holder.ivOptions.setOnClickListener(v -> {
+            if (onOptionsClickListener != null) {
+                onOptionsClickListener.onOptionsClick(song, v);
+            }
+        });
     }
 
     @Override
@@ -73,7 +88,7 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
 
     public static class SongViewHolder extends RecyclerView.ViewHolder {
         TextView tvIndex, tvSongTitle, tvSongArtist, tvStatus;
-        ImageView ivSongCover;
+        ImageView ivSongCover, ivOptions;
         View itemLayout; // Layout hook
 
         public SongViewHolder(@NonNull View itemView) {
@@ -84,6 +99,7 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
             tvSongTitle = itemView.findViewById(R.id.tvSongTitle);
             tvSongArtist = itemView.findViewById(R.id.tvSongArtist);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            ivOptions = itemView.findViewById(R.id.ivOptions);
         }
     }
 }
