@@ -29,7 +29,8 @@ public class FirebaseFavouriteSongsHandler {
                     Song song = ds.getValue(Song.class);
                     if (song != null) list.add(song);
                 }
-                MyApplication.favouriteSongs = list;
+                MyApplication.favouriteSongs.clear();
+                MyApplication.favouriteSongs.addAll(list);
                 MyApplication.notifyFavouriteSongsLoaded();
             }
 
@@ -44,14 +45,16 @@ public class FirebaseFavouriteSongsHandler {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     // Optimistically remove from local list immediately
-                    MyApplication.favouriteSongs.removeIf(s -> s.getId().equals(song.getId()));
-                    if (onComplete != null) onComplete.run();
+                    boolean removed = MyApplication.favouriteSongs.removeIf(s -> s.getId().equals(song.getId()));
+                    if (removed && onComplete != null) onComplete.run();
 
                     ref.child(song.getId()).removeValue()
                             .addOnFailureListener(e -> Log.e("FAV_E", "Remove failed: " + e.getMessage()));
                 } else {
                     // Optimistically add to local list immediately
-                    MyApplication.favouriteSongs.add(song);
+                    if (!MyApplication.favouriteSongs.contains(song)) {
+                        MyApplication.favouriteSongs.add(song);
+                    }
                     if (onComplete != null) onComplete.run();
 
                     ref.child(song.getId()).setValue(song)

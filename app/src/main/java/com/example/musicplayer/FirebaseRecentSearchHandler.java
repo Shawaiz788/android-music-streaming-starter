@@ -27,7 +27,8 @@ public class FirebaseRecentSearchHandler {
                         list.add(song);
                     }
                 }
-                MyApplication.recentSearches = list;
+                MyApplication.recentSearches.clear();
+                MyApplication.recentSearches.addAll(list);
                 
                 SearchFragment.refreshRecentSearches();
             }

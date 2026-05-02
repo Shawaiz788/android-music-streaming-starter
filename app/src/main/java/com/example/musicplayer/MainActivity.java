@@ -811,7 +811,8 @@ public class MainActivity extends AppCompatActivity
         android.widget.FrameLayout bottomSheet = createDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
         if (bottomSheet != null) {
             bottomSheet.getLayoutParams().height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-            createDialog.getWindow().setNavigationBarColor(Color.TRANSPARENT);
+            // Use the same charcoal color as the bottom sheet background to cover the navigation bar area
+            createDialog.getWindow().setNavigationBarColor(getResources().getColor(R.color.charcoal));
         }
 
         EditText input       = dialogView.findViewById(R.id.et_playlist_name);

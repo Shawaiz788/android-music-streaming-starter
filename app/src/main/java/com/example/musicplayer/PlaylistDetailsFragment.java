@@ -29,11 +29,13 @@ public class PlaylistDetailsFragment extends Fragment {
     private RecyclerView rvSongs;
     private FloatingActionButton btnPlay;
     private Toolbar toolbar;
+    private ImageButton btnMore;
     
     private Playlist currentPlaylist;
     private int bgColor, circleColor;
     private AlbumSongAdapter adapter;
     private List<Song> playlistSongs = new ArrayList<>();
+    private MyApplication.OnPlaylistsLoadedListener playlistListener;
 
     @Nullable
     @Override
@@ -60,7 +62,25 @@ public class PlaylistDetailsFragment extends Fragment {
             }
         }
 
+        playlistListener = playlists -> {
+            if (isAdded() && currentPlaylist != null) {
+                for (Playlist p : playlists) {
+                    if (p.getId() != null && p.getId().equals(currentPlaylist.getId())) {
+                        currentPlaylist = p;
+                        requireActivity().runOnUiThread(() -> {
+                            setupUI();
+                            loadPlaylistSongs();
+                        });
+                        break;
+                    }
+                }
+            }
+        };
+        MyApplication.subscribePlaylists(playlistListener);
+
         toolbar.setNavigationOnClickListener(v -> Navigation.findNavController(view).navigateUp());
+
+        btnMore.setOnClickListener(v -> showOptionsMenu(v));
 
         btnPlay.setOnClickListener(v -> {
             if (!playlistSongs.isEmpty()) {
@@ -79,6 +99,7 @@ public class PlaylistDetailsFragment extends Fragment {
         rvSongs = view.findViewById(R.id.rvSongs);
         btnPlay = view.findViewById(R.id.btnPlay);
         toolbar = view.findViewById(R.id.toolbar);
+        btnMore = view.findViewById(R.id.btnMore);
         
         setupImmersiveBackground(bgColor);
     }
@@ -116,8 +137,41 @@ public class PlaylistDetailsFragment extends Fragment {
             }
         }
 
-        adapter = new AlbumSongAdapter(requireContext(), playlistSongs);
-        rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvSongs.setAdapter(adapter);
+        if (adapter == null) {
+            adapter = new AlbumSongAdapter(requireContext(), playlistSongs);
+            rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
+            rvSongs.setAdapter(adapter);
+        } else {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private void showOptionsMenu(View v) {
+        androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(requireContext(), v);
+        popup.getMenu().add("Delete Playlist");
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getTitle().equals("Delete Playlist")) {
+                deletePlaylist();
+                return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
+    private void deletePlaylist() {
+        if (currentPlaylist != null && currentPlaylist.getId() != null) {
+            MyApplication.playlistHandler.deletePlaylist(currentPlaylist.getId());
+            Toast.makeText(getContext(), "Playlist deleted", Toast.LENGTH_SHORT).show();
+            Navigation.findNavController(requireView()).navigateUp();
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (playlistListener != null) {
+            MyApplication.unsubscribePlaylists(playlistListener);
+        }
     }
 }

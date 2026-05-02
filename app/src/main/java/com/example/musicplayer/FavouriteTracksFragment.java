@@ -22,6 +22,7 @@ public class FavouriteTracksFragment extends Fragment {
     private TextView tvNoFavourites;
     private ImageView ivBack;
     private SearchAdapter adapter;
+    private MyApplication.OnFavouriteSongsLoadedListener favouriteSongsListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -39,6 +40,17 @@ public class FavouriteTracksFragment extends Fragment {
 
         ivBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
 
+        favouriteSongsListener = songs -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(this::updateUI);
+            }
+        };
+
+        MyApplication.subscribeFavouriteSongs(favouriteSongsListener);
+        updateUI();
+    }
+
+    private void updateUI() {
         ArrayList<Song> favouriteSongs = MyApplication.favouriteSongs;
 
         if (favouriteSongs == null || favouriteSongs.isEmpty()) {
@@ -47,10 +59,22 @@ public class FavouriteTracksFragment extends Fragment {
         } else {
             tvNoFavourites.setVisibility(View.GONE);
             rvFavourites.setVisibility(View.VISIBLE);
-            
-            adapter = new SearchAdapter(requireContext(), favouriteSongs);
-            rvFavourites.setLayoutManager(new LinearLayoutManager(requireContext()));
-            rvFavourites.setAdapter(adapter);
+
+            if (adapter == null) {
+                adapter = new SearchAdapter(requireContext(), favouriteSongs);
+                rvFavourites.setLayoutManager(new LinearLayoutManager(requireContext()));
+                rvFavourites.setAdapter(adapter);
+            } else {
+                adapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (favouriteSongsListener != null) {
+            MyApplication.unsubscribeFavouriteSongs(favouriteSongsListener);
         }
     }
 }

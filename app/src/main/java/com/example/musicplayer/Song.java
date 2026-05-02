@@ -56,4 +56,17 @@ public class Song implements Serializable {
     public void setAlbumId(String albumId) { this.albumId = albumId; }
     public String getArtistId() { return artistId; }
     public void setArtistId(String artistId) { this.artistId = artistId; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Song song = (Song) o;
+        return id != null ? id.equals(song.id) : song.id == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }

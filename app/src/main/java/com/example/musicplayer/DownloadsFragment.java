@@ -22,7 +22,7 @@ public class DownloadsFragment extends Fragment {
     private TextView tvNoDownloads;
     private ImageView ivBack;
     private SearchAdapter adapter;
-    private DBManager dbManager;
+    private MyApplication.OnDownloadsLoadedListener downloadsLoadedListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -40,11 +40,18 @@ public class DownloadsFragment extends Fragment {
 
         ivBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
 
-        dbManager = new DBManager(requireContext());
-        dbManager.Open();
+        downloadsLoadedListener = songs -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(this::updateUI);
+            }
+        };
 
-        ArrayList<Song> downloadedSongs = dbManager.getAllDownloadedSongs();
-        dbManager.Close();
+        MyApplication.subscribeDownloads(downloadsLoadedListener);
+        updateUI();
+    }
+
+    private void updateUI() {
+        ArrayList<Song> downloadedSongs = MyApplication.downloadedSongs;
 
         if (downloadedSongs.isEmpty()) {
             tvNoDownloads.setVisibility(View.VISIBLE);
@@ -52,10 +59,22 @@ public class DownloadsFragment extends Fragment {
         } else {
             tvNoDownloads.setVisibility(View.GONE);
             rvDownloads.setVisibility(View.VISIBLE);
-            
-            adapter = new SearchAdapter(requireContext(), downloadedSongs);
-            rvDownloads.setLayoutManager(new LinearLayoutManager(requireContext()));
-            rvDownloads.setAdapter(adapter);
+
+            if (adapter == null) {
+                adapter = new SearchAdapter(requireContext(), downloadedSongs);
+                rvDownloads.setLayoutManager(new LinearLayoutManager(requireContext()));
+                rvDownloads.setAdapter(adapter);
+            } else {
+                adapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (downloadsLoadedListener != null) {
+            MyApplication.unsubscribeDownloads(downloadsLoadedListener);
         }
     }
 }

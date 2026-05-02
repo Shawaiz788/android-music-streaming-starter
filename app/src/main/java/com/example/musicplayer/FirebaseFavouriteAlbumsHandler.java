@@ -25,7 +25,8 @@ public class FirebaseFavouriteAlbumsHandler {
                     Album album = ds.getValue(Album.class);
                     if (album != null) list.add(album);
                 }
-                MyApplication.favouriteAlbums = list;
+                MyApplication.favouriteAlbums.clear();
+                MyApplication.favouriteAlbums.addAll(list);
             }
 
             @Override

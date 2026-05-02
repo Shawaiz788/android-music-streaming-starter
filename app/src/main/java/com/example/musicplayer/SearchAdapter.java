@@ -11,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.facebook.shimmer.Shimmer;
+import com.facebook.shimmer.ShimmerDrawable;
 
 import java.util.List;
 
@@ -35,6 +37,14 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         Song song = songs.get(position);
         holder.tvTitle.setText(song.getTitle());
         holder.tvArtist.setText(song.getArtist());
+        ShimmerDrawable shimmerDrawable = new ShimmerDrawable();
+        shimmerDrawable.setShimmer(new Shimmer.ColorHighlightBuilder()
+                .setBaseColor(0xFF555555)
+                .setHighlightColor(0xFF888888)
+                .setBaseAlpha(0.9f)
+                .setHighlightAlpha(1f)
+                .setDuration(1000)
+                .build());
 
         // --- Offline Image Loading Logic ---
         Object imageSource = song.getImageUrl();
@@ -48,11 +58,14 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         }
         dbManager.Close();
 
-        if (imageSource != null) {
+        if (imageSource != null && (!(imageSource instanceof String) || !((String) imageSource).isEmpty())) {
             Glide.with(context)
                     .load(imageSource)
-                    .placeholder(android.R.color.darker_gray)
+                    .placeholder(shimmerDrawable)
+                    .error(R.drawable.error_song_cover)
                     .into(holder.ivSong);
+        } else {
+            holder.ivSong.setImageResource(android.R.color.darker_gray);
         }
 
         holder.itemView.setOnClickListener(v -> {

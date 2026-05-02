@@ -32,7 +32,8 @@ public class FirebasePlaylistHandler {
                         list.add(playlist);
                     }
                 }
-                MyApplication.favouritePlaylists = list;
+                MyApplication.favouritePlaylists.clear();
+                MyApplication.favouritePlaylists.addAll(list);
                 MyApplication.notifyPlaylistsLoaded();
             }
 
@@ -49,10 +50,18 @@ public class FirebasePlaylistHandler {
             playlist.setId(id);
             playlist.calculateAndSetDuration(MyApplication.songs);
             ref.child(id).setValue(playlist);
+            // Optimistic update
+            if (!MyApplication.favouritePlaylists.contains(playlist)) {
+                MyApplication.favouritePlaylists.add(playlist);
+            }
+            MyApplication.notifyPlaylistsLoaded();
         }
     }
 
     public void deletePlaylist(String playlistId) {
+        // Optimistic update
+        MyApplication.favouritePlaylists.removeIf(p -> p.getId() != null && p.getId().equals(playlistId));
+        MyApplication.notifyPlaylistsLoaded();
         ref.child(playlistId).removeValue();
     }
 
@@ -60,6 +69,9 @@ public class FirebasePlaylistHandler {
         if (playlist.getId() != null) {
             playlist.calculateAndSetDuration(MyApplication.songs);
             ref.child(playlist.getId()).setValue(playlist);
+            // The object in MyApplication.favouritePlaylists is likely already updated, 
+            // but we notify to refresh UI components.
+            MyApplication.notifyPlaylistsLoaded();
         }
     }
 }

@@ -20,11 +20,12 @@ public class MyApplication extends Application {
     public static final ArrayList<Song> songs = new ArrayList<>();
     public static final ArrayList<Song> newReleases = new ArrayList<>();
     public static final ArrayList<Album> allAlbums = new ArrayList<>();
-    public static ArrayList<Song> recentSearches = new ArrayList<>();
-    public static ArrayList<Song> favouriteSongs = new ArrayList<>();
-    public static ArrayList<Album> favouriteAlbums = new ArrayList<>();
-    public static ArrayList<Artist> favouriteArtists = new ArrayList<>();
-    public static ArrayList<Playlist> favouritePlaylists = new ArrayList<>();
+    public static final ArrayList<Song> recentSearches = new ArrayList<>();
+    public static final ArrayList<Song> favouriteSongs = new ArrayList<>();
+    public static final ArrayList<Album> favouriteAlbums = new ArrayList<>();
+    public static final ArrayList<Artist> favouriteArtists = new ArrayList<>();
+    public static final ArrayList<Playlist> favouritePlaylists = new ArrayList<>();
+    public static final ArrayList<Song> downloadedSongs = new ArrayList<>();
 
     public static User currentUserInfo;
     public static long sessionSeed; // Shared seed for consistent random colors
@@ -61,11 +62,21 @@ public class MyApplication extends Application {
         void onFavouriteSongsLoaded(ArrayList<Song> favouriteSongs);
     }
 
+    public interface OnDownloadsLoadedListener {
+        void onDownloadsLoaded(ArrayList<Song> downloadedSongs);
+    }
+
+    public interface OnFavouriteArtistsLoadedListener {
+        void onFavouriteArtistsLoaded(ArrayList<Artist> favouriteArtists);
+    }
+
     private static final ArrayList<OnSongsLoadedListener> songListeners = new ArrayList<>();
     private static final ArrayList<OnUserLoadedListener> userListeners = new ArrayList<>();
     private static final ArrayList<OnAlbumsLoadedListener> albumListeners = new ArrayList<>();
     private static final ArrayList<OnPlaylistsLoadedListener> playlistListeners = new ArrayList<>();
     private static final ArrayList<OnFavouriteSongsLoadedListener> favouriteSongsListeners = new ArrayList<>();
+    private static final ArrayList<OnDownloadsLoadedListener> downloadListeners = new ArrayList<>();
+    private static final ArrayList<OnFavouriteArtistsLoadedListener> favouriteArtistListeners = new ArrayList<>();
 
     public static void subscribe(OnSongsLoadedListener listener) {
         if (!songListeners.contains(listener)) {
@@ -131,6 +142,32 @@ public class MyApplication extends Application {
         favouriteSongsListeners.remove(listener);
     }
 
+    public static void subscribeDownloads(OnDownloadsLoadedListener listener) {
+        if (!downloadListeners.contains(listener)) {
+            downloadListeners.add(listener);
+        }
+        if (!downloadedSongs.isEmpty()) {
+            listener.onDownloadsLoaded(new ArrayList<>(downloadedSongs));
+        }
+    }
+
+    public static void unsubscribeDownloads(OnDownloadsLoadedListener listener) {
+        downloadListeners.remove(listener);
+    }
+
+    public static void subscribeFavouriteArtists(OnFavouriteArtistsLoadedListener listener) {
+        if (!favouriteArtistListeners.contains(listener)) {
+            favouriteArtistListeners.add(listener);
+        }
+        if (!favouriteArtists.isEmpty()) {
+            listener.onFavouriteArtistsLoaded(new ArrayList<>(favouriteArtists));
+        }
+    }
+
+    public static void unsubscribeFavouriteArtists(OnFavouriteArtistsLoadedListener listener) {
+        favouriteArtistListeners.remove(listener);
+    }
+
     public static void notifySongsLoaded() {
         // System-wide update: Recalculate all playlist durations once songs are available
         for (Playlist p : favouritePlaylists) {
@@ -174,6 +211,20 @@ public class MyApplication extends Application {
         }
     }
 
+    public static void notifyDownloadsLoaded() {
+        ArrayList<Song> copy = new ArrayList<>(downloadedSongs);
+        for (OnDownloadsLoadedListener listener : downloadListeners) {
+            listener.onDownloadsLoaded(copy);
+        }
+    }
+
+    public static void notifyFavouriteArtistsLoaded() {
+        ArrayList<Artist> copy = new ArrayList<>(favouriteArtists);
+        for (OnFavouriteArtistsLoadedListener listener : favouriteArtistListeners) {
+            listener.onFavouriteArtistsLoaded(copy);
+        }
+    }
+
     public static MyApplication getInstance() {
         return instance;
     }
@@ -188,13 +239,20 @@ public class MyApplication extends Application {
         songs.clear();
         newReleases.clear();
         allAlbums.clear();
-        
+        downloadedSongs.clear();
+
         // 1. Initialize Handlers
         songsHandler = new FirebaseSongsHandler();
         albumHandler = new FirebaseAlbumsHandler();
 
         // 2. Add local data
-         addLocal();
+        //addLocal();
+
+        // Load downloads into memory
+        DBManager dbManager = new DBManager(this);
+        dbManager.Open();
+        downloadedSongs.addAll(dbManager.getAllDownloadedSongs());
+        dbManager.Close();
 
         // 3. Sync and Load from Firebase
         syncData();

@@ -90,6 +90,11 @@ public class DBManager {
         cv.put(COLUMN_TIMESTAMP, System.currentTimeMillis());
         // Use insertWithOnConflict to handle updates if the song is downloaded again
         writeDB.insertWithOnConflict(TABLE_NAME, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+
+        // Update global list
+        MyApplication.downloadedSongs.clear();
+        MyApplication.downloadedSongs.addAll(getAllDownloadedSongs());
+        MyApplication.notifyDownloadsLoaded();
     }
 
     public boolean isDownloaded(String songId) {
@@ -117,6 +122,11 @@ public class DBManager {
     public void deleteSong(String songId) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.delete(TABLE_NAME, COLUMN_ID + " = ?", new String[]{songId});
+
+        // Update global list
+        MyApplication.downloadedSongs.clear();
+        MyApplication.downloadedSongs.addAll(getAllDownloadedSongs());
+        MyApplication.notifyDownloadsLoaded();
     }
 
     public java.util.ArrayList<Song> getAllDownloadedSongs() {

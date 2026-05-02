@@ -108,7 +108,7 @@
                     android:layout_marginEnd="16dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="More"
-                    android:src="@android:drawable/ic_menu_more"
+                    android:src="@drawable/ic_settings_playlist"
                     app:tint="@android:color/white" />
 
             </androidx.appcompat.widget.Toolbar>

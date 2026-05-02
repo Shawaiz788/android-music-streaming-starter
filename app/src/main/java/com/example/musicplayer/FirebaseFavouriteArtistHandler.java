@@ -25,7 +25,9 @@ public class FirebaseFavouriteArtistHandler {
                     Artist artist = ds.getValue(Artist.class);
                     if (artist != null) list.add(artist);
                 }
-                MyApplication.favouriteArtists = list;
+                MyApplication.favouriteArtists.clear();
+                MyApplication.favouriteArtists.addAll(list);
+                MyApplication.notifyFavouriteArtistsLoaded();
             }
 
             @Override
