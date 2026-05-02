@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.facebook.shimmer.ShimmerFrameLayout;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 
@@ -28,6 +29,7 @@ public class HomeFragment extends Fragment {
     ImageView ivPfp;
     TextView tvViewAll;
     CardView cvProfile;
+    MaterialButton btnIdentifyMusic;
     RecyclerView rvReleases, rvAlbums;
     RvReleasesAdapter releasesAdapter;
     AlbumAdapter albumAdapter;
@@ -65,6 +67,7 @@ public class HomeFragment extends Fragment {
 
         tvViewAll = view.findViewById(R.id.tvViewAll);
         cvProfile = view.findViewById(R.id.cvProfile);
+        btnIdentifyMusic = view.findViewById(R.id.btnIdentifyMusic);
         rvReleases = view.findViewById(R.id.rvReleases);
         rvAlbums = view.findViewById(R.id.rvAlbums);
         shimmerContainer = view.findViewById(R.id.shimmer_view_container);
@@ -119,10 +122,18 @@ public class HomeFragment extends Fragment {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.profileFragment);
         });
+        
         tvViewAll.setOnClickListener((v)->{
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.ReleasesFragment);
         });
+
+        if (btnIdentifyMusic != null) {
+            btnIdentifyMusic.setOnClickListener(v -> {
+                NavController navController = NavHostFragment.findNavController(this);
+                navController.navigate(R.id.fragment_music_recognition);
+            });
+        }
     }
 
     @Override

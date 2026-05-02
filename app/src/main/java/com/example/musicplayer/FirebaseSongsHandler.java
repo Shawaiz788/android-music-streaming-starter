@@ -6,6 +6,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,13 +15,20 @@ import java.util.Map;
 
 public class FirebaseSongsHandler {
     private final DatabaseReference databaseReference;
+    private final DatabaseReference playCountsReference;
 
     public interface OnSyncCompleteListener {
         void onSyncComplete(Map<String, String> idMap);
     }
 
+    public interface OnPlayCountsLoadedListener {
+        void onPlayCountsLoaded(Map<String, Integer> playCounts);
+    }
+
     public FirebaseSongsHandler() {
-        databaseReference = FirebaseDatabase.getInstance("https://musicplayer-33db9-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference("songs");
+        FirebaseDatabase db = FirebaseDatabase.getInstance("https://musicplayer-33db9-default-rtdb.asia-southeast1.firebasedatabase.app/");
+        databaseReference = db.getReference("songs");
+        playCountsReference = db.getReference("play_counts");
     }
 
     public void loadSongs() {
@@ -61,6 +69,35 @@ public class FirebaseSongsHandler {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e("FirebaseSongsHandler", "Load failed: " + error.getMessage());
+            }
+        });
+    }
+
+    public void incrementPlayCount(String songId) {
+        if (songId == null) return;
+        playCountsReference.child(songId).setValue(ServerValue.increment(1));
+    }
+
+    public void loadPlayCounts(OnPlayCountsLoadedListener listener) {
+        playCountsReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Map<String, Integer> playCounts = new HashMap<>();
+                for (DataSnapshot ds : snapshot.getChildren()) {
+                    Object val = ds.getValue();
+                    if (val instanceof Long) {
+                        playCounts.put(ds.getKey(), ((Long) val).intValue());
+                    } else if (val instanceof Integer) {
+                        playCounts.put(ds.getKey(), (Integer) val);
+                    }
+                }
+                if (listener != null) listener.onPlayCountsLoaded(playCounts);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("FirebaseSongsHandler", "Play counts load failed: " + error.getMessage());
+                if (listener != null) listener.onPlayCountsLoaded(new HashMap<>());
             }
         });
     }

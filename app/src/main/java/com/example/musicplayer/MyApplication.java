@@ -57,10 +57,15 @@ public class MyApplication extends Application {
         void onPlaylistsLoaded(ArrayList<Playlist> playlists);
     }
 
+    public interface OnFavouriteSongsLoadedListener {
+        void onFavouriteSongsLoaded(ArrayList<Song> favouriteSongs);
+    }
+
     private static final ArrayList<OnSongsLoadedListener> songListeners = new ArrayList<>();
     private static final ArrayList<OnUserLoadedListener> userListeners = new ArrayList<>();
     private static final ArrayList<OnAlbumsLoadedListener> albumListeners = new ArrayList<>();
     private static final ArrayList<OnPlaylistsLoadedListener> playlistListeners = new ArrayList<>();
+    private static final ArrayList<OnFavouriteSongsLoadedListener> favouriteSongsListeners = new ArrayList<>();
 
     public static void subscribe(OnSongsLoadedListener listener) {
         if (!songListeners.contains(listener)) {
@@ -113,6 +118,19 @@ public class MyApplication extends Application {
         playlistListeners.remove(listener);
     }
 
+    public static void subscribeFavouriteSongs(OnFavouriteSongsLoadedListener listener) {
+        if (!favouriteSongsListeners.contains(listener)) {
+            favouriteSongsListeners.add(listener);
+        }
+        if (!favouriteSongs.isEmpty()) {
+            listener.onFavouriteSongsLoaded(new ArrayList<>(favouriteSongs));
+        }
+    }
+
+    public static void unsubscribeFavouriteSongs(OnFavouriteSongsLoadedListener listener) {
+        favouriteSongsListeners.remove(listener);
+    }
+
     public static void notifySongsLoaded() {
         // System-wide update: Recalculate all playlist durations once songs are available
         for (Playlist p : favouritePlaylists) {
@@ -146,6 +164,13 @@ public class MyApplication extends Application {
         ArrayList<Playlist> copy = new ArrayList<>(favouritePlaylists);
         for (OnPlaylistsLoadedListener listener : playlistListeners) {
             listener.onPlaylistsLoaded(copy);
+        }
+    }
+
+    public static void notifyFavouriteSongsLoaded() {
+        ArrayList<Song> copy = new ArrayList<>(favouriteSongs);
+        for (OnFavouriteSongsLoadedListener listener : favouriteSongsListeners) {
+            listener.onFavouriteSongsLoaded(copy);
         }
     }
 

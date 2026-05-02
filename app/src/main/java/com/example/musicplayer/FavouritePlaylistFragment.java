@@ -38,7 +38,10 @@ public class FavouritePlaylistFragment extends Fragment {
         ivBack = view.findViewById(R.id.ivBack);
         tvNoPlaylists = view.findViewById(R.id.tvNoPlaylists);
 
-        ivBack.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+        ivBack.setOnClickListener(v -> {
+                    NavHostFragment.findNavController(this).navigateUp();
+                }
+               );
 
         setupRecyclerView();
 

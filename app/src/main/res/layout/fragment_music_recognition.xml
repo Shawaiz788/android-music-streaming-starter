@@ -7,14 +7,15 @@
     android:background="@drawable/bg_gradient"
     tools:context=".MusicRecognitionFragment"
     android:clipChildren="false"
-    android:clipToPadding="false">
+    android:clipToPadding="false"
+    >
 
     <ImageView
         android:id="@+id/btnBack"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="26dp"
         android:padding="12dp"
         android:src="@drawable/ic_close"
         android:rotation="90"

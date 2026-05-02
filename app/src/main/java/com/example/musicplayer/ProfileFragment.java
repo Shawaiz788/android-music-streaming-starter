@@ -67,14 +67,21 @@ public class ProfileFragment extends Fragment {
 
     private void handleImageSelection(Uri uri) {
         try {
-            InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
-            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-            
+            Bitmap bitmap;
+            try (InputStream inputStream = requireContext().getContentResolver().openInputStream(uri)) {
+                bitmap = BitmapFactory.decodeStream(inputStream);
+            }
+
+            if (bitmap == null) return;
+
+            // Fix orientation based on EXIF data
+            bitmap = rotateImageIfRequired(bitmap, uri);
+
             // Show loading state
             Toast.makeText(requireContext(), "Uploading to Drive...", Toast.LENGTH_SHORT).show();
-            
+
             String fileName = "profile_" + (user != null ? user.getUid() : "unknown");
-            
+
             DriveUploader.uploadImage(bitmap, fileName, new DriveUploader.UploadCallback() {
                 @Override
                 public void onSuccess(String directLink) {
@@ -96,6 +103,36 @@ public class ProfileFragment extends Fragment {
         } catch (Exception e) {
             Toast.makeText(requireContext(), "Failed to process image", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private Bitmap rotateImageIfRequired(Bitmap img, Uri selectedImage) {
+        try (InputStream input = requireContext().getContentResolver().openInputStream(selectedImage)) {
+            if (input == null) return img;
+            androidx.exifinterface.media.ExifInterface ei = new androidx.exifinterface.media.ExifInterface(input);
+
+            int orientation = ei.getAttributeInt(androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION, androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL);
+
+            switch (orientation) {
+                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90:
+                    return rotateImage(img, 90);
+                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180:
+                    return rotateImage(img, 180);
+                case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270:
+                    return rotateImage(img, 270);
+                default:
+                    return img;
+            }
+        } catch (Exception e) {
+            return img;
+        }
+    }
+
+    private static Bitmap rotateImage(Bitmap img, int degree) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
+        img.recycle();
+        return rotatedImg;
     }
 
     private String encodeImageToBase64(Bitmap bitmap) {
