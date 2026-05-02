@@ -91,8 +91,7 @@ public class MusicRecognitionFragment extends Fragment {
         audioFilePath = requireContext().getCacheDir().getAbsolutePath() + "/recognition_sample.mp4";
 
         btnBack.setOnClickListener(v -> {
-            NavController navController = NavHostFragment.findNavController(MusicRecognitionFragment.this);
-            navController.navigate(R.id.favoritesFragment);
+            NavHostFragment.findNavController(this).navigateUp();
         });
 
         btnIdentify.setOnClickListener(v -> {
