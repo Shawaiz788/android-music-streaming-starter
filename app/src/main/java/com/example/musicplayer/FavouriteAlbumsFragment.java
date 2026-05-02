@@ -38,8 +38,8 @@ public class FavouriteAlbumsFragment extends Fragment {
         btnBack = view.findViewById(R.id.btnBack);
 
         btnBack.setOnClickListener(v -> {
-            NavController navController = NavHostFragment.findNavController(FavouriteAlbumsFragment.this);
-            navController.navigate(R.id.favoritesFragment);
+            NavHostFragment.findNavController(this).navigateUp();
+
         });
 
         setupRecyclerView();
