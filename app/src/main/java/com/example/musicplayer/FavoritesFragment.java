@@ -19,12 +19,13 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class FavoritesFragment extends Fragment {
 
     LinearLayout LLTracks, LLFYNF, LLAlbums, LLPlaylists, LLDownload;
-    CardView cvProfile, cvTopPlaylist;
+    CardView cvProfile, cvTopPlaylist, cvTopPlaylistPlay;
     ImageView ivPfp;
     TextView tvTopPlaylistTitle, tvTopPlaylistTracks;
     MyApplication.OnPlaylistsLoadedListener playlistListener;
@@ -61,6 +62,7 @@ public class FavoritesFragment extends Fragment {
         LLFYNF=view.findViewById(R.id.LLFYNF);
         
         cvTopPlaylist = view.findViewById(R.id.cvTopPlaylist);
+        cvTopPlaylistPlay = view.findViewById(R.id.cvTopPlaylistPlay);
         tvTopPlaylistTitle = view.findViewById(R.id.tvTopPlaylistTitle);
         tvTopPlaylistTracks = view.findViewById(R.id.tvTopPlaylistTracks);
 
@@ -140,7 +142,22 @@ public class FavoritesFragment extends Fragment {
                 bundle.putInt("circleColor", finalCircleColor);
                 NavHostFragment.findNavController(this).navigate(R.id.playlistDetailsFragment, bundle);
             });
-            
+
+            cvTopPlaylistPlay.setOnClickListener(v -> {
+                List<Song> playlistSongs = new ArrayList<>();
+                for (String id : topPlaylist.getSongIds()) {
+                    for (Song s : MyApplication.songs) {
+                        if (s.getId().equals(id)) {
+                            playlistSongs.add(s);
+                            break;
+                        }
+                    }
+                }
+                if (!playlistSongs.isEmpty() && getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0);
+                }
+            });
+
             cvTopPlaylist.setVisibility(View.VISIBLE);
         } else {
             cvTopPlaylist.setVisibility(View.GONE);

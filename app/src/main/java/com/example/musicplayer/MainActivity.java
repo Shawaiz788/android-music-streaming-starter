@@ -132,6 +132,13 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Pause the player when the activity goes to the background (app changed or phone turned off)
+        PlayerManager.getInstance().pause();
+    }
+
     private void startProgressUpdater() {
         progressUpdater = new Runnable() {
             @Override

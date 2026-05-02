@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -74,6 +75,21 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
             bundle.putInt("circleColor", finalCircleColor);
             Navigation.findNavController(v).navigate(R.id.playlistDetailsFragment, bundle);
         });
+
+        holder.btnPlay.setOnClickListener(v -> {
+            List<Song> playlistSongs = new ArrayList<>();
+            for (String id : playlist.getSongIds()) {
+                for (Song s : MyApplication.songs) {
+                    if (s.getId().equals(id)) {
+                        playlistSongs.add(s);
+                        break;
+                    }
+                }
+            }
+            if (!playlistSongs.isEmpty() && context instanceof MainActivity) {
+                ((MainActivity) context).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0);
+            }
+        });
     }
 
     @Override
@@ -84,7 +100,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
     public static class PlaylistViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvInfo;
         View layoutBackground, viewCircle, itemLayout;
-        ImageView btnSave;
+        View btnPlay;
 
         public PlaylistViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -93,7 +109,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
             tvInfo = itemView.findViewById(R.id.tvPlaylistInfo);
             layoutBackground = itemView.findViewById(R.id.layoutBackground);
             viewCircle = itemView.findViewById(R.id.viewCircle);
-            btnSave = itemView.findViewById(R.id.btnSave);
+            btnPlay = itemView.findViewById(R.id.btnPlay);
         }
     }
 }

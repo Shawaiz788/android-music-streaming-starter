@@ -35,7 +35,7 @@ public class SearchFragment extends Fragment {
     RecyclerView rvSearch;
     View defaultContent;
     View searchResultContent;
-    TextView tvSearchHeader;
+    TextView tvSearchHeader, tvClearAll;
     SearchAdapter adapter;
     List<Song> displayList = new ArrayList<>();
     CardView cvProfile;
@@ -80,6 +80,7 @@ public class SearchFragment extends Fragment {
             if (instance.adapter != null) {
                 instance.adapter.notifyDataSetChanged();
             }
+            instance.updateClearAllVisibility();
         }
     }
 
@@ -101,6 +102,7 @@ public class SearchFragment extends Fragment {
         defaultContent = view.findViewById(R.id.defaultContent);
         searchResultContent = view.findViewById(R.id.searchResultContent);
         tvSearchHeader = view.findViewById(R.id.tvSearchHeader);
+        tvClearAll = view.findViewById(R.id.tvClearAll);
 
         cvAlbums = view.findViewById(R.id.cvAlbums);
         cvPlaylists = view.findViewById(R.id.cvPlaylists);
@@ -145,6 +147,7 @@ public class SearchFragment extends Fragment {
             displayList.clear();
             displayList.addAll(MyApplication.recentSearches);
             adapter.notifyDataSetChanged();
+            updateClearAllVisibility();
         }
 
         if (etSearch != null) {
@@ -166,6 +169,7 @@ public class SearchFragment extends Fragment {
                     } else {
                         tvSearchHeader.setText("Search results");
                     }
+                    updateClearAllVisibility();
                     performSearch(query);
                 }
                 @Override public void afterTextChanged(Editable s) {}
@@ -180,6 +184,12 @@ public class SearchFragment extends Fragment {
             });
         }
         
+        tvClearAll.setOnClickListener(v -> {
+            if (MyApplication.recentSearchHandler != null) {
+                MyApplication.recentSearchHandler.clearRecentSearches();
+            }
+        });
+
         cvProfile.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.profileFragment);
@@ -200,6 +210,15 @@ public class SearchFragment extends Fragment {
         cvNewReleases.setOnClickListener(v -> {
             NavHostFragment.findNavController(this).navigate(R.id.ReleasesFragment);
         });
+    }
+
+    private void updateClearAllVisibility() {
+        if (tvClearAll == null) return;
+        if (currentQuery.trim().isEmpty() && !MyApplication.recentSearches.isEmpty()) {
+            tvClearAll.setVisibility(VISIBLE);
+        } else {
+            tvClearAll.setVisibility(GONE);
+        }
     }
 
     private void setupCategoryCards() {
@@ -272,5 +291,6 @@ public class SearchFragment extends Fragment {
         displayList.clear();
         displayList.addAll(results);
         adapter.notifyDataSetChanged();
+        updateClearAllVisibility();
     }
 }
