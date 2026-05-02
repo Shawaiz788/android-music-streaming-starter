@@ -30,6 +30,7 @@ public class FirebaseFavouriteSongsHandler {
                     if (song != null) list.add(song);
                 }
                 MyApplication.favouriteSongs = list;
+                MyApplication.notifyFavouriteSongsLoaded();
             }
 
             @Override
@@ -56,6 +57,7 @@ public class FirebaseFavouriteSongsHandler {
                     ref.child(song.getId()).setValue(song)
                             .addOnFailureListener(e -> Log.e("FAV_E", "Failed: " + e.getMessage()));
                 }
+                MyApplication.notifyFavouriteSongsLoaded();
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {

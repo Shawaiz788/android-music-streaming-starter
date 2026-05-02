@@ -34,8 +34,8 @@ public class ReleasesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         btn_back=view.findViewById(R.id.btn_back);
         btn_back.setOnClickListener(v -> {
-            NavController navController = NavHostFragment.findNavController(ReleasesFragment.this);
-            navController.navigate(R.id.homeFragment);
+            NavHostFragment.findNavController(this).navigateUp();
+
         });
         rvReleases=view.findViewById(R.id.rvReleases);
         adapter=new RvReleasesAdapter(requireContext(),MyApplication.newReleases);
