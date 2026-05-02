@@ -58,9 +58,11 @@ public class AlbumDetailsFragment extends Fragment {
 
         toolbar.setNavigationOnClickListener(v -> Navigation.findNavController(view).navigateUp());
 
+        btnShare.setOnClickListener(v -> shareAlbum());
+
         btnPlay.setOnClickListener(v -> {
             if (!albumSongs.isEmpty()) {
-                ((MainActivity) requireActivity()).showPlayerDialog(albumSongs.get(0), false, albumSongs, 0);
+                ((MainActivity) requireActivity()).showPlayerDialog(albumSongs.get(0), false, albumSongs, 0, "Album: " + currentAlbum.getTitle());
             } else {
                 Toast.makeText(getContext(), "No songs in this album", Toast.LENGTH_SHORT).show();
             }
@@ -129,8 +131,23 @@ public class AlbumDetailsFragment extends Fragment {
             }
         }
 
-        adapter = new AlbumSongAdapter(requireContext(), albumSongs);
+        adapter = new AlbumSongAdapter(requireContext(), albumSongs, true);
+        adapter.setQueueTitle("Album: " + currentAlbum.getTitle());
         rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvSongs.setAdapter(adapter);
+    }
+
+    private void shareAlbum() {
+        if (currentAlbum == null) return;
+
+        String shareText = "Check out this album: " + currentAlbum.getTitle() + "\n" +
+                "By: " + currentAlbum.getArtist() + "\n" +
+                "Shared via Music Player App";
+
+        android.content.Intent shareIntent = new android.content.Intent(android.content.Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Album: " + currentAlbum.getTitle());
+        shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareText);
+        startActivity(android.content.Intent.createChooser(shareIntent, "Share Album via"));
     }
 }

@@ -84,7 +84,7 @@ public class PlaylistDetailsFragment extends Fragment {
 
         btnPlay.setOnClickListener(v -> {
             if (!playlistSongs.isEmpty()) {
-                ((MainActivity) requireActivity()).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0);
+                ((MainActivity) requireActivity()).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0, currentPlaylist.getTitle());
             } else {
                 Toast.makeText(getContext(), "No songs in this playlist", Toast.LENGTH_SHORT).show();
             }
@@ -138,7 +138,8 @@ public class PlaylistDetailsFragment extends Fragment {
         }
 
         if (adapter == null) {
-            adapter = new AlbumSongAdapter(requireContext(), playlistSongs);
+            adapter = new AlbumSongAdapter(requireContext(), playlistSongs, false);
+            adapter.setQueueTitle(currentPlaylist.getTitle());
             adapter.setOnOptionsClickListener((song, view) -> showSongOptions(song, view));
             rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
             rvSongs.setAdapter(adapter);

@@ -14,59 +14,45 @@ import com.bumptech.glide.Glide;
 
 import java.util.List;
 
-public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.SongViewHolder> {
+public class QueueAdapter extends RecyclerView.Adapter<QueueAdapter.QueueViewHolder> {
 
     private final Context context;
     private final List<Song> songs;
-    private final boolean isAlbum;
-    private String queueTitle;
-    private OnOptionsClickListener onOptionsClickListener;
+    private final OnSongClickListener onSongClickListener;
 
-    public interface OnOptionsClickListener {
-        void onOptionsClick(Song song, View view);
+    public interface OnSongClickListener {
+        void onSongClick(Song song, int position);
     }
 
-    public AlbumSongAdapter(Context context, List<Song> songs, boolean isAlbum) {
+    public QueueAdapter(Context context, List<Song> songs, OnSongClickListener listener) {
         this.context = context;
         this.songs = songs;
-        this.isAlbum = isAlbum;
-    }
-
-    public void setQueueTitle(String queueTitle) {
-        this.queueTitle = queueTitle;
-    }
-
-    public void setOnOptionsClickListener(OnOptionsClickListener listener) {
-        this.onOptionsClickListener = listener;
+        this.onSongClickListener = listener;
     }
 
     @NonNull
     @Override
-    public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        int layoutRes = isAlbum ? R.layout.item_song_album_no_dots : R.layout.item_song_album;
-        View view = LayoutInflater.from(context).inflate(layoutRes, parent, false);
-        return new SongViewHolder(view);
+    public QueueViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_song_album, parent, false);
+        return new QueueViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull QueueViewHolder holder, int position) {
         Song song = songs.get(position);
         holder.tvIndex.setText(String.valueOf(position + 1));
         holder.tvSongTitle.setText(song.getTitle());
         holder.tvSongArtist.setText(song.getArtist());
 
-        // Load song cover image
         if (song.getImageUrl() != null && !song.getImageUrl().isEmpty()) {
             Glide.with(context)
                     .load(song.getImageUrl())
                     .placeholder(R.drawable.hungama)
-                    .error(R.drawable.error_song_cover)
                     .into(holder.ivSongCover);
         } else {
             holder.ivSongCover.setImageResource(R.drawable.hungama);
         }
 
-        // Show "NOW" if the song is currently playing
         if (PlayerManager.getInstance().getCurrentSong() != null &&
                 PlayerManager.getInstance().getCurrentSong().getId().equals(song.getId())) {
             holder.tvStatus.setVisibility(View.VISIBLE);
@@ -75,20 +61,11 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
             holder.tvStatus.setVisibility(View.GONE);
         }
 
-        // Using the layout hook to set the click listener in bind
-        holder.itemLayout.setOnClickListener(v -> {
-            if (context instanceof MainActivity) {
-                ((MainActivity) context).showPlayerDialog(song, false, songs, position, queueTitle);
+        holder.itemView.setOnClickListener(v -> {
+            if (onSongClickListener != null) {
+                onSongClickListener.onSongClick(song, position);
             }
         });
-
-        if (holder.ivOptions != null) {
-            holder.ivOptions.setOnClickListener(v -> {
-                if (onOptionsClickListener != null) {
-                    onOptionsClickListener.onOptionsClick(song, v);
-                }
-            });
-        }
     }
 
     @Override
@@ -96,20 +73,19 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
         return songs != null ? songs.size() : 0;
     }
 
-    public static class SongViewHolder extends RecyclerView.ViewHolder {
+    public static class QueueViewHolder extends RecyclerView.ViewHolder {
         TextView tvIndex, tvSongTitle, tvSongArtist, tvStatus;
         ImageView ivSongCover, ivOptions;
-        View itemLayout; // Layout hook
 
-        public SongViewHolder(@NonNull View itemView) {
+        public QueueViewHolder(@NonNull View itemView) {
             super(itemView);
-            itemLayout = itemView; // Root layout of item_song_album.xml
             tvIndex = itemView.findViewById(R.id.tvIndex);
             ivSongCover = itemView.findViewById(R.id.ivSongCover);
             tvSongTitle = itemView.findViewById(R.id.tvSongTitle);
             tvSongArtist = itemView.findViewById(R.id.tvSongArtist);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             ivOptions = itemView.findViewById(R.id.ivOptions);
+            ivOptions.setVisibility(View.GONE); // Hide options in queue list for now
         }
     }
 }

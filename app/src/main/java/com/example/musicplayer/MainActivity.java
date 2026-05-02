@@ -184,13 +184,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void showPlayerDialog(Song song, boolean resumeOnly) {
-        showPlayerDialog(song, resumeOnly, java.util.Collections.singletonList(song), 0);
+        showPlayerDialog(song, resumeOnly, java.util.Collections.singletonList(song), 0, null);
     }
 
     public void showPlayerDialog(Song song, boolean resumeOnly, java.util.List<Song> queue, int index) {
+        showPlayerDialog(song, resumeOnly, queue, index, null);
+    }
+
+    public void showPlayerDialog(Song song, boolean resumeOnly, java.util.List<Song> queue, int index, String queueTitle) {
         if (playerDialog != null && playerDialog.isShowing()) {
             if (!resumeOnly) {
-                PlayerManager.getInstance().play(this, queue, index);
+                PlayerManager.getInstance().play(this, queue, index, queueTitle);
             }
             // Sync the shared reference and refresh the UI
             currentSongRef[0] = PlayerManager.getInstance().getCurrentSong();
@@ -204,6 +208,7 @@ public class MainActivity extends AppCompatActivity
         playerDialogView = LayoutInflater.from(this).inflate(R.layout.dialog_player, null);
         View view = playerDialogView;
 
+        TextView tvTopStatus       = view.findViewById(R.id.tv_top_status_internal);
         TextView tvTitle            = view.findViewById(R.id.tv_title);
         TextView tvArtist           = view.findViewById(R.id.tv_artist);
         TextView tvTotalTime        = view.findViewById(R.id.tv_total_time);
@@ -218,6 +223,17 @@ public class MainActivity extends AppCompatActivity
         SeekBar seekBar             = view.findViewById(R.id.seek_bar);
         ImageView ivFav             = view.findViewById(R.id.iv_fav);
         ImageView ivFavMenu         = view.findViewById(R.id.iv_fav_menu);
+
+        if (queueTitle != null && !queueTitle.isEmpty()) {
+            String displayTitle = queueTitle.startsWith("Album: ") ? queueTitle : "Playlist «" + queueTitle + "»";
+            if (PlayerManager.getInstance().isShuffleEnabled()) {
+                displayTitle += " (Shuffled)";
+            }
+            tvTopStatus.setText("Play Now: " + displayTitle);
+            tvTopStatus.setVisibility(View.VISIBLE);
+        } else {
+            tvTopStatus.setVisibility(View.GONE);
+        }
 
         // ── Helper: refresh fav icons based on currentSongRef ──
         Runnable refreshFavIcons = () -> {
@@ -340,7 +356,7 @@ public class MainActivity extends AppCompatActivity
                     song.setSongUrl(paths[0]);
                 }
             }
-            playerManager.play(this, queue, index);
+            playerManager.play(this, queue, index, queueTitle);
             song.setSongUrl(originalUrl);
 
             ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
@@ -408,6 +424,7 @@ public class MainActivity extends AppCompatActivity
         ImageView btnPrev = view.findViewById(R.id.btn_prev);
         ImageView btnNext = view.findViewById(R.id.btn_next);
         ImageView btnRepeat = view.findViewById(R.id.btn_repeat);
+        ImageView btnShuffle = view.findViewById(R.id.btn_shuffle);
 
         Runnable updateRepeatButton = () -> {
             boolean repeat = playerManager.isRepeatEnabled();
@@ -415,10 +432,11 @@ public class MainActivity extends AppCompatActivity
         };
         updateRepeatButton.run();
 
-        btnRepeat.setOnClickListener(v -> {
-            playerManager.setRepeatEnabled(!playerManager.isRepeatEnabled());
-            updateRepeatButton.run();
-        });
+        Runnable updateShuffleButton = () -> {
+            boolean shuffle = playerManager.isShuffleEnabled();
+            btnShuffle.setAlpha(shuffle ? 1.0f : 0.4f);
+        };
+        updateShuffleButton.run();
 
         Runnable updateNavigationButtons = () -> {
             boolean hasPrev = playerManager.hasPrevious();
@@ -428,6 +446,20 @@ public class MainActivity extends AppCompatActivity
             btnNext.setEnabled(hasNext);
             btnNext.setAlpha(hasNext ? 1.0f : 0.3f);
         };
+
+        btnRepeat.setOnClickListener(v -> {
+            playerManager.setRepeatEnabled(!playerManager.isRepeatEnabled());
+            updateRepeatButton.run();
+        });
+
+        btnShuffle.setOnClickListener(v -> {
+            playerManager.setShuffleEnabled(!playerManager.isShuffleEnabled());
+            updateShuffleButton.run();
+            // Refresh navigation buttons and UI as indices and text might have changed
+            updateNavigationButtons.run();
+            updatePlayerDialogUI(currentSongRef[0]);
+        });
+
         updateNavigationButtons.run();
 
         playerDialog = new AlertDialog.Builder(this, R.style.TransparentDialog)
@@ -458,12 +490,14 @@ public class MainActivity extends AppCompatActivity
         View equalizerSheet = view.findViewById(R.id.equalizer_sheet);
         View lyricsSheet    = view.findViewById(R.id.lyrics_sheet);
         View playlistSheet  = view.findViewById(R.id.playlist_sheet);
+        View queueSheet     = view.findViewById(R.id.queue_sheet);
         View playerContent  = view.findViewById(R.id.player_content);
 
         BottomSheetBehavior<View> behavior        = BottomSheetBehavior.from(moreMenuSheet);
         BottomSheetBehavior<View> eqBehavior      = BottomSheetBehavior.from(equalizerSheet);
         BottomSheetBehavior<View> lyricsBehavior  = BottomSheetBehavior.from(lyricsSheet);
         BottomSheetBehavior<View> playlistBehavior = BottomSheetBehavior.from(playlistSheet);
+        BottomSheetBehavior<View> queueBehavior    = BottomSheetBehavior.from(queueSheet);
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -490,6 +524,11 @@ public class MainActivity extends AppCompatActivity
         playlistBehavior.setSkipCollapsed(true);
         playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
+        queueBehavior.setFitToContents(true);
+        queueBehavior.setHideable(true);
+        queueBehavior.setSkipCollapsed(true);
+        queueBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
         BottomSheetBehavior.BottomSheetCallback commonCallback = new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
@@ -497,7 +536,8 @@ public class MainActivity extends AppCompatActivity
                     if (behavior.getState()        == BottomSheetBehavior.STATE_HIDDEN &&
                             eqBehavior.getState()      == BottomSheetBehavior.STATE_HIDDEN &&
                             lyricsBehavior.getState()  == BottomSheetBehavior.STATE_HIDDEN &&
-                            playlistBehavior.getState()== BottomSheetBehavior.STATE_HIDDEN) {
+                            playlistBehavior.getState()== BottomSheetBehavior.STATE_HIDDEN &&
+                            queueBehavior.getState()   == BottomSheetBehavior.STATE_HIDDEN) {
                         playerContent.animate().alpha(1f).setDuration(200).start();
                     }
                 }
@@ -514,6 +554,29 @@ public class MainActivity extends AppCompatActivity
         eqBehavior.addBottomSheetCallback(commonCallback);
         lyricsBehavior.addBottomSheetCallback(commonCallback);
         playlistBehavior.addBottomSheetCallback(commonCallback);
+        queueBehavior.addBottomSheetCallback(commonCallback);
+
+        view.findViewById(R.id.btn_music_list).setOnClickListener(v -> {
+            behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+            RecyclerView rvQueue = queueSheet.findViewById(R.id.rv_queue_list);
+            rvQueue.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+            QueueAdapter queueAdapter = new QueueAdapter(this, playerManager.getCurrentQueue(), (selectedSong, position) -> {
+                playerManager.setCurrentSongIndex(position);
+                playerManager.play(this, playerManager.getCurrentQueue(), position, playerManager.getQueueTitle());
+                currentSongRef[0] = selectedSong;
+                updatePlayerDialogUI(selectedSong);
+                queueBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                updateNavigationButtons.run();
+                updateDownloadButton.run();
+                refreshFavIcons.run();
+            });
+            rvQueue.setAdapter(queueAdapter);
+            queueBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        });
 
         view.findViewById(R.id.menu_more).setOnClickListener(v -> {
             eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -636,12 +699,6 @@ public class MainActivity extends AppCompatActivity
             lyricsBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         });
 
-        view.findViewById(R.id.btn_music_list).setOnClickListener(v1 -> {
-            playerManager.stop();
-            handler.removeCallbacks(updateSeekBar);
-            dialog.dismiss();
-        });
-
         view.setOnTouchListener(new View.OnTouchListener() {
             float touchStartY = 0;
             float totalDeltaY = 0;
@@ -650,7 +707,8 @@ public class MainActivity extends AppCompatActivity
                 if (behavior.getState()        != BottomSheetBehavior.STATE_HIDDEN ||
                         eqBehavior.getState()      != BottomSheetBehavior.STATE_HIDDEN ||
                         lyricsBehavior.getState()  != BottomSheetBehavior.STATE_HIDDEN ||
-                        playlistBehavior.getState()!= BottomSheetBehavior.STATE_HIDDEN) {
+                        playlistBehavior.getState()!= BottomSheetBehavior.STATE_HIDDEN ||
+                        queueBehavior.getState()   != BottomSheetBehavior.STATE_HIDDEN) {
                     return false;
                 }
                 switch (event.getAction()) {
@@ -701,6 +759,7 @@ public class MainActivity extends AppCompatActivity
         // ── Keep the shared reference in sync ──
         currentSongRef[0] = song;
 
+        TextView tvTopStatus      = playerDialogView.findViewById(R.id.tv_top_status_internal);
         TextView tvTitle          = playerDialogView.findViewById(R.id.tv_title);
         TextView tvArtist         = playerDialogView.findViewById(R.id.tv_artist);
         TextView tvTotalTime      = playerDialogView.findViewById(R.id.tv_total_time);
@@ -713,6 +772,19 @@ public class MainActivity extends AppCompatActivity
         SeekBar seekBar           = playerDialogView.findViewById(R.id.seek_bar);
         ImageView ivFav           = playerDialogView.findViewById(R.id.iv_fav);
         ImageView ivFavMenu       = playerDialogView.findViewById(R.id.iv_fav_menu);
+
+        PlayerManager playerManager = PlayerManager.getInstance();
+        String queueTitle = playerManager.getQueueTitle();
+        if (queueTitle != null && !queueTitle.isEmpty()) {
+            String displayTitle = queueTitle.startsWith("Album: ") ? queueTitle : "Playlist «" + queueTitle + "»";
+            if (playerManager.isShuffleEnabled()) {
+                displayTitle += " (Shuffled)";
+            }
+            tvTopStatus.setText("Play Now: " + displayTitle);
+            tvTopStatus.setVisibility(View.VISIBLE);
+        } else {
+            tvTopStatus.setVisibility(View.GONE);
+        }
 
         tvTitle.setText(song.getTitle());
         tvArtist.setText(song.getArtist());
@@ -728,25 +800,27 @@ public class MainActivity extends AppCompatActivity
         if (ivFavMenu != null)
             ivFavMenu.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
 
-        // Reset seekbar and times
-        tvCurrentTime.setText("0:00");
-        tvTotalTime.setText("0:00");
-        tvDurationMenu.setText("0:00");
-        seekBar.setMax(0);
-        seekBar.setProgress(0);
-
-        PlayerManager playerManager = PlayerManager.getInstance();
-        if (playerManager.isPrepared()) {
+        // Reset seekbar and times only if not already prepared
+        if (!playerManager.isPrepared()) {
+            tvCurrentTime.setText("0:00");
+            tvTotalTime.setText("0:00");
+            tvDurationMenu.setText("0:00");
+            seekBar.setMax(0);
+            seekBar.setProgress(0);
+        } else {
             seekBar.setMax(playerManager.getDuration());
             String totalTime = formatTime(playerManager.getDuration());
             tvTotalTime.setText(totalTime);
             tvDurationMenu.setText(totalTime);
+            seekBar.setProgress(playerManager.getCurrentPosition());
+            tvCurrentTime.setText(formatTime(playerManager.getCurrentPosition()));
         }
 
         // Update navigation and repeat buttons
         ImageView btnPrev = playerDialogView.findViewById(R.id.btn_prev);
         ImageView btnNext = playerDialogView.findViewById(R.id.btn_next);
         ImageView btnRepeat = playerDialogView.findViewById(R.id.btn_repeat);
+        ImageView btnShuffle = playerDialogView.findViewById(R.id.btn_shuffle);
         if (btnPrev != null && btnNext != null) {
             boolean hasPrev = playerManager.hasPrevious();
             boolean hasNext = playerManager.hasNext();
@@ -757,6 +831,9 @@ public class MainActivity extends AppCompatActivity
         }
         if (btnRepeat != null) {
             btnRepeat.setAlpha(playerManager.isRepeatEnabled() ? 1.0f : 0.4f);
+        }
+        if (btnShuffle != null) {
+            btnShuffle.setAlpha(playerManager.isShuffleEnabled() ? 1.0f : 0.4f);
         }
 
         // Update album art and background gradient
@@ -799,6 +876,12 @@ public class MainActivity extends AppCompatActivity
             ivPlayPause.setImageResource(playerManager.isPlaying()
                     ? android.R.drawable.ic_media_pause
                     : android.R.drawable.ic_media_play);
+        }
+
+        // Refresh Queue List if it's currently being displayed
+        RecyclerView rvQueue = playerDialogView.findViewById(R.id.rv_queue_list);
+        if (rvQueue != null && rvQueue.getAdapter() != null) {
+            rvQueue.getAdapter().notifyDataSetChanged();
         }
     }
 

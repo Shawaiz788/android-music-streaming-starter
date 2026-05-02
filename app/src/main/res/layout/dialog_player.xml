@@ -22,9 +22,9 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"
             android:gravity="center"
-            android:text="Play Now: Playlist «Mysterious»"
             android:textColor="@android:color/white"
-            android:textSize="15sp" />
+            android:textSize="15sp"
+            android:visibility="gone" />
 
         <!-- Music List Button (Bottom) -->
         <com.google.android.material.button.MaterialButton
@@ -93,39 +93,50 @@
                 android:progressTint="@android:color/white"
                 android:thumbTint="@android:color/white" />
 
-            <RelativeLayout
+            <LinearLayout
                 android:id="@+id/layout_timers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/tv_current_time"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
+                    android:layout_weight="1"
                     android:text="0:36"
                     android:textColor="@android:color/white"
                     android:textSize="12sp" />
 
                 <ImageView
+                    android:id="@+id/btn_shuffle"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="16dp"
+                    android:alpha="0.4"
+                    android:src="@drawable/ic_shuffle"
+                    app:tint="@android:color/white" />
+
+                <ImageView
                     android:id="@+id/btn_repeat"
                     android:layout_width="28dp"
                     android:layout_height="28dp"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/ic_replay"
                     android:alpha="0.4"
+                    android:src="@drawable/ic_replay"
                     app:tint="@android:color/white" />
 
                 <TextView
                     android:id="@+id/tv_total_time"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
+                    android:layout_weight="1"
+                    android:gravity="end"
                     android:text="2:43"
                     android:textColor="@android:color/white"
                     android:textSize="12sp" />
-            </RelativeLayout>
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/layout_controls"
@@ -263,6 +274,14 @@
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
         <include layout="@layout/dialog_add_to_playlist" />
+    </androidx.core.widget.NestedScrollView>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/queue_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+        <include layout="@layout/dialog_queue_list" />
     </androidx.core.widget.NestedScrollView>
 
     <!-- Persistent Header Handle -->

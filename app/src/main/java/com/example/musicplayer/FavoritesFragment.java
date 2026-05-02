@@ -154,7 +154,7 @@ public class FavoritesFragment extends Fragment {
                     }
                 }
                 if (!playlistSongs.isEmpty() && getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0);
+                    ((MainActivity) getActivity()).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0, topPlaylist.getTitle());
                 }
             });
 

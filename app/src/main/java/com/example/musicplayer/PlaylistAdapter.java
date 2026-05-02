@@ -87,7 +87,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
                 }
             }
             if (!playlistSongs.isEmpty() && context instanceof MainActivity) {
-                ((MainActivity) context).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0);
+                ((MainActivity) context).showPlayerDialog(playlistSongs.get(0), false, playlistSongs, 0, playlist.getTitle());
             }
         });
     }
