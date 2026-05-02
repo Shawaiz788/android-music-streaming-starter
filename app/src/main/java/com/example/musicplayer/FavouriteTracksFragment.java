@@ -33,7 +33,7 @@ public class FavouriteTracksFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        ThemeHelper.applyTheme(view);
         rvFavourites = view.findViewById(R.id.rvFavourites);
         tvNoFavourites = view.findViewById(R.id.tvNoFavourites);
         ivBack = view.findViewById(R.id.ivBack);

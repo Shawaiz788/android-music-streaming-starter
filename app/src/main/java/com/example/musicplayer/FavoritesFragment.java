@@ -52,7 +52,7 @@ public class FavoritesFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
+        ThemeHelper.applyTheme(view);
         LLTracks = view.findViewById(R.id.LLTracks);
         LLAlbums = view.findViewById(R.id.LLAlbums);
         LLPlaylists = view.findViewById(R.id.LLPlaylists);
