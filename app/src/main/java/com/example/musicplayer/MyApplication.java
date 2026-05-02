@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -194,7 +195,7 @@ public class MyApplication extends Application {
         albumHandler = new FirebaseAlbumsHandler();
 
         // 2. Add local data
-         addLocal();
+         //addLocal();
 
         // 3. Sync and Load from Firebase
         syncData();
@@ -288,7 +289,7 @@ public class MyApplication extends Application {
 
         Song song2 = new Song(
                 "local_song_2",
-                "Alag Asmaan",
+                "Alag Aasmaan",
                 "Anuv Jain",
                 "Coke Studio Bharat (Season 3)",
                 "Indie-Pop",
@@ -344,23 +345,72 @@ public class MyApplication extends Application {
     }
 
     private static int calculateScore(Song song, String query) {
+        if (query == null || query.isBlank()) return 0;
+
+        String q      = query.trim().toLowerCase();
+        String title  = song.getTitle()  != null ? song.getTitle().trim().toLowerCase()  : "";
+        String artist = song.getArtist() != null ? song.getArtist().trim().toLowerCase() : "";
+        String album  = song.getAlbum()  != null ? song.getAlbum().trim().toLowerCase()  : "";
+
         int score = 0;
-        String title = (song.getTitle() != null ? song.getTitle() : "").toLowerCase();
-        String artist = (song.getArtist() != null ? song.getArtist() : "").toLowerCase();
-        String album = (song.getAlbum() != null ? song.getAlbum() : "").toLowerCase();
 
-        if (title.equals(query)) score += 100;
-        else if (title.startsWith(query)) score += 80;
-        else if (title.contains(query)) score += 40;
+        // Exact match
+        if (title.equals(q))  score += 100;
+        if (artist.equals(q)) score += 70;
+        if (album.equals(q))  score += 30;
 
-        if (artist.equals(query)) score += 70;
-        else if (artist.startsWith(query)) score += 50;
-        else if (artist.contains(query)) score += 20;
+        // Substring containment (bidirectional)
+        if (title.contains(q)  || q.contains(title))  score += title.startsWith(q)  || q.startsWith(title)  ? 80 : 40;
+        if (artist.contains(q) || q.contains(artist)) score += artist.startsWith(q) || q.startsWith(artist) ? 50 : 20;
+        if (album.contains(q)  || q.contains(album))  score += 10;
 
-        if (album.equals(query)) score += 30;
-        else if (album.contains(query)) score += 10;
+        // Fuzzy match — catches typos like "hangama" → "hungama"
+        score += (int) (fuzzy(title,  q) * 80);
+        score += (int) (fuzzy(artist, q) * 50);
+        score += (int) (fuzzy(album,  q) * 20);
+
+        // Word-level fuzzy for multi-word queries
+        for (String word : q.split("\\s+")) {
+            if (word.length() < 3) continue;
+            score += (int) (fuzzy(title,  word) * 20);
+            score += (int) (fuzzy(artist, word) * 15);
+            score += (int) (fuzzy(album,  word) *  5);
+        }
 
         return score;
+    }
+
+    ///using Levenshtein edit distance.
+   //fuzzy("hungama", "hangama") returns  0.857
+
+    private static double fuzzy(String a, String b) {
+        if (a.isEmpty() || b.isEmpty()) return 0.0;
+
+        int m = a.length(), n = b.length();
+
+        // Ignore pairs that are too different in length to ever score well
+        if (Math.abs(m - n) > Math.max(m, n) / 2) return 0.0;
+
+        // Levenshtein distance with two rolling arrays (memory efficient)
+        int[] prev = new int[n + 1];
+        int[] curr = new int[n + 1];
+        for (int j = 0; j <= n; j++) prev[j] = j;
+
+        for (int i = 1; i <= m; i++) {
+            curr[0] = i;
+            for (int j = 1; j <= n; j++) {
+                curr[j] = a.charAt(i - 1) == b.charAt(j - 1)
+                        ? prev[j - 1]
+                        : 1 + Math.min(prev[j - 1], Math.min(prev[j], curr[j - 1]));
+            }
+            int[] tmp = prev; prev = curr; curr = tmp;
+        }
+
+        int distance = prev[n];
+        double similarity = 1.0 - (double) distance / Math.max(m, n);
+
+        // Only return a score if strings are meaningfully similar
+        return similarity >= 0.6 ? similarity : 0.0;
     }
 
     private static class ScoredSong {

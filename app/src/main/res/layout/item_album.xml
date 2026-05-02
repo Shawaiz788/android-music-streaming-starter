@@ -69,14 +69,6 @@
 
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/ivOptions"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@android:drawable/ic_menu_more"
-        app:tint="#80FFFFFF"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
