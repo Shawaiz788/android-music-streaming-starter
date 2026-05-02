@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -15,6 +16,8 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.bumptech.glide.Glide;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -22,8 +25,10 @@ public class FavoritesFragment extends Fragment {
 
     LinearLayout LLTracks, LLFYNF, LLAlbums, LLPlaylists, LLDownload;
     CardView cvProfile, cvTopPlaylist;
+    ImageView ivPfp;
     TextView tvTopPlaylistTitle, tvTopPlaylistTracks;
     MyApplication.OnPlaylistsLoadedListener playlistListener;
+    MyApplication.OnUserLoadedListener userLoadedListener;
 
     private final int[] colors = {
             Color.parseColor("#4CAF50"), Color.parseColor("#F44336"),
@@ -52,6 +57,7 @@ public class FavoritesFragment extends Fragment {
         LLPlaylists = view.findViewById(R.id.LLPlaylists);
         LLDownload = view.findViewById(R.id.LLDownload);
         cvProfile = view.findViewById(R.id.cvProfile);
+        ivPfp = view.findViewById(R.id.ivPfp);
         LLFYNF=view.findViewById(R.id.LLFYNF);
         
         cvTopPlaylist = view.findViewById(R.id.cvTopPlaylist);
@@ -98,6 +104,17 @@ public class FavoritesFragment extends Fragment {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.profileFragment);
         });
+
+        userLoadedListener = user -> {
+            if (isAdded() && user != null && user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty() && ivPfp != null) {
+                Glide.with(this)
+                        .load(user.getProfileImageUrl())
+                        .placeholder(R.drawable.icon_pfp)
+                        .error(R.drawable.icon_pfp)
+                        .into(ivPfp);
+            }
+        };
+        MyApplication.subscribeUser(userLoadedListener);
     }
 
     private void updateTopPlaylistUI(ArrayList<Playlist> playlists) {
@@ -135,6 +152,9 @@ public class FavoritesFragment extends Fragment {
         super.onDestroyView();
         if (playlistListener != null) {
             MyApplication.unsubscribePlaylists(playlistListener);
+        }
+        if (userLoadedListener != null) {
+            MyApplication.unsubscribeUser(userLoadedListener);
         }
     }
 }

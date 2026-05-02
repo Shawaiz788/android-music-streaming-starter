@@ -39,6 +39,7 @@ public class SearchFragment extends Fragment {
     SearchAdapter adapter;
     List<Song> displayList = new ArrayList<>();
     CardView cvProfile;
+    ImageView ivPfp;
     EditText etSearch;
     
     CardView cvAlbums, cvPlaylists, cvMadeForYou, cvNewReleases;
@@ -50,6 +51,7 @@ public class SearchFragment extends Fragment {
     private MyApplication.OnAlbumsLoadedListener albumsLoadedListener;
     private MyApplication.OnSongsLoadedListener songsLoadedListener;
     private MyApplication.OnFavouriteSongsLoadedListener favouriteSongsLoadedListener;
+    private MyApplication.OnUserLoadedListener userLoadedListener;
     
     private final int[] playlistColors = {
             Color.parseColor("#4CAF50"), // Green
@@ -93,6 +95,7 @@ public class SearchFragment extends Fragment {
         instance = this;
         
         cvProfile = view.findViewById(R.id.cvProfile);
+        ivPfp = view.findViewById(R.id.ivPfp);
         etSearch = view.findViewById(R.id.etSearch);
         rvSearch = view.findViewById(R.id.rvSearch);
         defaultContent = view.findViewById(R.id.defaultContent);
@@ -111,6 +114,17 @@ public class SearchFragment extends Fragment {
         viewPlaylistCircle = view.findViewById(R.id.viewPlaylistCircle);
 
         setupCategoryCards();
+
+        userLoadedListener = user -> {
+            if (isAdded() && user != null && user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty() && ivPfp != null) {
+                Glide.with(this)
+                        .load(user.getProfileImageUrl())
+                        .placeholder(R.drawable.icon_pfp)
+                        .error(R.drawable.icon_pfp)
+                        .into(ivPfp);
+            }
+        };
+        MyApplication.subscribeUser(userLoadedListener);
 
         adapter = new SearchAdapter(requireContext(), displayList);
         rvSearch.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -237,6 +251,9 @@ public class SearchFragment extends Fragment {
         }
         if (favouriteSongsLoadedListener != null) {
             MyApplication.unsubscribeFavouriteSongs(favouriteSongsLoadedListener);
+        }
+        if (userLoadedListener != null) {
+            MyApplication.unsubscribeUser(userLoadedListener);
         }
         instance = null;
     }

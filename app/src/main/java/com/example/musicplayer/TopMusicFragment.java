@@ -29,9 +29,10 @@ public class TopMusicFragment extends Fragment {
     private SearchAdapter adapter;
     private List<Song> topSongsList = new ArrayList<>();
     private CardView cvProfile, cvTopSong;
-    private ImageView ivTopSongBg;
+    private ImageView ivTopSongBg, ivPfp;
     private TextView tvTopSongTitle, tvTopSongArtist;
     private Map<String, Integer> playCountsMap = new HashMap<>();
+    private MyApplication.OnUserLoadedListener userLoadedListener;
 
     public TopMusicFragment() {
         // Required empty public constructor
@@ -48,6 +49,7 @@ public class TopMusicFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         
         cvProfile = view.findViewById(R.id.cvProfile);
+        ivPfp = view.findViewById(R.id.ivPfp);
         rvTopSongs = view.findViewById(R.id.rvTopSongs);
         cvTopSong = view.findViewById(R.id.cvTopSong);
         ivTopSongBg = view.findViewById(R.id.ivTopSongBg);
@@ -63,7 +65,26 @@ public class TopMusicFragment extends Fragment {
             navController.navigate(R.id.profileFragment);
         });
 
+        userLoadedListener = user -> {
+            if (isAdded() && user != null && ivPfp != null) {
+                Glide.with(this)
+                        .load(user.getProfileImageUrl())
+                        .placeholder(R.drawable.icon_pfp)
+                        .error(R.drawable.icon_pfp)
+                        .into(ivPfp);
+            }
+        };
+        MyApplication.subscribeUser(userLoadedListener);
+
         loadData();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (userLoadedListener != null) {
+            MyApplication.unsubscribeUser(userLoadedListener);
+        }
     }
 
     private void loadData() {
@@ -84,7 +105,7 @@ public class TopMusicFragment extends Fragment {
     }
 
     private void refreshTopSongs() {
-        if (MyApplication.songs.isEmpty()) return;
+        if (!isAdded() || MyApplication.songs.isEmpty()) return;
 
         List<Song> allSongs = new ArrayList<>(MyApplication.songs);
         //use quick sort to sort the songs
