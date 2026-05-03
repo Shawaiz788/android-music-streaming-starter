@@ -656,11 +656,7 @@ public class MainActivity extends AppCompatActivity
             eqBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         });
 
-        // ── Go to Artist — uses currentSongRef[0] ──
-        view.findViewById(R.id.btn_go_to_artist).setOnClickListener(v -> {
-            dialog.dismiss();
-            Toast.makeText(this, "Going to artist: " + currentSongRef[0].getArtist(), Toast.LENGTH_SHORT).show();
-        });
+
 
         // ── Go to Album — uses currentSongRef[0] ──
         view.findViewById(R.id.btn_go_to_album).setOnClickListener(v -> {

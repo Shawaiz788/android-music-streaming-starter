@@ -139,18 +139,7 @@
             app:iconPadding="16dp"
             app:iconTint="@color/white" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_go_to_artist"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="start|center_vertical"
-            android:paddingVertical="12dp"
-            android:text="Artist"
-            android:textColor="@color/white"
-            app:icon="@drawable/ic_music"
-            app:iconPadding="16dp"
-            app:iconTint="@color/white" />
+
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_go_to_album"

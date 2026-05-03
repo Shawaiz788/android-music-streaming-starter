@@ -246,7 +246,7 @@ public class MyApplication extends Application {
         albumHandler = new FirebaseAlbumsHandler();
 
         // 2. Add local data
-        //addLocal();
+        addLocal();
 
         // Load downloads into memory
         DBManager dbManager = new DBManager(this);
@@ -321,7 +321,6 @@ public class MyApplication extends Application {
         String cokeStudioId = "local_album_1";
         String anuvJainId = "local_artist_1";
 
-
         Album cokeStudioAlbum = new Album(
                 cokeStudioId,
                 "Coke Studio Bharat (Season 3)",
@@ -358,13 +357,29 @@ public class MyApplication extends Application {
                 anuvJainId
         );
 
-
         allAlbums.add(cokeStudioAlbum);
         songs.add(song1);
         songs.add(song2);
 
         cokeStudioAlbum.getSongIds().add(song1.getId());
         cokeStudioAlbum.getSongIds().add(song2.getId());
+
+        // New Data Upload
+        String album2Id = "local_album_2";
+        String artist2Id = "local_artist_2";
+        Album album2 = new Album(album2Id, "P-Pop culture", "Karan Aujila & Ikky", "https://drive.google.com/uc?export=download&id=1FdRbkB2gfQgtk0f9x4HcgHgJ2BBUESrz", "2025");
+        Song s3 = new Song("local_song_3", "For A Reason", "Karan Aujila & Ikky", "P-Pop culture", "P-Pop", "No lyrics", 309000, "https://drive.google.com/uc?export=download&id=1QND4XxpHAbV0p_rRdB9e63j7FvoL8d-4", "https://drive.google.com/uc?export=download&id=1mYRf5SjqWhhsqdYeo8LxyIo5Jmz6Lukr", album2Id, artist2Id);
+        Song s4 = new Song("local_song_4", "Boyfriend", "Karan Aujila & Ikky", "P-Pop culture", "P-Pop", "No lyrics", 242000, "https://drive.google.com/uc?export=download&id=19xLDf2xDQOga1I3nBhNH61S83FAEJzC7", "https://drive.google.com/uc?export=download&id=1BQpaKQTJmiJIy-oKRDQVaUV8WYGMiHOh", album2Id, artist2Id);
+        allAlbums.add(album2); songs.add(s3); songs.add(s4);
+        album2.getSongIds().add(s3.getId()); album2.getSongIds().add(s4.getId());
+
+        String album3Id = "local_album_3";
+        String artist3Id = "local_artist_3";
+        Album album3 = new Album(album3Id, "Open Letter", "Talha Anjum", "https://drive.google.com/uc?export=download&id=1qMrBo520q_QkYBZ1LbEfZtIn3Hjp-tl_", "2023");
+        Song s5 = new Song("local_song_5", "Happy Hour", "Talha Anjum", "Open Letter", "Urdu Hip Hop", "No lyrics", 315000, "https://drive.google.com/uc?export=download&id=13O4BX4TZPAvXSVTGNTU28torYT_Bnfm6", "https://drive.google.com/uc?export=download&id=1qMrBo520q_QkYBZ1LbEfZtIn3Hjp-tl_", album3Id, artist3Id);
+        Song s6 = new Song("local_song_6", "Studio Gangsters", "Talha Anjum", "Open Letter", "Urdu Hip Hop", "No lyrics", 408000, "https://drive.google.com/uc?export=download&id=1jF5SW4VQLWoRIhtH7Bw3VTOaOG7tC5mW", "https://drive.google.com/uc?export=download&id=1qMrBo520q_QkYBZ1LbEfZtIn3Hjp-tl_", album3Id, artist3Id);
+        allAlbums.add(album3); songs.add(s5); songs.add(s6);
+        album3.getSongIds().add(s5.getId()); album3.getSongIds().add(s6.getId());
     }
 
     public String getResourceUri(int resId) {
