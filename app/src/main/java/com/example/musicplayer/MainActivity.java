@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity
     ImageView ivPlayPause;
     private AlertDialog playerDialog;
     private View playerDialogView;
+    private boolean wasPlayingBeforePause = false;
 
     // ─── Mutable song reference so all menu listeners always use the current song ───
     private final Song[] currentSongRef = {null};
@@ -135,8 +136,23 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        // Pause the player when the activity goes to the background (app changed or phone turned off)
-        PlayerManager.getInstance().pause();
+        // Capture whether the song was playing before pausing
+        // Only update if it is currently playing, to avoid overwriting a 'true' state
+        // set by the share button before this lifecycle method is called.
+        if (PlayerManager.getInstance().isPlaying()) {
+            wasPlayingBeforePause = true;
+            PlayerManager.getInstance().pause();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // If it was playing before the app was paused (e.g. by sharing), resume playback
+        if (wasPlayingBeforePause) {
+            PlayerManager.getInstance().resume();
+            wasPlayingBeforePause = false; // Reset to avoid double-resuming if onResume is called again
+        }
     }
 
     private void startProgressUpdater() {
@@ -603,6 +619,12 @@ public class MainActivity extends AppCompatActivity
 
         // ── Share — uses currentSongRef[0] ──
         view.findViewById(R.id.share_btn).setOnClickListener(v -> {
+            // Capture playback state and pause before showing the share chooser
+            wasPlayingBeforePause = PlayerManager.getInstance().isPlaying();
+            if (wasPlayingBeforePause) {
+                PlayerManager.getInstance().pause();
+            }
+
             Song activeSong = currentSongRef[0];
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");

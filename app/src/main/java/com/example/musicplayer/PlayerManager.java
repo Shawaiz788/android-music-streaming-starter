@@ -200,6 +200,14 @@ public class PlayerManager {
         if (listener != null) listener.onPlayStateChanged(isPlaying());
     }
 
+    public void resume() {
+        if (mediaPlayer != null && prepared && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+            completed = false;
+            if (listener != null) listener.onPlayStateChanged(true);
+        }
+    }
+
     public void pause() {
         if (mediaPlayer != null && prepared && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
