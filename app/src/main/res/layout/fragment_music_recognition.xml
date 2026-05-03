@@ -27,7 +27,7 @@
         android:id="@+id/tvStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tap to Identify"
+        android:text="@string/tap_to_identify"
         android:textColor="@android:color/white"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -48,7 +48,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.4">
 
-        <!-- Pulse effect circles -->
         <View
             android:id="@+id/pulseView1"
             android:layout_width="280dp"
@@ -100,7 +99,7 @@
             android:id="@+id/tvResultTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Song Title"
+            android:text="@string/song_title_placeholder"
             android:textColor="@android:color/white"
             android:textSize="22sp"
             android:textStyle="bold"
@@ -110,7 +109,7 @@
             android:id="@+id/tvResultArtist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Artist Name"
+            android:text="@string/artist_name_placeholder"
             android:textColor="#B3FFFFFF"
             android:textSize="16sp"
             android:layout_marginTop="4dp"
@@ -120,7 +119,7 @@
             android:id="@+id/btnPlayResult"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Play Now"
+            android:text="@string/play_now"
             android:layout_marginTop="16dp"
             app:cornerRadius="20dp"
             app:backgroundTint="@android:color/white"

@@ -47,21 +47,18 @@ public class DBManager {
     }
 
     public void AddSongs(Song song, OnDownloadListener listener) {
-       //download the audio file
         DownloadUtils.getLocalPath(context, song, new DownloadUtils.DownloadCallback() {
             @Override
             public void onDownloadComplete(String localAudioPath) {
-                //download cover image
                 DownloadUtils.getCoverPath(context, song, new DownloadUtils.DownloadCallback() {
                     @Override
                     public void onDownloadComplete(String localCoverPath) {
-                        //save to database
                         saveSongToDb(song, localAudioPath, localCoverPath);
                         if (listener != null) listener.onDownloadComplete();
                     }
 
                     @Override
-                    public void onDownloadFailed(Exception e) {//cover save failed
+                    public void onDownloadFailed(Exception e) {
                         saveSongToDb(song, localAudioPath, null);
                         if (listener != null) listener.onDownloadComplete();
                     }
@@ -69,7 +66,7 @@ public class DBManager {
             }
 
             @Override
-            public void onDownloadFailed(Exception e) {//audio save failed
+            public void onDownloadFailed(Exception e) {
                 if (listener != null) listener.onDownloadFailed(e);
             }
         });
@@ -88,10 +85,8 @@ public class DBManager {
         cv.put(COLUMN_LOCAL_PATH, audioPath);
         cv.put(COLUMN_COVER_PATH, coverPath);
         cv.put(COLUMN_TIMESTAMP, System.currentTimeMillis());
-        // Use insertWithOnConflict to handle updates if the song is downloaded again
         writeDB.insertWithOnConflict(TABLE_NAME, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
 
-        // Update global list
         MyApplication.downloadedSongs.clear();
         MyApplication.downloadedSongs.addAll(getAllDownloadedSongs());
         MyApplication.notifyDownloadsLoaded();
@@ -108,7 +103,7 @@ public class DBManager {
 
     public String[] getSongPaths(String songId) {
         SQLiteDatabase db = helper.getReadableDatabase();
-        String[] paths = new String[2]; // [audioPath, coverPath]
+        String[] paths = new String[2];
         String query = "SELECT " + COLUMN_LOCAL_PATH + ", " + COLUMN_COVER_PATH + " FROM " + TABLE_NAME + " WHERE " + COLUMN_ID + " = ?";
         android.database.Cursor cursor = db.rawQuery(query, new String[]{songId});
         if (cursor.moveToFirst()) {
@@ -123,7 +118,6 @@ public class DBManager {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.delete(TABLE_NAME, COLUMN_ID + " = ?", new String[]{songId});
 
-        // Update global list
         MyApplication.downloadedSongs.clear();
         MyApplication.downloadedSongs.addAll(getAllDownloadedSongs());
         MyApplication.notifyDownloadsLoaded();

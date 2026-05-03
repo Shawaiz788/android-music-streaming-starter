@@ -25,8 +25,6 @@ SharedPreferences srPref;
         init();
         new Handler().postDelayed(()->{
             checkLoggedIn();
-//            startActivity(new Intent(Splash.this, MainActivity.class));
-//            finish();
         },1);
     }
 
@@ -38,13 +36,6 @@ SharedPreferences srPref;
             startActivity(new Intent(Splash.this, MainActivity.class));
             finish();
         }
-//        if(srPref.getBoolean("is_loggedin",false)==true){
-//            startActivity(new Intent(Splash.this, SignInSignup.class));
-//            finish();
-//        }else{
-//            startActivity(new Intent(Splash.this, MainActivity.class));
-//            finish();
-//        }
     }
 
     public void init(){

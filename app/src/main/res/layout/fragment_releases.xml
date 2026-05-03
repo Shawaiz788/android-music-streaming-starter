@@ -65,7 +65,7 @@
                 android:id="@+id/tvHeaderTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Releases"
+                android:text="@string/new_releases"
                 android:textColor="@android:color/white"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -73,7 +73,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Fresh tracks just for you"
+                android:text="@string/fresh_tracks"
                 android:textColor="#88FFFFFF"
                 android:textSize="12sp"
                 android:layout_marginTop="2dp"/>

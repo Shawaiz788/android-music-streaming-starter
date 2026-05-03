@@ -118,7 +118,7 @@ public class FirebaseAlbumsHandler {
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FirebaseAlbums", "Failed saving: " + e.getMessage());
-                    if (listener != null) listener.onAdded(album.getId()); // Still notify to avoid hang
+                    if (listener != null) listener.onAdded(album.getId());
                 });
     }
 

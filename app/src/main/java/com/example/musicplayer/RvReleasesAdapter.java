@@ -48,7 +48,6 @@ ArrayList<Song>songs;
                 .build());
         Song song = songs.get(position);
         
-        // --- Offline Image Loading Logic ---
         Object imageSource = song.getImageUrl();
         DBManager dbManager = new DBManager(context);
         dbManager.Open();
@@ -60,7 +59,6 @@ ArrayList<Song>songs;
         }
         dbManager.Close();
 
-        // Use Glide for reliable image loading (Firebase URLs + Local Resources)
         if (imageSource != null) {
             Glide.with(context)
                     .load(imageSource)

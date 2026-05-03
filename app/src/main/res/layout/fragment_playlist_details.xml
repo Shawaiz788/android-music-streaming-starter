@@ -77,7 +77,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="24dp"
-                        android:contentDescription="Play"
                         android:src="@android:drawable/ic_media_play"
                         app:backgroundTint="@android:color/white"
                         app:fabSize="normal"
@@ -99,7 +98,6 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="end" />
 
-                <!-- Manual Three Dots Button to match design 8 -->
                 <ImageButton
                     android:id="@+id/btnMore"
                     android:layout_width="wrap_content"
@@ -107,7 +105,6 @@
                     android:layout_gravity="end"
                     android:layout_marginEnd="16dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="More"
                     android:src="@drawable/ic_settings_playlist"
                     app:tint="@android:color/white" />
 

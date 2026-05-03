@@ -23,8 +23,6 @@ public class DownloadUtils {
 
 
 
-    //downloads an audio file to internal storage and returns the local path.
-    // //if the audio file already exists then it just returns the path.
     public static void getLocalPath(Context context, Song song, DownloadCallback callback) {
         String fileName = song.getId() + ".mp3";
         File dir = new File(context.getFilesDir(), AUDIO_DIR);

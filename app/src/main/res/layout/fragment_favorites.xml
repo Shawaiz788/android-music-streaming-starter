@@ -27,7 +27,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:text="Favorites"
+                android:text="@string/favorites"
                 android:textColor="@android:color/white"
                 android:textSize="32sp"
                 android:textStyle="bold" />
@@ -76,7 +76,7 @@
                         android:id="@+id/tvTopPlaylistTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="No Playlists"
+                        android:text="@string/no_playlists"
                         android:textColor="@android:color/white"
                         android:textSize="26sp"
                         android:textStyle="bold" />
@@ -86,7 +86,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="0 tracks"
+                        android:text="@string/zero_tracks"
                         android:textColor="#D9FFFFFF"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -140,7 +140,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Tracks"
+                    android:text="@string/tracks"
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -170,7 +170,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Album"
+                    android:text="@string/album"
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -198,7 +198,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Playlists"
+                    android:text="@string/playlists"
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -226,7 +226,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Find Your New Favorite"
+                    android:text="@string/find_your_new_favorite"
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -254,7 +254,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Download"
+                    android:text="@string/download"
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />
             </LinearLayout>

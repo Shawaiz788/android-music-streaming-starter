@@ -27,7 +27,6 @@ public class FirebasePlaylistHandler {
                     Playlist playlist = ds.getValue(Playlist.class);
                     if (playlist != null) {
                         playlist.setId(ds.getKey());
-                        // Calculate duration locally based on currently loaded songs
                         playlist.calculateAndSetDuration(MyApplication.songs);
                         list.add(playlist);
                     }
@@ -50,7 +49,6 @@ public class FirebasePlaylistHandler {
             playlist.setId(id);
             playlist.calculateAndSetDuration(MyApplication.songs);
             ref.child(id).setValue(playlist);
-            // Optimistic update
             if (!MyApplication.favouritePlaylists.contains(playlist)) {
                 MyApplication.favouritePlaylists.add(playlist);
             }
@@ -59,7 +57,6 @@ public class FirebasePlaylistHandler {
     }
 
     public void deletePlaylist(String playlistId) {
-        // Optimistic update
         MyApplication.favouritePlaylists.removeIf(p -> p.getId() != null && p.getId().equals(playlistId));
         MyApplication.notifyPlaylistsLoaded();
         ref.child(playlistId).removeValue();
@@ -69,8 +66,6 @@ public class FirebasePlaylistHandler {
         if (playlist.getId() != null) {
             playlist.calculateAndSetDuration(MyApplication.songs);
             ref.child(playlist.getId()).setValue(playlist);
-            // The object in MyApplication.favouritePlaylists is likely already updated, 
-            // but we notify to refresh UI components.
             MyApplication.notifyPlaylistsLoaded();
         }
     }

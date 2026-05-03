@@ -76,8 +76,7 @@ public class AlbumDetailsFragment extends Fragment {
             if (MyApplication.favouriteAlbumsHandler != null) {
                 boolean isCurrentlyFav = isAlbumFavourite(currentAlbum);
                 MyApplication.favouriteAlbumsHandler.toggleFavourite(currentAlbum);
-                
-                // Immediate UI update for better UX
+
                 updateFavoriteIcon(!isCurrentlyFav);
             } else {
                 Toast.makeText(getContext(), "Please sign in to favorite albums", Toast.LENGTH_SHORT).show();

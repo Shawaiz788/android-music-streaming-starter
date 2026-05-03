@@ -25,15 +25,12 @@ public class VerifyEmailFragment extends Fragment {
     Button btnContinueLogin;
 
     public VerifyEmailFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return  inflater.inflate(R.layout.fragment_verify_email, container, false);
-
-
     }
 
     @Override
@@ -52,14 +49,13 @@ public class VerifyEmailFragment extends Fragment {
 
     private void checkEmailVerification() {
         if (user != null) {
-            // reload() is crucial to get the latest status from Firebase servers
             user.reload().addOnCompleteListener(task -> {
                 if (user.isEmailVerified()) {
-                    Toast.makeText(getContext(), "Email Verified!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), R.string.email_verified, Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(getActivity(), MainActivity.class));
                     requireActivity().finish();
                 } else {
-                    Toast.makeText(getContext(), "Please verify your email first.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), R.string.verify_email_first, Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -70,14 +66,14 @@ public class VerifyEmailFragment extends Fragment {
             user.sendEmailVerification().addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void unused) {
-                    Toast.makeText(getContext(), "Verification email sent to " + user.getEmail(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.verification_email_sent, user.getEmail()), Toast.LENGTH_SHORT).show();
                 }
             }).addOnFailureListener(e -> {
                 Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
             });
 
         } else {
-            Toast.makeText(getContext(), "Session expired. Please log in again.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.session_expired, Toast.LENGTH_SHORT).show();
         }
     }
 }

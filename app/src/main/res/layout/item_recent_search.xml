@@ -36,7 +36,6 @@
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Song Title"
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -45,7 +44,6 @@
             android:id="@+id/tvArtist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Artist Name"
             android:textColor="#B3B3B3"
             android:textSize="14sp" />
     </LinearLayout>

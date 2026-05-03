@@ -14,35 +14,32 @@
         android:gravity="center"
         android:padding="24dp">
 
-        <!-- Title -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create account"
+            android:text="@string/create_account"
             android:textSize="26sp"
             android:textStyle="bold"
             android:textColor="@android:color/white"
             android:layout_marginTop="40dp"
             android:layout_marginBottom="32dp"/>
 
-        <!-- Email -->
         <EditText
             android:id="@+id/etEmail"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:hint="Email"
+            android:hint="@string/email"
             android:background="@drawable/rounded_input"
             android:padding="15dp"
             android:textColor="@android:color/white"
             android:textColorHint="#AAAAAA"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Password -->
         <EditText
             android:id="@+id/etPassword"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:hint="Password"
+            android:hint="@string/password"
             android:inputType="textPassword"
             android:background="@drawable/rounded_input"
             android:padding="15dp"
@@ -50,12 +47,11 @@
             android:textColorHint="#AAAAAA"
             android:layout_marginBottom="16dp"/>
 
-        <!-- Confirm Password -->
         <EditText
             android:id="@+id/etCpassword"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:hint="Confirm Password"
+            android:hint="@string/confirm_password"
             android:inputType="textPassword"
             android:background="@drawable/rounded_input"
             android:padding="15dp"
@@ -63,34 +59,30 @@
             android:textColorHint="#AAAAAA"
             android:layout_marginBottom="28dp"/>
 
-        <!-- Sign Up Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSignUp"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:text="Sign Up"
+            android:text="@string/sign_up"
             android:textColor="@android:color/black"
             android:backgroundTint="#E0E0E0"
             app:cornerRadius="25dp"/>
 
-        <!-- Already have account -->
-
-
-        <!-- Back to Login (like create account button style) -->
         <TextView
             android:id="@+id/tvSignin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Already have an account?"
+            android:text="@string/already_have_account"
             android:textColor="@android:color/white"
             android:background="@drawable/outline_button"
             android:paddingHorizontal="16dp"
             android:paddingVertical="8dp"
             android:layout_marginTop="10dp"/>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hear it. Identify it. Play it. Always free."
+            android:text="@string/catchy_tagline"
             android:textColor="#CCCCCC"
             android:textSize="12sp"
             android:layout_marginTop="24dp"/>

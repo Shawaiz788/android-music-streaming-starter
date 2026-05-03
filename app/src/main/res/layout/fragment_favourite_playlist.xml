@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Favourite Playlists"
+            android:text="@string/favourite_playlists"
             android:textColor="@android:color/white"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -51,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="No playlists yet"
+            android:text="@string/no_playlists_yet"
             android:textColor="#80FFFFFF"
             android:textSize="18sp"
             android:visibility="gone" />

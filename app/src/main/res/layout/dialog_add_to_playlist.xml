@@ -8,7 +8,6 @@
     android:orientation="vertical"
     android:padding="24dp">
 
-    <!-- Drag Handle -->
     <View
         android:layout_width="45dp"
         android:layout_height="4dp"
@@ -19,7 +18,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add to Playlist"
+        android:text="@string/add_to_playlist_title"
         android:textColor="@android:color/white"
         android:textSize="22sp"
         android:textStyle="bold"
@@ -30,7 +29,7 @@
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:text="Create New Playlist"
+        android:text="@string/create_new_playlist"
         android:textColor="@android:color/white"
         app:strokeColor="#4DFFFFFF"
         app:icon="@android:drawable/ic_menu_add"

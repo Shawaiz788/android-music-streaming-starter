@@ -17,7 +17,6 @@
         android:background="#4CAF50"
         android:clipChildren="false">
 
-        <!-- Decorating circle - Now using opaque background to prevent color suppression -->
         <View
             android:id="@+id/viewCircle"
             android:layout_width="200dp"
@@ -40,7 +39,6 @@
                 android:id="@+id/tvPlaylistTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Renaissance"
                 android:textColor="@android:color/white"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -50,7 +48,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="843 tracks • 23 hours"
                 android:textColor="#D9FFFFFF"
                 android:textSize="14sp" />
         </LinearLayout>

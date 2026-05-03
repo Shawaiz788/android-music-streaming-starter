@@ -61,23 +61,21 @@ public class SearchFragment extends Fragment {
     private MyApplication.OnUserLoadedListener userLoadedListener;
     
     private final int[] playlistColors = {
-            Color.parseColor("#4CAF50"), // Green
-            Color.parseColor("#F44336"), // Red
-            Color.parseColor("#2196F3"), // Blue
-            Color.parseColor("#FF9800"), // Orange
-            Color.parseColor("#9C27B0"), // Purple
-            Color.parseColor("#00BCD4"), // Cyan
-            Color.parseColor("#E91E63"), // Pink
-            Color.parseColor("#673AB7"), // Deep Purple
-            Color.parseColor("#FF5722"), // Deep Orange
-            Color.parseColor("#3F51B5")  // Indigo
+            Color.parseColor("#4CAF50"),
+            Color.parseColor("#F44336"),
+            Color.parseColor("#2196F3"),
+            Color.parseColor("#FF9800"),
+            Color.parseColor("#9C27B0"),
+            Color.parseColor("#00BCD4"),
+            Color.parseColor("#E91E63"),
+            Color.parseColor("#673AB7"),
+            Color.parseColor("#FF5722"),
+            Color.parseColor("#3F51B5")
     };
 
-    // Static reference to the active fragment instance
     private static SearchFragment instance;
 
     public SearchFragment() {
-        // Required empty public constructor
     }
 
     public static void refreshRecentSearches() {
@@ -141,7 +139,6 @@ public class SearchFragment extends Fragment {
         rvSearch.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvSearch.setAdapter(adapter);
 
-        // Check for initial query from navigation arguments
         String initialQuery = null;
         if (getArguments() != null) {
             initialQuery = getArguments().getString("initialQuery");
@@ -152,7 +149,6 @@ public class SearchFragment extends Fragment {
             showSearchResults();
             performSearch(initialQuery);
         } else if (currentQuery.isEmpty()) {
-            // Load initial data (recent searches)
             displayList.clear();
             displayList.addAll(MyApplication.recentSearches);
             adapter.notifyDataSetChanged();
@@ -174,9 +170,9 @@ public class SearchFragment extends Fragment {
                     String query = s.toString();
                     currentQuery = query;
                     if (query.trim().isEmpty()) {
-                        tvSearchHeader.setText("Recent searches");
+                        tvSearchHeader.setText(getString(R.string.recent_searches));
                     } else {
-                        tvSearchHeader.setText("Search results");
+                        tvSearchHeader.setText(getString(R.string.search_results));
                     }
                     updateClearAllVisibility();
                     performSearch(query);
@@ -231,7 +227,6 @@ public class SearchFragment extends Fragment {
     }
 
     private void setupCategoryCards() {
-        // Random Playlist Background logic (same as PlaylistAdapter)
         Random random = new Random(MyApplication.sessionSeed + 123);
         int bgIndex = random.nextInt(playlistColors.length);
         int circleIndex = (bgIndex + (playlistColors.length / 2)) % playlistColors.length;
@@ -240,7 +235,6 @@ public class SearchFragment extends Fragment {
             viewPlaylistCircle.getBackground().mutate().setTint(playlistColors[circleIndex]);
         }
 
-        // Setup Album Image
         albumsLoadedListener = albums -> {
             if (isAdded() && albums != null && !albums.isEmpty() && ivAlbumBg != null) {
                 Album randomAlbum = albums.get(new Random().nextInt(albums.size()));
@@ -249,18 +243,15 @@ public class SearchFragment extends Fragment {
         };
         MyApplication.subscribeAlbums(albumsLoadedListener);
 
-        // Setup New Releases
         songsLoadedListener = songs -> {
             if (isAdded() && songs != null && !songs.isEmpty() && ivNewReleasesBg != null) {
                 Song randomNew = songs.get(new Random().nextInt(songs.size()));
                 Glide.with(this).load(randomNew.getImageUrl()).into(ivNewReleasesBg);
             }
-            // Also refresh explore section if needed
             setupExploreSection();
         };
         MyApplication.subscribe(songsLoadedListener);
 
-        // Setup Made For You (from favorites)
         favouriteSongsLoadedListener = favs -> {
             if (isAdded() && favs != null && !favs.isEmpty() && ivMadeForYouBg != null) {
                 Song randomFav = favs.get(new Random().nextInt(favs.size()));

@@ -7,7 +7,6 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <!-- Menu Handle -->
     <View
         android:id="@+id/queue_handle"
         android:layout_width="45dp"
@@ -23,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="20dp"
-        android:text="Now Playing Queue"
+        android:text="@string/now_playing_queue"
         android:textColor="@android:color/white"
         android:textSize="20sp"
         android:textStyle="bold" />

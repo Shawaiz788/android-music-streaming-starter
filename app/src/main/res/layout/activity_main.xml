@@ -63,8 +63,7 @@
                     android:textStyle="bold"
                     android:maxWidth="200dp"
                     android:singleLine="true"
-                    android:ellipsize="end"
-                    android:text="Title" />
+                    android:ellipsize="end" />
 
                 <TextView
                     android:id="@+id/mini_tv_artist"
@@ -74,8 +73,7 @@
                     android:textSize="11sp"
                     android:maxWidth="200dp"
                     android:singleLine="true"
-                    android:ellipsize="end"
-                    android:text="Artist" />
+                    android:ellipsize="end" />
             </LinearLayout>
 
             <ImageButton

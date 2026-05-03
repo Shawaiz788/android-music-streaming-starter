@@ -40,7 +40,6 @@ public class FavoritesFragment extends Fragment {
     };
 
     public FavoritesFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -66,7 +65,6 @@ public class FavoritesFragment extends Fragment {
         tvTopPlaylistTitle = view.findViewById(R.id.tvTopPlaylistTitle);
         tvTopPlaylistTracks = view.findViewById(R.id.tvTopPlaylistTracks);
 
-        // Subscribe to playlist updates
         playlistListener = playlists -> {
             if (isAdded()) {
                 getActivity().runOnUiThread(() -> updateTopPlaylistUI(playlists));
@@ -77,7 +75,6 @@ public class FavoritesFragment extends Fragment {
 
         updateTopPlaylistUI(MyApplication.favouritePlaylists);
 
-        // Click listeners
         LLTracks.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.favouriteTracksFragment);
@@ -125,7 +122,6 @@ public class FavoritesFragment extends Fragment {
             tvTopPlaylistTitle.setText(topPlaylist.getTitle());
             tvTopPlaylistTracks.setText(topPlaylist.getSongIds().size() + " tracks");
             
-            // Replicate the color logic for consistency
             Random random = new Random(topPlaylist.getId().hashCode() ^ MyApplication.sessionSeed);
             int bgIndex = random.nextInt(colors.length);
             int circleIndex = (bgIndex + (colors.length / 2)) % colors.length;

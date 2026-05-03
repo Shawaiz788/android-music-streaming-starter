@@ -46,7 +46,6 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
                 .setDuration(1000)
                 .build());
 
-        // --- Offline Image Loading Logic ---
         Object imageSource = song.getImageUrl();
         DBManager dbManager = new DBManager(context);
         dbManager.Open();
@@ -69,7 +68,6 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         }
 
         holder.itemView.setOnClickListener(v -> {
-            // Save to recent searches in Firebase
             if (MyApplication.recentSearchHandler != null) {
                 MyApplication.recentSearchHandler.addRecentSearch(song);
             }

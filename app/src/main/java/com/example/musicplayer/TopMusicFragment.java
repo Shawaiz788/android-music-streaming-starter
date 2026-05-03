@@ -35,7 +35,6 @@ public class TopMusicFragment extends Fragment {
     private MyApplication.OnUserLoadedListener userLoadedListener;
 
     public TopMusicFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -90,13 +89,11 @@ public class TopMusicFragment extends Fragment {
     private void loadData() {
         if (MyApplication.songsHandler == null) return;
 
-        // 1. Load Global Play Counts from Firebase
         MyApplication.songsHandler.loadPlayCounts(counts -> {
             this.playCountsMap = counts;
             refreshTopSongs();
         });
 
-        // 2. Subscribe to songs if not already loaded
         MyApplication.subscribe(songs -> {
             if (isAdded()) {
                 refreshTopSongs();
@@ -108,17 +105,14 @@ public class TopMusicFragment extends Fragment {
         if (!isAdded() || MyApplication.songs.isEmpty()) return;
 
         List<Song> allSongs = new ArrayList<>(MyApplication.songs);
-        //use quick sort to sort the songs
         quickSort(allSongs, 0, allSongs.size() - 1);
 
         topSongsList.clear();
-        // take top 50 or all if less
         int limit = Math.min(allSongs.size(), 50);
         for (int i = 0; i < limit; i++) {
             topSongsList.add(allSongs.get(i));
         }
 
-        // Update the Top Card with the #1 song
         if (!topSongsList.isEmpty()) {
             Song topSong = topSongsList.get(0);
             cvTopSong.setVisibility(View.VISIBLE);
@@ -144,7 +138,6 @@ public class TopMusicFragment extends Fragment {
         }
     }
 
-    // Manual Quick Sort Implementation as requested
     private void quickSort(List<Song> list, int low, int high) {
         if (low < high) {
             int pi = partition(list, low, high);
@@ -154,11 +147,9 @@ public class TopMusicFragment extends Fragment {
     }
 
     private int partition(List<Song> list, int low, int high) {
-        // We sort by play count in descending order
         int pivotCount = getPlayCount(list.get(high).getId());
         int i = (low - 1);
         for (int j = low; j < high; j++) {
-            // Descending: current count > pivot count
             if (getPlayCount(list.get(j).getId()) > pivotCount) {
                 i++;
                 Song temp = list.get(i);

@@ -15,7 +15,7 @@ public class ThemeHelper {
 
     public static String getTheme(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getString(KEY_THEME, "teal"); // Default to teal
+        return prefs.getString(KEY_THEME, "teal");
     }
 
     public static int getThemeDrawable(String themeName) {

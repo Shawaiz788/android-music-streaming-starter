@@ -55,7 +55,6 @@ public class PlaylistDetailsFragment extends Fragment {
             circleColor = getArguments().getInt("circleColor");
             
             if (currentPlaylist != null) {
-                // Recalculate duration here to ensure it's accurate with current song data
                 currentPlaylist.calculateAndSetDuration(MyApplication.songs);
                 setupUI();
                 loadPlaylistSongs();
@@ -105,10 +104,9 @@ public class PlaylistDetailsFragment extends Fragment {
     }
 
     private void setupImmersiveBackground(int color) {
-        // Create a smooth top-to-bottom gradient
         GradientDrawable gd = new GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{color, 0xFF000000} // Fades from playlist color to black
+                new int[]{color, 0xFF000000}
         );
         rootLayout.setBackground(gd);
     }

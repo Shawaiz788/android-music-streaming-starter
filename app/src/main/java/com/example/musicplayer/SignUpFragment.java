@@ -49,7 +49,7 @@ public class SignUpFragment extends Fragment {
             cpassword=etCpassword.getText().toString().trim();
 
             if(email.isEmpty()||password.isEmpty()||cpassword.isEmpty()){
-                Toast.makeText(requireContext(),"All fields must be filled",Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), R.string.all_fields_filled, Toast.LENGTH_SHORT).show();
                 return;
            }
             if(password.equals(cpassword)){
@@ -61,7 +61,6 @@ public class SignUpFragment extends Fragment {
                             String uid = firebaseUser.getUid();
                             String userEmail = firebaseUser.getEmail();
                             MyApplication.initHandlers(uid);
-                            //extract name from email for now
                             String name = userEmail != null ? userEmail.split("@")[0] : "User";
                             User newUser = new User(uid, name, userEmail, "");
                             if (MyApplication.userHandler != null) {
@@ -77,7 +76,7 @@ public class SignUpFragment extends Fragment {
                     }
                 });
             }else{
-                Toast.makeText(requireContext(),"Passwords do not match",Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), R.string.passwords_do_not_match, Toast.LENGTH_SHORT).show();
                 return;
             }
         }));
@@ -116,7 +115,6 @@ public class SignUpFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_sign_up, container, false);
     }
 }

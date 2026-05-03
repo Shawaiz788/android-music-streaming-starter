@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_bottom_sheet_dark"
     android:orientation="vertical"
     android:padding="20dp">
 
-    <!-- Menu Handle -->
     <View
         android:id="@+id/menu_handle"
         android:layout_width="45dp"
@@ -23,7 +23,6 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp">
 
-        <!-- Favourite Button (Left) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/fav_btn_menu_container"
             android:layout_width="50dp"
@@ -43,7 +42,6 @@
                 app:tint="@android:color/white" />
         </androidx.cardview.widget.CardView>
 
-        <!-- Song Image -->
         <ImageView
             android:id="@+id/iv_song_menu"
             android:layout_width="120dp"
@@ -53,7 +51,6 @@
             android:scaleType="centerCrop"
             android:src="@drawable/app_logo" />
 
-        <!-- Share Button (Right) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/share_btn"
             android:layout_width="50dp"
@@ -73,18 +70,16 @@
         </androidx.cardview.widget.CardView>
     </RelativeLayout>
 
-    <!-- Song Name -->
     <TextView
         android:id="@+id/tv_song_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Burning"
+        tools:text="Song Title"
         android:textColor="@color/white"
         android:textSize="24sp"
         android:textStyle="bold" />
 
-    <!-- Artist and Duration -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -98,7 +93,7 @@
             android:id="@+id/tv_artist_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Podval Caplella"
+            tools:text="Artist Name"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
 
@@ -106,7 +101,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="4dp"
-            android:text="."
+            android:text="@string/bullet_separator"
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -115,12 +110,11 @@
             android:id="@+id/tv_duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2:43"
+            tools:text="0:00"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
     </LinearLayout>
 
-    <!-- Menu Options -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -133,13 +127,11 @@
             android:layout_height="wrap_content"
             android:gravity="start|center_vertical"
             android:paddingVertical="12dp"
-            android:text="Add to playlist"
+            android:text="@string/add_to_playlist"
             android:textColor="@color/white"
             app:icon="@android:drawable/ic_menu_add"
             app:iconPadding="16dp"
             app:iconTint="@color/white" />
-
-
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_go_to_album"
@@ -148,7 +140,7 @@
             android:layout_height="wrap_content"
             android:gravity="start|center_vertical"
             android:paddingVertical="12dp"
-            android:text="Album"
+            android:text="@string/album"
             android:textColor="@color/white"
             app:icon="@drawable/icon_album"
             app:iconPadding="16dp"
@@ -161,7 +153,7 @@
             android:layout_height="wrap_content"
             android:gravity="start|center_vertical"
             android:paddingVertical="12dp"
-            android:text="Song Lyrics"
+            android:text="@string/song_lyrics"
             android:textColor="@color/white"
             app:icon="@drawable/icon_lyrics"
             app:iconPadding="16dp"
@@ -174,7 +166,7 @@
             android:layout_height="wrap_content"
             android:gravity="start|center_vertical"
             android:paddingVertical="12dp"
-            android:text="Download"
+            android:text="@string/download"
             android:textColor="@color/white"
             app:icon="@android:drawable/stat_sys_download"
             app:iconPadding="16dp"

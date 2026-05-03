@@ -26,7 +26,6 @@
             android:id="@+id/tv_playlist_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Playlist Name"
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -35,7 +34,6 @@
             android:id="@+id/tv_playlist_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0 tracks"
             android:textColor="#B3FFFFFF"
             android:textSize="14sp" />
     </LinearLayout>

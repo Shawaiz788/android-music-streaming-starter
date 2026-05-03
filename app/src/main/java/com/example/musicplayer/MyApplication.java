@@ -16,7 +16,6 @@ import java.util.Random;
 
 public class MyApplication extends Application {
     private static MyApplication instance;
-    // Global Data Lists
     public static final ArrayList<Song> songs = new ArrayList<>();
     public static final ArrayList<Song> newReleases = new ArrayList<>();
     public static final ArrayList<Album> allAlbums = new ArrayList<>();
@@ -28,12 +27,11 @@ public class MyApplication extends Application {
     public static final ArrayList<Song> downloadedSongs = new ArrayList<>();
 
     public static User currentUserInfo;
-    public static long sessionSeed; // Shared seed for consistent random colors
+    public static long sessionSeed;
 
-    // Handlers
     public static FirebaseSongsHandler songsHandler;
     public static FirebaseRecentSearchHandler recentSearchHandler;
-    public static FirebaseRecentSearchHandler recentSearchHandler_older; // keeping unused as requested
+    public static FirebaseRecentSearchHandler recentSearchHandler_older;
     public static FirebaseFavouriteSongsHandler favouriteSongsHandler;
     public static FirebaseFavouriteAlbumsHandler favouriteAlbumsHandler;
     public static FirebaseAlbumsHandler albumHandler;
@@ -169,7 +167,6 @@ public class MyApplication extends Application {
     }
 
     public static void notifySongsLoaded() {
-        // System-wide update: Recalculate all playlist durations once songs are available
         for (Playlist p : favouritePlaylists) {
             p.calculateAndSetDuration(songs);
         }
@@ -235,29 +232,23 @@ public class MyApplication extends Application {
         
         sessionSeed = new Random().nextLong();
         
-        // Ensure we start with a fresh list to trigger the shimmer
         songs.clear();
         newReleases.clear();
         allAlbums.clear();
         downloadedSongs.clear();
 
-        // 1. Initialize Handlers
         songsHandler = new FirebaseSongsHandler();
         albumHandler = new FirebaseAlbumsHandler();
 
-        // 2. Add local data
         addLocal();
 
-        // Load downloads into memory
         DBManager dbManager = new DBManager(this);
         dbManager.Open();
         downloadedSongs.addAll(dbManager.getAllDownloadedSongs());
         dbManager.Close();
 
-        // 3. Sync and Load from Firebase
         syncData();
 
-        // 4. Initialize user-specific handlers if logged in
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             initHandlers(currentUser.getUid());
@@ -265,22 +256,16 @@ public class MyApplication extends Application {
     }
 
     private void syncData() {
-        // Step 1: Sync Albums first to get their Firebase IDs
         albumHandler.syncLocalAlbums(new ArrayList<>(allAlbums), albumIdMap -> {
-            Log.d("Sync", "Albums synced. ID Map: " + albumIdMap);
 
-            // Step 2: Update all local songs with the new Album IDs
             for (Song song : songs) {
                 if (song.getAlbumId() != null && albumIdMap.containsKey(song.getAlbumId())) {
                     song.setAlbumId(albumIdMap.get(song.getAlbumId()));
                 }
             }
 
-            // Step 3: Sync Songs now that they have correct Album IDs
             songsHandler.syncLocalSongs(new ArrayList<>(songs), songIdMap -> {
-                Log.d("Sync", "Songs synced. ID Map: " + songIdMap);
 
-                // Step 4: Update Albums with corrected Song IDs
                 for (Album album : allAlbums) {
                     List<String> newSongIds = new ArrayList<>();
                     boolean changed = false;
@@ -294,12 +279,10 @@ public class MyApplication extends Application {
                     }
                     if (changed) {
                         album.setSongIds(newSongIds);
-                        // Push updated album back to Firebase
                         albumHandler.updateAlbum(album);
                     }
                 }
 
-                // Step 5: Finalize and load everything from cloud
                 songsHandler.loadSongs();
                 albumHandler.loadAlbums();
             });
@@ -364,7 +347,6 @@ public class MyApplication extends Application {
         cokeStudioAlbum.getSongIds().add(song1.getId());
         cokeStudioAlbum.getSongIds().add(song2.getId());
 
-        // New Data Upload
         String album2Id = "local_album_2";
         String artist2Id = "local_artist_2";
         Album album2 = new Album(album2Id, "P-Pop culture", "Karan Aujila & Ikky", "https://drive.google.com/uc?export=download&id=1FdRbkB2gfQgtk0f9x4HcgHgJ2BBUESrz", "2025");
@@ -426,22 +408,18 @@ public class MyApplication extends Application {
 
         int score = 0;
 
-        // Exact match
         if (title.equals(q))  score += 100;
         if (artist.equals(q)) score += 70;
         if (album.equals(q))  score += 30;
 
-        // Substring containment (bidirectional)
         if (title.contains(q)  || q.contains(title))  score += title.startsWith(q)  || q.startsWith(title)  ? 80 : 40;
         if (artist.contains(q) || q.contains(artist)) score += artist.startsWith(q) || q.startsWith(artist) ? 50 : 20;
         if (album.contains(q)  || q.contains(album))  score += 10;
 
-        // Fuzzy match — catches typos like "hangama" → "hungama"
         score += (int) (fuzzy(title,  q) * 80);
         score += (int) (fuzzy(artist, q) * 50);
         score += (int) (fuzzy(album,  q) * 20);
 
-        // Word-level fuzzy for multi-word queries
         for (String word : q.split("\\s+")) {
             if (word.length() < 3) continue;
             score += (int) (fuzzy(title,  word) * 20);
@@ -452,18 +430,14 @@ public class MyApplication extends Application {
         return score;
     }
 
-    ///using Levenshtein edit distance.
-   //fuzzy("hungama", "hangama") returns  0.857
 
     private static double fuzzy(String a, String b) {
         if (a.isEmpty() || b.isEmpty()) return 0.0;
 
         int m = a.length(), n = b.length();
 
-        // Ignore pairs that are too different in length to ever score well
         if (Math.abs(m - n) > Math.max(m, n) / 2) return 0.0;
 
-        // Levenshtein distance with two rolling arrays (memory efficient)
         int[] prev = new int[n + 1];
         int[] curr = new int[n + 1];
         for (int j = 0; j <= n; j++) prev[j] = j;
@@ -481,7 +455,6 @@ public class MyApplication extends Application {
         int distance = prev[n];
         double similarity = 1.0 - (double) distance / Math.max(m, n);
 
-        // Only return a score if strings are meaningfully similar
         return similarity >= 0.6 ? similarity : 0.0;
     }
 

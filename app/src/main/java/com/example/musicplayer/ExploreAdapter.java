@@ -47,7 +47,6 @@ public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.ViewHold
                 .setDuration(1000)
                 .build());
 
-        // Offline Image Loading Logic (consistent with SearchAdapter)
         Object imageSource = song.getImageUrl();
         DBManager dbManager = new DBManager(context);
         dbManager.Open();

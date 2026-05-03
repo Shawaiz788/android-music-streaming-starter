@@ -42,7 +42,7 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.AlbumViewHol
         if(album.getYear()!=null){
             year=album.getYear();
         }else{
-            year="Unknown Year";
+            year=context.getString(R.string.unknown_year);
         }
         holder.tvYear.setText(year);
 
@@ -74,11 +74,11 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.AlbumViewHol
     public static class AlbumViewHolder extends RecyclerView.ViewHolder {
         ImageView ivAlbumArt, ivOptions;
         TextView tvAlbumTitle, tvArtistName, tvYear;
-        View itemLayout; // Layout hook
+        View itemLayout;
 
         public AlbumViewHolder(@NonNull View itemView) {
             super(itemView);
-            itemLayout = itemView; // Root layout of item_album.xml
+            itemLayout = itemView;
             ivAlbumArt = itemView.findViewById(R.id.ivAlbumArt);
             tvAlbumTitle = itemView.findViewById(R.id.tvAlbumTitle);
             tvArtistName = itemView.findViewById(R.id.tvArtistName);

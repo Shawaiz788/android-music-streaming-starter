@@ -7,7 +7,6 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <!-- Drag Handle -->
     <View
         android:layout_width="40dp"
         android:layout_height="4dp"
@@ -20,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"
-        android:text="Equalizer"
+        android:text="@string/equalizer"
         android:textColor="@android:color/white"
         android:textSize="20sp"
         android:textStyle="bold" />
@@ -30,7 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="Enable"
+        android:text="@string/enable"
         android:textColor="@android:color/white" />
 
     <LinearLayout

@@ -39,20 +39,18 @@ public class HomeFragment extends Fragment {
     MyApplication.OnAlbumsLoadedListener albumsLoadedListener;
 
     public HomeFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-         ThemeHelper.applyTheme(view);
+        ThemeHelper.applyTheme(view);
         ivPfp = view.findViewById(R.id.ivPfp);
         
         userLoadedListener = user -> {
@@ -77,13 +75,11 @@ public class HomeFragment extends Fragment {
         if (shimmerContainer != null) {
             shimmerContainer.startShimmer();
         }
-        
-        // Setup New Releases Adapter
+
         releasesAdapter = new RvReleasesAdapter(requireContext(), MyApplication.newReleases);
         rvReleases.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
         rvReleases.setAdapter(releasesAdapter);
 
-        // Setup Albums Adapter (Grid Layout span 2)
         albumAdapter = new AlbumAdapter(requireContext(), MyApplication.allAlbums);
         rvAlbums.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         rvAlbums.setAdapter(albumAdapter);

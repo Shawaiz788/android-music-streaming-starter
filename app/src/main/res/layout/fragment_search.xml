@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:text="Search"
+            android:text="@string/search"
             android:textColor="@android:color/white"
             android:textSize="32sp"
             android:textStyle="bold" />
@@ -40,8 +40,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@drawable/icon_pfp"
-                android:contentDescription="Profile Picture" />
+                android:src="@drawable/icon_pfp" />
 
         </androidx.cardview.widget.CardView>
     </RelativeLayout>
@@ -52,7 +51,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
         android:background="@drawable/rounded_input_white"
-        android:hint="Artists, songs, or albums"
+        android:hint="@string/search_hint"
         android:textColorHint="@color/black"
         android:padding="14dp"
         android:drawableStart="@drawable/icon_search"
@@ -78,7 +77,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Browse all"
+                    android:text="@string/browse_all"
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
                     android:textStyle="bold"
@@ -113,13 +112,12 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:scaleType="centerCrop"
-                                    android:alpha="0.7"
-                                    android:contentDescription="Album Background" />
+                                    android:alpha="0.7" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Albums"
+                                    android:text="@string/albums"
                                     android:textColor="@android:color/white"
                                     android:textStyle="bold"
                                     android:textSize="16sp"
@@ -154,7 +152,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Playlists"
+                                    android:text="@string/playlists"
                                     android:textColor="@android:color/white"
                                     android:textStyle="bold"
                                     android:textSize="16sp"
@@ -185,13 +183,12 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:scaleType="centerCrop"
-                                android:alpha="0.7"
-                                android:contentDescription="Made For You Background" />
+                                android:alpha="0.7" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Made For You"
+                                android:text="@string/made_for_you"
                                 android:textColor="@android:color/white"
                                 android:textStyle="bold"
                                 android:textSize="16sp"
@@ -217,13 +214,12 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:scaleType="centerCrop"
-                                    android:alpha="0.7"
-                                    android:contentDescription="New Releases Background" />
+                                    android:alpha="0.7" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="New Releases"
+                                    android:text="@string/new_releases"
                                     android:textColor="@android:color/white"
                                     android:textStyle="bold"
                                     android:textSize="16sp"
@@ -251,7 +247,7 @@
                     android:id="@+id/tvExplore"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Explore"
+                    android:text="@string/explore"
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
                     android:textStyle="bold"
@@ -286,7 +282,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:text="Recent searches"
+                    android:text="@string/recent_searches"
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -297,7 +293,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:text="Clear all"
+                    android:text="@string/clear_all"
                     android:textColor="#B3B3B3"
                     android:textSize="14sp"
                     android:textStyle="bold"

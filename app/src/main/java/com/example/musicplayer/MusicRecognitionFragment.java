@@ -48,7 +48,6 @@ public class MusicRecognitionFragment extends Fragment {
 
     private static final String TAG = "MusicRecognition";
     private static final int PERMISSION_REQUEST_CODE = 101;
-    // For demo/test purposes. Get a real token at https://audd.io/
     private static final String AUDD_API_TOKEN = "21888d16d53c17b1820ec1026206428c";
 
     private ImageView btnBack;
@@ -65,7 +64,6 @@ public class MusicRecognitionFragment extends Fragment {
     private final OkHttpClient client = new OkHttpClient();
 
     public MusicRecognitionFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -137,7 +135,6 @@ public class MusicRecognitionFragment extends Fragment {
 
         try {
             startRecording();
-            // Automatically stop and identify after 10 seconds of recording
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (isListening && isAdded()) {
                     stopRecordingAndIdentify();

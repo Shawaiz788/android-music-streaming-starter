@@ -55,7 +55,6 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
         holder.tvSongTitle.setText(song.getTitle());
         holder.tvSongArtist.setText(song.getArtist());
 
-        // Load song cover image
         if (song.getImageUrl() != null && !song.getImageUrl().isEmpty()) {
             Glide.with(context)
                     .load(song.getImageUrl())
@@ -66,7 +65,6 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
             holder.ivSongCover.setImageResource(R.drawable.hungama);
         }
 
-        // Show "NOW" if the song is currently playing
         if (PlayerManager.getInstance().getCurrentSong() != null &&
                 PlayerManager.getInstance().getCurrentSong().getId().equals(song.getId())) {
             holder.tvStatus.setVisibility(View.VISIBLE);
@@ -75,7 +73,6 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
             holder.tvStatus.setVisibility(View.GONE);
         }
 
-        // Using the layout hook to set the click listener in bind
         holder.itemLayout.setOnClickListener(v -> {
             if (context instanceof MainActivity) {
                 ((MainActivity) context).showPlayerDialog(song, false, songs, position, queueTitle);
@@ -99,11 +96,11 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
     public static class SongViewHolder extends RecyclerView.ViewHolder {
         TextView tvIndex, tvSongTitle, tvSongArtist, tvStatus;
         ImageView ivSongCover, ivOptions;
-        View itemLayout; // Layout hook
+        View itemLayout;
 
         public SongViewHolder(@NonNull View itemView) {
             super(itemView);
-            itemLayout = itemView; // Root layout of item_song_album.xml
+            itemLayout = itemView;
             tvIndex = itemView.findViewById(R.id.tvIndex);
             ivSongCover = itemView.findViewById(R.id.ivSongCover);
             tvSongTitle = itemView.findViewById(R.id.tvSongTitle);

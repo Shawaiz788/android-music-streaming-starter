@@ -9,7 +9,7 @@ public class Album implements Serializable {
     private String title;
     private String artist;
     private String imageUrl;
-    private String year; // Added year
+    private String year;
     private List<String> songIds;
 
     public Album() {
@@ -25,7 +25,6 @@ public class Album implements Serializable {
         this.songIds = new ArrayList<>();
     }
 
-    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getTitle() { return title; }

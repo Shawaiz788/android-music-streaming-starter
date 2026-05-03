@@ -42,11 +42,11 @@ public class SigninFragment extends Fragment {
         btnLogin.setOnClickListener((v->{
             String email,password;
             email=etEmail.getText().toString().trim();
-            password=etPassword.getText().toString().trim(); //idk if supposed to be trimmed or not
+            password=etPassword.getText().toString().trim();
 
 
             if(email.isEmpty()||password.isEmpty()){
-                Toast.makeText(requireContext(),"All fields must be filled",Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), R.string.all_fields_filled, Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -57,7 +57,7 @@ public class SigninFragment extends Fragment {
                     if (firebaseUser != null) {
                         MyApplication.initHandlers(firebaseUser.getUid());
                     }
-                    Toast.makeText(getContext(), "SignIn Successful!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), R.string.signin_successful, Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(getActivity(), MainActivity.class));
                     requireActivity().finish();
                 }
@@ -82,7 +82,6 @@ public class SigninFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_signin, container, false);
     }
 }

@@ -52,8 +52,6 @@ public class PlayerManager {
             return;
         }
 
-        // Check if we are starting a fresh play from an external list (like AlbumDetails)
-        // or just navigating within the current/shuffled queue.
         boolean isNewRequest = (queue != this.currentQueue);
 
         if (isNewRequest) {
@@ -69,7 +67,6 @@ public class PlayerManager {
                 this.currentIndex = index;
             }
         } else {
-            // Navigating within the existing queue (e.g., via Next/Prev or Queue List)
             this.currentIndex = index;
         }
 
@@ -91,7 +88,6 @@ public class PlayerManager {
         currentSong = song;
         mediaPlayer = new MediaPlayer();
 
-        // Increment Global Play Count on Firebase
         if (MyApplication.songsHandler != null) {
             MyApplication.songsHandler.incrementPlayCount(song.getId());
         }
@@ -134,7 +130,7 @@ public class PlayerManager {
                             listener.onPlayStateChanged(false)
                     );
                 }
-                // Auto play next or repeat
+                
                 if (repeatEnabled) {
                     play(context, currentQueue, currentIndex);
                 } else if (hasNext()) {
@@ -145,7 +141,7 @@ public class PlayerManager {
             mediaPlayer.setOnErrorListener((mp, what, extra) -> {
                 completed = false;
                 prepared = false;
-                Toast.makeText(context, "Playback error: " + what + ", " + extra, Toast.LENGTH_LONG).show();
+                Toast.makeText(context, context.getString(R.string.playback_error, what, extra), Toast.LENGTH_LONG).show();
                 return true;
             });
 
@@ -293,10 +289,8 @@ public class PlayerManager {
         this.shuffleEnabled = shuffleEnabled;
 
         if (shuffleEnabled) {
-            // Enable shuffle: keep current song at index 0 if available, shuffle the rest
             java.util.List<Song> shuffled = new java.util.ArrayList<>(originalQueue);
             if (currentSong != null) {
-                // Find and remove current song using ID comparison
                 int currentSongIdx = -1;
                 for (int i = 0; i < shuffled.size(); i++) {
                     if (shuffled.get(i).getId().equals(currentSong.getId())) {
@@ -317,7 +311,6 @@ public class PlayerManager {
             }
             this.currentQueue = shuffled;
         } else {
-            // Disable shuffle: restore original order, find current song index
             this.currentQueue = new java.util.ArrayList<>(originalQueue);
             if (currentSong != null) {
                 for (int i = 0; i < currentQueue.size(); i++) {

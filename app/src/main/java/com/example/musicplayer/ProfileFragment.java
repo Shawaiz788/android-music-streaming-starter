@@ -53,7 +53,6 @@ public class ProfileFragment extends Fragment {
     private Map<String, View> themeViews = new HashMap<>();
 
     public ProfileFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -79,11 +78,9 @@ public class ProfileFragment extends Fragment {
 
             if (bitmap == null) return;
 
-            // Fix orientation based on EXIF data
             bitmap = rotateImageIfRequired(bitmap, uri);
 
-            // Show loading state
-            Toast.makeText(requireContext(), "Uploading to Drive...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), getString(R.string.uploading_to_drive), Toast.LENGTH_SHORT).show();
 
             String fileName = "profile_" + (user != null ? user.getUid() : "unknown");
 
@@ -93,7 +90,7 @@ public class ProfileFragment extends Fragment {
                     requireActivity().runOnUiThread(() -> {
                         if (MyApplication.userHandler != null) {
                             MyApplication.userHandler.setProfileImageUrl(directLink);
-                            Toast.makeText(requireContext(), "Profile picture updated!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), getString(R.string.profile_picture_updated), Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -101,12 +98,12 @@ public class ProfileFragment extends Fragment {
                 @Override
                 public void onFailure(Exception e) {
                     requireActivity().runOnUiThread(() -> {
-                        Toast.makeText(requireContext(), "Upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(requireContext(), getString(R.string.upload_failed, e.getMessage()), Toast.LENGTH_LONG).show();
                     });
                 }
             });
         } catch (Exception e) {
-            Toast.makeText(requireContext(), "Failed to process image", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), getString(R.string.failed_to_process_image), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -154,7 +151,6 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        // ThemeHelper.applyTheme(view); // Removed as per user request
         btnQuit = view.findViewById(R.id.btnQuit);
         btnClose = view.findViewById(R.id.closeBtn);
         btnEditProfile = view.findViewById(R.id.btnEditProfile);
@@ -168,7 +164,6 @@ public class ProfileFragment extends Fragment {
         userListener = this::updateUI;
         MyApplication.subscribeUser(userListener);
 
-        // Theme selection views
         themeViews.put("teal", view.findViewById(R.id.colorTeal));
         themeViews.put("orange", view.findViewById(R.id.colorOrange));
         themeViews.put("purple", view.findViewById(R.id.colorPurple));
@@ -182,7 +177,6 @@ public class ProfileFragment extends Fragment {
             }
         }
 
-        // Highlight currently selected theme
         String currentTheme = ThemeHelper.getTheme(requireContext());
         highlightSelectedTheme(currentTheme);
 
@@ -210,9 +204,6 @@ public class ProfileFragment extends Fragment {
                 view.setScaleX(1.2f);
                 view.setScaleY(1.2f);
                 view.setAlpha(1.0f);
-                // To show a border, we can't easily change the stroke of the background drawable
-                // without affecting others since they share the same resource.
-                // But we can use alpha and scale to make it stand out.
             } else {
                 view.setScaleX(1.0f);
                 view.setScaleY(1.0f);
@@ -245,18 +236,11 @@ public class ProfileFragment extends Fragment {
     }
 
     private void updateTheme(String themeName, View view) {
-        // 1. Save the theme preference globally or in SharedPreferences
         ThemeHelper.saveTheme(requireContext(), themeName);
-
-        // 2. Update UI selection
         highlightSelectedTheme(themeName);
-
-        // 3. Optional: Notify the user
-        Toast.makeText(requireContext(), "Theme changed to " + themeName, Toast.LENGTH_SHORT).show();
-
-        // 4. To reflect theme change in the background of ProfileFragment immediately if needed:
-        // ThemeHelper.applyTheme(view.findViewById(R.id.profileRoot));
+        Toast.makeText(requireContext(), getString(R.string.theme_changed_to, themeName), Toast.LENGTH_SHORT).show();
     }
+
     private void showEditProfileDialog() {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_profile, null);
         EditText etName = dialogView.findViewById(R.id.etName);
@@ -281,12 +265,12 @@ public class ProfileFragment extends Fragment {
         btnSave.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (name.isEmpty()) {
-                Toast.makeText(requireContext(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), getString(R.string.name_cannot_be_empty), Toast.LENGTH_SHORT).show();
                 return;
             }
             if (MyApplication.userHandler != null) {
                 MyApplication.userHandler.setName(name);
-                Toast.makeText(requireContext(), "Updating...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), getString(R.string.updating), Toast.LENGTH_SHORT).show();
             }
             dialog.dismiss();
         });

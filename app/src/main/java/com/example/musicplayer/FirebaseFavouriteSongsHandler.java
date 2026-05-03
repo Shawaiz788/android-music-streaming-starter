@@ -44,14 +44,12 @@ public class FirebaseFavouriteSongsHandler {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    // Optimistically remove from local list immediately
                     boolean removed = MyApplication.favouriteSongs.removeIf(s -> s.getId().equals(song.getId()));
                     if (removed && onComplete != null) onComplete.run();
 
                     ref.child(song.getId()).removeValue()
                             .addOnFailureListener(e -> Log.e("FAV_E", "Remove failed: " + e.getMessage()));
                 } else {
-                    // Optimistically add to local list immediately
                     if (!MyApplication.favouriteSongs.contains(song)) {
                         MyApplication.favouriteSongs.add(song);
                     }
@@ -64,12 +62,11 @@ public class FirebaseFavouriteSongsHandler {
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(MyApplication.getInstance(), "Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MyApplication.getInstance(), MyApplication.getInstance().getString(R.string.error_generic, error.getMessage()), Toast.LENGTH_LONG).show();
             }
         });
     }
 
-    // Keep old signature working for any other callers
     public void toggleFavourite(Song song) {
         toggleFavourite(song, null);
     }

@@ -20,7 +20,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:text="Top Songs"
+            android:layout_toStartOf="@id/cvProfile"
+            android:layout_alignParentStart="true"
+            android:text="@string/top_songs"
             android:textColor="@android:color/white"
             android:textSize="32sp"
             android:textStyle="bold" />
@@ -77,7 +79,7 @@
                 android:id="@+id/tvTopSongTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Song Title"
+                android:text="@string/song_title_placeholder"
                 android:textColor="@android:color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -86,7 +88,7 @@
                 android:id="@+id/tvTopSongArtist"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Artist Name"
+                android:text="@string/artist_name_placeholder"
                 android:textColor="@android:color/white"
                 android:textSize="14sp" />
         </LinearLayout>

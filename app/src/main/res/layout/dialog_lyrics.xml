@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:padding="20dp">
 
-    <!-- Drag Handle -->
     <View
         android:layout_width="40dp"
         android:layout_height="4dp"

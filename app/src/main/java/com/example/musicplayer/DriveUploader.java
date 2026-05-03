@@ -19,9 +19,6 @@ import okhttp3.Response;
 
 public class DriveUploader {
 
-    // IMPORTANT: To upload to a specific folder without OAuth in Android, 
-    // you typically use a Google Apps Script as a proxy.
-    // Here is a placeholder URL. You should replace this with your deployed Google Apps Script URL.
     private static final String SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzoE2PJc2zX9pZJOTFLugw5PKJuOVDxcFHGcJHvmVX8dZEfE14180iHIkdAfX_SS9wpnw/exec";
     private static final String FOLDER_ID = "1MQbfnIx629erETZWkxokVT-oGk5OZh1A";
 
@@ -33,7 +30,6 @@ public class DriveUploader {
     public static void uploadImage(Bitmap bitmap, String fileName, UploadCallback callback) {
         OkHttpClient client = new OkHttpClient();
 
-        // 1. Resize image to ensure it's not too large for the script (max 500px)
         int maxWidth = 500;
         int maxHeight = 500;
         float scale = Math.min(((float) maxWidth / bitmap.getWidth()), ((float) maxHeight / bitmap.getHeight()));
@@ -42,16 +38,13 @@ public class DriveUploader {
             resizedBitmap = Bitmap.createScaledBitmap(bitmap, (int) (bitmap.getWidth() * scale), (int) (bitmap.getHeight() * scale), true);
         }
 
-        // 2. Convert to JPEG byte array
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
         byte[] byteArray = stream.toByteArray();
 
-        // 3. Convert to Base64 string (NO_WRAP is crucial for URL parameters)
         String base64Image = Base64.encodeToString(byteArray, Base64.NO_WRAP);
         Log.d("DriveUploader", "Base64 Length: " + base64Image.length());
 
-        // 4. Create form body
         RequestBody requestBody = new FormBody.Builder()
                 .add("base64", base64Image)
                 .add("fileName", fileName + ".jpg")
@@ -76,8 +69,6 @@ public class DriveUploader {
                     String responseData = response.body().string().trim();
                     Log.d("DriveUploader", "Raw Response: " + responseData);
 
-                    // 5. Robust Validation: Drive IDs are 33-40 chars, alphanumeric, hyphens, and underscores.
-                    // If it contains spaces, "Error", or "Exception", it's definitely a failure.
                     boolean isLikelyError = responseData.contains(" ") || 
                                            responseData.contains(":") || 
                                            responseData.toLowerCase().contains("error") || 

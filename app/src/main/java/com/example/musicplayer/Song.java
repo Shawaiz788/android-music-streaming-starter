@@ -13,7 +13,6 @@ public class Song implements Serializable {
     private String songUrl;
     private String imageUrl;
     
-    // Relationship IDs for efficient filtering
     private String albumId;
     private String artistId;
 
@@ -33,7 +32,6 @@ public class Song implements Serializable {
         this.artistId = artistId;
     }
 
-    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getTitle() { return title; }

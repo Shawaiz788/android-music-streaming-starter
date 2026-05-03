@@ -6,14 +6,12 @@
     android:layout_height="match_parent"
     android:background="#A67B5B">
 
-    <!-- Fading Player Elements -->
     <RelativeLayout
         android:id="@+id/player_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="25dp">
 
-        <!-- Top Status -->
         <TextView
             android:id="@+id/tv_top_status_internal"
             android:layout_width="wrap_content"
@@ -26,7 +24,6 @@
             android:textSize="15sp"
             android:visibility="gone" />
 
-        <!-- Music List Button (Bottom) -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_music_list"
             android:layout_width="wrap_content"
@@ -34,7 +31,7 @@
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="20dp"
-            android:text="Music List"
+            android:text="@string/music_list"
             android:textAllCaps="false"
             android:textColor="@android:color/black"
             android:textSize="14sp"
@@ -44,7 +41,6 @@
             app:iconGravity="end"
             app:iconTint="@android:color/black" />
 
-        <!-- Bottom Controls and Seek Section -->
         <LinearLayout
             android:id="@+id/layout_controls_and_seek"
             android:layout_width="match_parent"
@@ -60,12 +56,13 @@
                 android:layout_gravity="center_horizontal"
                 android:gravity="center"
                 android:paddingHorizontal="24dp"
-                android:text="Burning"
+                tools:text="Song Title"
                 android:textColor="@android:color/white"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:ellipsize="end"
-                android:maxLines="1" />
+                android:maxLines="1"
+                xmlns:tools="http://schemas.android.com/tools" />
 
             <TextView
                 android:id="@+id/tv_artist"
@@ -75,11 +72,12 @@
                 android:layout_marginTop="4dp"
                 android:gravity="center"
                 android:paddingHorizontal="24dp"
-                android:text="Podval Caplella"
+                tools:text="Artist Name"
                 android:textColor="#CCFFFFFF"
                 android:textSize="17sp"
                 android:ellipsize="end"
-                android:maxLines="1" />
+                android:maxLines="1"
+                xmlns:tools="http://schemas.android.com/tools" />
 
             <SeekBar
                 android:id="@+id/seek_bar"
@@ -88,7 +86,7 @@
                 android:layout_marginTop="32dp"
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp"
-                android:progress="25"
+                android:progress="0"
                 android:progressBackgroundTint="#4DFFFFFF"
                 android:progressTint="@android:color/white"
                 android:thumbTint="@android:color/white" />
@@ -106,9 +104,10 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="0:36"
+                    tools:text="0:00"
                     android:textColor="@android:color/white"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"
+                    xmlns:tools="http://schemas.android.com/tools" />
 
                 <ImageView
                     android:id="@+id/btn_shuffle"
@@ -133,9 +132,10 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="2:43"
+                    tools:text="0:00"
                     android:textColor="@android:color/white"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"
+                    xmlns:tools="http://schemas.android.com/tools" />
             </LinearLayout>
 
             <LinearLayout
@@ -178,7 +178,7 @@
                         android:layout_width="35dp"
                         android:layout_height="35dp"
                         android:layout_gravity="center"
-                        android:src="@android:drawable/ic_media_pause"
+                        android:src="@android:drawable/ic_media_play"
                         app:tint="@android:color/black" />
                 </androidx.cardview.widget.CardView>
 
@@ -202,7 +202,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Center Content Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -243,7 +242,6 @@
 
     </RelativeLayout>
 
-    <!-- Bottom Sheets -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/more_menu_sheet"
         android:layout_width="match_parent"
@@ -284,7 +282,6 @@
         <include layout="@layout/dialog_queue_list" />
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Persistent Header Handle -->
     <View
         android:id="@+id/top_handle"
         android:layout_width="45dp"

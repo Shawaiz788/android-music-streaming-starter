@@ -35,7 +35,6 @@ public class FirebaseSongsHandler {
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // Clear the global lists before repopulating to ensure consistency
                 MyApplication.songs.clear();
                 MyApplication.newReleases.clear();
 
@@ -50,7 +49,6 @@ public class FirebaseSongsHandler {
                         }
                     }
 
-                    // Extract new releases from this bucket
                     int totalInBucket = bucketSongs.size();
                     if (totalInBucket > 0) {
                         int countToTake = Math.max(1, (int) Math.ceil(totalInBucket * 0.25));
@@ -60,7 +58,6 @@ public class FirebaseSongsHandler {
                     }
                 }
                 
-                // Shuffle new releases so the list isn't strictly alphabetical by bucket
                 java.util.Collections.shuffle(MyApplication.newReleases);
                 
                 MyApplication.notifySongsLoaded();

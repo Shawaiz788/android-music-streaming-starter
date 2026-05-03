@@ -56,7 +56,7 @@ public class QueueAdapter extends RecyclerView.Adapter<QueueAdapter.QueueViewHol
         if (PlayerManager.getInstance().getCurrentSong() != null &&
                 PlayerManager.getInstance().getCurrentSong().getId().equals(song.getId())) {
             holder.tvStatus.setVisibility(View.VISIBLE);
-            holder.tvStatus.setText("NOW");
+            holder.tvStatus.setText(context.getString(R.string.status_now));
         } else {
             holder.tvStatus.setVisibility(View.GONE);
         }
@@ -85,7 +85,7 @@ public class QueueAdapter extends RecyclerView.Adapter<QueueAdapter.QueueViewHol
             tvSongArtist = itemView.findViewById(R.id.tvSongArtist);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             ivOptions = itemView.findViewById(R.id.ivOptions);
-            ivOptions.setVisibility(View.GONE); // Hide options in queue list for now
+            ivOptions.setVisibility(View.GONE);
         }
     }
 }

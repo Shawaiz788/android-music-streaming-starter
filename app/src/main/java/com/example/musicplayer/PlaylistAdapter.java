@@ -21,25 +21,25 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
 
     private final Context context;
     private final List<Playlist> playlists;
-    private final long sessionSeed; // Unique seed for this app session
+    private final long sessionSeed;
     
     private final int[] colors = {
-            Color.parseColor("#4CAF50"), // Green
-            Color.parseColor("#F44336"), // Red
-            Color.parseColor("#2196F3"), // Blue
-            Color.parseColor("#FF9800"), // Orange
-            Color.parseColor("#9C27B0"), // Purple
-            Color.parseColor("#00BCD4"), // Cyan
-            Color.parseColor("#E91E63"), // Pink
-            Color.parseColor("#673AB7"), // Deep Purple
-            Color.parseColor("#FF5722"), // Deep Orange
-            Color.parseColor("#3F51B5")  // Indigo
+            Color.parseColor("#4CAF50"),
+            Color.parseColor("#F44336"),
+            Color.parseColor("#2196F3"),
+            Color.parseColor("#FF9800"),
+            Color.parseColor("#9C27B0"),
+            Color.parseColor("#00BCD4"),
+            Color.parseColor("#E91E63"),
+            Color.parseColor("#673AB7"),
+            Color.parseColor("#FF5722"),
+            Color.parseColor("#3F51B5")
     };
 
     public PlaylistAdapter(Context context, List<Playlist> playlists) {
         this.context = context;
         this.playlists = playlists;
-        this.sessionSeed = new Random().nextLong(); // Generate once per app open
+        this.sessionSeed = new Random().nextLong();
     }
 
     @NonNull

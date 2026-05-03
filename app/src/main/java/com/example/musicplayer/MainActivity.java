@@ -71,7 +71,6 @@ public class MainActivity extends AppCompatActivity
     private View playerDialogView;
     private boolean wasPlayingBeforePause = false;
 
-    // ─── Mutable song reference so all menu listeners always use the current song ───
     private final Song[] currentSongRef = {null};
 
     @Override
@@ -91,7 +90,6 @@ public class MainActivity extends AppCompatActivity
         miniBtnClose.setOnClickListener(v -> PlayerManager.getInstance().stop());
         miniBtnMaximize.setOnClickListener(v -> reopenFullPlayer());
 
-        // Nav setup
         bottomNav = findViewById(R.id.bottom_navigation);
 
         NavHostFragment navHostFragment =
@@ -136,9 +134,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        // Capture whether the song was playing before pausing
-        // Only update if it is currently playing, to avoid overwriting a 'true' state
-        // set by the share button before this lifecycle method is called.
         if (PlayerManager.getInstance().isPlaying()) {
             wasPlayingBeforePause = true;
             PlayerManager.getInstance().pause();
@@ -148,10 +143,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        // If it was playing before the app was paused (e.g. by sharing), resume playback
         if (wasPlayingBeforePause) {
             PlayerManager.getInstance().resume();
-            wasPlayingBeforePause = false; // Reset to avoid double-resuming if onResume is called again
+            wasPlayingBeforePause = false;
         }
     }
 
@@ -212,13 +206,11 @@ public class MainActivity extends AppCompatActivity
             if (!resumeOnly) {
                 PlayerManager.getInstance().play(this, queue, index, queueTitle);
             }
-            // Sync the shared reference and refresh the UI
             currentSongRef[0] = PlayerManager.getInstance().getCurrentSong();
             updatePlayerDialogUI(currentSongRef[0]);
             return;
         }
 
-        // ── Set the shared song reference for this dialog session ──
         currentSongRef[0] = song;
 
         playerDialogView = LayoutInflater.from(this).inflate(R.layout.dialog_player, null);
@@ -241,17 +233,16 @@ public class MainActivity extends AppCompatActivity
         ImageView ivFavMenu         = view.findViewById(R.id.iv_fav_menu);
 
         if (queueTitle != null && !queueTitle.isEmpty()) {
-            String displayTitle = queueTitle.startsWith("Album: ") ? queueTitle : "Playlist «" + queueTitle + "»";
+            String displayTitle = queueTitle.startsWith(getString(R.string.album)) ? queueTitle : getString(R.string.playlist_format, queueTitle);
             if (PlayerManager.getInstance().isShuffleEnabled()) {
-                displayTitle += " (Shuffled)";
+                displayTitle += getString(R.string.shuffled_suffix);
             }
-            tvTopStatus.setText("Play Now: " + displayTitle);
+            tvTopStatus.setText(getString(R.string.play_now_format, displayTitle));
             tvTopStatus.setVisibility(View.VISIBLE);
         } else {
             tvTopStatus.setVisibility(View.GONE);
         }
 
-        // ── Helper: refresh fav icons based on currentSongRef ──
         Runnable refreshFavIcons = () -> {
             boolean fav = false;
             for (Song s : MyApplication.favouriteSongs) {
@@ -263,12 +254,10 @@ public class MainActivity extends AppCompatActivity
         };
         refreshFavIcons.run();
 
-        // ── Fav button (main) — always acts on currentSongRef[0] ──
         view.findViewById(R.id.fav_btn).setOnClickListener(v -> {
             MyApplication.favouriteSongsHandler.toggleFavourite(currentSongRef[0], refreshFavIcons);
         });
 
-        // ── Fav button (menu) — same ──
         View favBtnMenu = view.findViewById(R.id.fav_btn_menu_container);
         if (favBtnMenu != null) {
             favBtnMenu.setOnClickListener(v -> {
@@ -277,14 +266,13 @@ public class MainActivity extends AppCompatActivity
             });
         }
 
-        // ── Download / Delete — always acts on currentSongRef[0] ──
         MaterialButton btnDownload = view.findViewById(R.id.btn_download);
         DBManager dbManager = new DBManager(this);
         dbManager.Open();
 
         Runnable updateDownloadButton = () -> {
             boolean downloaded = dbManager.isDownloaded(currentSongRef[0].getId());
-            btnDownload.setText(downloaded ? "Delete" : "Download");
+            btnDownload.setText(downloaded ? getString(R.string.delete) : getString(R.string.download));
             btnDownload.setIconResource(downloaded
                     ? android.R.drawable.ic_menu_delete
                     : android.R.drawable.stat_sys_download);
@@ -298,18 +286,18 @@ public class MainActivity extends AppCompatActivity
                 if (paths[0] != null) new java.io.File(paths[0]).delete();
                 if (paths[1] != null) new java.io.File(paths[1]).delete();
                 dbManager.deleteSong(activeSong.getId());
-                Toast.makeText(this, "Song deleted from device", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.song_deleted), Toast.LENGTH_SHORT).show();
                 updateDownloadButton.run();
             } else {
                 btnDownload.setEnabled(false);
-                btnDownload.setText("Downloading...");
+                btnDownload.setText(getString(R.string.downloading));
                 dbManager.AddSongs(activeSong, new DBManager.OnDownloadListener() {
                     @Override
                     public void onDownloadComplete() {
                         runOnUiThread(() -> {
                             updateDownloadButton.run();
                             btnDownload.setEnabled(true);
-                            Toast.makeText(MainActivity.this, "Song downloaded successfully", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, getString(R.string.song_downloaded), Toast.LENGTH_SHORT).show();
                         });
                     }
                     @Override
@@ -330,7 +318,6 @@ public class MainActivity extends AppCompatActivity
         tvSongNameMenu.setText(song.getTitle());
         tvArtistNameMenu.setText(song.getArtist());
 
-        // Check for local cover image
         Object imageSource = song.getImageUrl();
         if (dbManager.isDownloaded(song.getId())) {
             String[] paths = dbManager.getSongPaths(song.getId());
@@ -376,9 +363,9 @@ public class MainActivity extends AppCompatActivity
             song.setSongUrl(originalUrl);
 
             ivPlayPause.setImageResource(android.R.drawable.ic_media_pause);
-            tvCurrentTime.setText("0:00");
-            tvTotalTime.setText("0:00");
-            tvDurationMenu.setText("0:00");
+            tvCurrentTime.setText(getString(R.string.time_zero));
+            tvTotalTime.setText(getString(R.string.time_zero));
+            tvDurationMenu.setText(getString(R.string.time_zero));
             seekBar.setMax(0);
         } else {
             tvTitle.setText(song.getTitle());
@@ -471,7 +458,6 @@ public class MainActivity extends AppCompatActivity
         btnShuffle.setOnClickListener(v -> {
             playerManager.setShuffleEnabled(!playerManager.isShuffleEnabled());
             updateShuffleButton.run();
-            // Refresh navigation buttons and UI as indices and text might have changed
             updateNavigationButtons.run();
             updatePlayerDialogUI(currentSongRef[0]);
         });
@@ -501,7 +487,6 @@ public class MainActivity extends AppCompatActivity
             refreshFavIcons.run();
         });
 
-        // ── Bottom Sheets ──
         View moreMenuSheet  = view.findViewById(R.id.more_menu_sheet);
         View equalizerSheet = view.findViewById(R.id.equalizer_sheet);
         View lyricsSheet    = view.findViewById(R.id.lyrics_sheet);
@@ -608,7 +593,6 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        // ── Add to Playlist — uses currentSongRef[0] ──
         view.findViewById(R.id.btn_add_to_playlist).setOnClickListener(v -> {
             behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -617,9 +601,7 @@ public class MainActivity extends AppCompatActivity
             showAddToPlaylistDialog(currentSongRef[0], playlistBehavior, playlistSheet);
         });
 
-        // ── Share — uses currentSongRef[0] ──
         view.findViewById(R.id.share_btn).setOnClickListener(v -> {
-            // Capture playback state and pause before showing the share chooser
             wasPlayingBeforePause = PlayerManager.getInstance().isPlaying();
             if (wasPlayingBeforePause) {
                 PlayerManager.getInstance().pause();
@@ -628,13 +610,12 @@ public class MainActivity extends AppCompatActivity
             Song activeSong = currentSongRef[0];
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
-            String shareMessage = "Check out this song: " + activeSong.getTitle()
-                    + " by " + activeSong.getArtist() + "\n" + activeSong.getSongUrl();
+            String shareMessage = getString(R.string.share_message_format,
+                    activeSong.getTitle(), activeSong.getArtist(), activeSong.getSongUrl());
             shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
-            startActivity(Intent.createChooser(shareIntent, "Share via"));
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_via)));
         });
 
-        // ── Equalizer ──
         view.findViewById(R.id.equalizer).setOnClickListener(v -> {
             behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -659,7 +640,7 @@ public class MainActivity extends AppCompatActivity
                     TextView freqText = new TextView(this);
                     freqText.setTextColor(Color.WHITE);
                     freqText.setPadding(0, 20, 0, 10);
-                    freqText.setText((equalizer.getCenterFreq(band) / 1000) + " Hz");
+                    freqText.setText(getString(R.string.hz_format, (equalizer.getCenterFreq(band) / 1000)));
                     container.addView(freqText);
 
                     SeekBar bar = new SeekBar(this);
@@ -680,7 +661,6 @@ public class MainActivity extends AppCompatActivity
 
 
 
-        // ── Go to Album — uses currentSongRef[0] ──
         view.findViewById(R.id.btn_go_to_album).setOnClickListener(v -> {
             Album targetAlbum = null;
             for (Album a : MyApplication.allAlbums) {
@@ -695,16 +675,15 @@ public class MainActivity extends AppCompatActivity
                 bundle.putSerializable("album", targetAlbum);
                 navController.navigate(R.id.albumDetailsFragment, bundle);
             } else {
-                Toast.makeText(this, "Album details not available", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.album_not_available), Toast.LENGTH_SHORT).show();
             }
         });
 
-        // ── Lyrics — uses currentSongRef[0] ──
         view.findViewById(R.id.btn_lyrics).setOnClickListener(v -> {
             Song activeSong = currentSongRef[0];
             String lyrics = activeSong.getLyrics();
             if (lyrics == null || lyrics.isEmpty()) {
-                lyrics = "Lyrics not available for this song.";
+                lyrics = getString(R.string.lyrics_not_available);
             }
 
             ((TextView) lyricsSheet.findViewById(R.id.tv_lyrics_title)).setText(activeSong.getTitle());
@@ -774,7 +753,6 @@ public class MainActivity extends AppCompatActivity
     private void updatePlayerDialogUI(Song song) {
         if (playerDialogView == null || song == null) return;
 
-        // ── Keep the shared reference in sync ──
         currentSongRef[0] = song;
 
         TextView tvTopStatus      = playerDialogView.findViewById(R.id.tv_top_status_internal);
@@ -794,11 +772,11 @@ public class MainActivity extends AppCompatActivity
         PlayerManager playerManager = PlayerManager.getInstance();
         String queueTitle = playerManager.getQueueTitle();
         if (queueTitle != null && !queueTitle.isEmpty()) {
-            String displayTitle = queueTitle.startsWith("Album: ") ? queueTitle : "Playlist «" + queueTitle + "»";
+            String displayTitle = queueTitle.startsWith(getString(R.string.album)) ? queueTitle : getString(R.string.playlist_format, queueTitle);
             if (playerManager.isShuffleEnabled()) {
-                displayTitle += " (Shuffled)";
+                displayTitle += getString(R.string.shuffled_suffix);
             }
-            tvTopStatus.setText("Play Now: " + displayTitle);
+            tvTopStatus.setText(getString(R.string.play_now_format, displayTitle));
             tvTopStatus.setVisibility(View.VISIBLE);
         } else {
             tvTopStatus.setVisibility(View.GONE);
@@ -809,7 +787,6 @@ public class MainActivity extends AppCompatActivity
         tvSongNameMenu.setText(song.getTitle());
         tvArtistNameMenu.setText(song.getArtist());
 
-        // Update fav icons
         boolean isFav = false;
         for (Song s : MyApplication.favouriteSongs) {
             if (s.getId().equals(song.getId())) { isFav = true; break; }
@@ -818,11 +795,10 @@ public class MainActivity extends AppCompatActivity
         if (ivFavMenu != null)
             ivFavMenu.setImageResource(isFav ? R.drawable.icon_favorites : R.drawable.ic_fav);
 
-        // Reset seekbar and times only if not already prepared
         if (!playerManager.isPrepared()) {
-            tvCurrentTime.setText("0:00");
-            tvTotalTime.setText("0:00");
-            tvDurationMenu.setText("0:00");
+            tvCurrentTime.setText(getString(R.string.time_zero));
+            tvTotalTime.setText(getString(R.string.time_zero));
+            tvDurationMenu.setText(getString(R.string.time_zero));
             seekBar.setMax(0);
             seekBar.setProgress(0);
         } else {
@@ -834,7 +810,6 @@ public class MainActivity extends AppCompatActivity
             tvCurrentTime.setText(formatTime(playerManager.getCurrentPosition()));
         }
 
-        // Update navigation and repeat buttons
         ImageView btnPrev = playerDialogView.findViewById(R.id.btn_prev);
         ImageView btnNext = playerDialogView.findViewById(R.id.btn_next);
         ImageView btnRepeat = playerDialogView.findViewById(R.id.btn_repeat);
@@ -854,7 +829,6 @@ public class MainActivity extends AppCompatActivity
             btnShuffle.setAlpha(playerManager.isShuffleEnabled() ? 1.0f : 0.4f);
         }
 
-        // Update album art and background gradient
         DBManager dbManager = new DBManager(this);
         dbManager.Open();
         Object imageSource = song.getImageUrl();
@@ -889,14 +863,12 @@ public class MainActivity extends AppCompatActivity
                     @Override public void onLoadCleared(@Nullable Drawable placeholder) {}
                 });
 
-        // Update play/pause icon
         if (ivPlayPause != null) {
             ivPlayPause.setImageResource(playerManager.isPlaying()
                     ? android.R.drawable.ic_media_pause
                     : android.R.drawable.ic_media_play);
         }
 
-        // Refresh Queue List if it's currently being displayed
         RecyclerView rvQueue = playerDialogView.findViewById(R.id.rv_queue_list);
         if (rvQueue != null && rvQueue.getAdapter() != null) {
             rvQueue.getAdapter().notifyDataSetChanged();
@@ -913,9 +885,9 @@ public class MainActivity extends AppCompatActivity
                 playlist.getSongIds().add(song.getId());
                 playlist.setTrackCount(playlist.getSongIds().size());
                 MyApplication.playlistHandler.updatePlaylist(playlist);
-                Toast.makeText(this, "Added to " + playlist.getTitle(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.added_to_playlist, playlist.getTitle()), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Song already in playlist", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.song_already_in_playlist), Toast.LENGTH_SHORT).show();
             }
             playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         });
@@ -937,7 +909,6 @@ public class MainActivity extends AppCompatActivity
         android.widget.FrameLayout bottomSheet = createDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
         if (bottomSheet != null) {
             bottomSheet.getLayoutParams().height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-            // Use the same charcoal color as the bottom sheet background to cover the navigation bar area
             createDialog.getWindow().setNavigationBarColor(getResources().getColor(R.color.charcoal));
         }
 
@@ -951,10 +922,10 @@ public class MainActivity extends AppCompatActivity
                 Playlist newPlaylist = new Playlist(null, name, 1, "0 min");
                 newPlaylist.getSongIds().add(song.getId());
                 MyApplication.playlistHandler.addPlaylist(newPlaylist);
-                Toast.makeText(this, "Playlist created", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.playlist_created), Toast.LENGTH_SHORT).show();
                 createDialog.dismiss();
             } else {
-                input.setError("Name cannot be empty");
+                input.setError(getString(R.string.playlist_name_empty));
             }
         });
 
@@ -984,7 +955,7 @@ public class MainActivity extends AppCompatActivity
 
         int sessionId = PlayerManager.getInstance().getAudioSessionId();
         if (sessionId == 0) {
-            Toast.makeText(this, "No active audio session", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.no_audio_session), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -1005,7 +976,7 @@ public class MainActivity extends AppCompatActivity
             freqText.setGravity(Gravity.CENTER);
             freqText.setTextColor(Color.WHITE);
             freqText.setPadding(0, 20, 0, 10);
-            freqText.setText((equalizer.getCenterFreq(band) / 1000) + " Hz");
+            freqText.setText(getString(R.string.hz_format, (equalizer.getCenterFreq(band) / 1000)));
             container.addView(freqText);
 
             LinearLayout row = new LinearLayout(this);
@@ -1013,7 +984,7 @@ public class MainActivity extends AppCompatActivity
             row.setGravity(Gravity.CENTER_VERTICAL);
 
             TextView minDb = new TextView(this);
-            minDb.setText((minEQLevel / 100) + " dB");
+            minDb.setText(getString(R.string.db_format, (minEQLevel / 100)));
             minDb.setTextColor(Color.WHITE);
             minDb.setTextSize(10);
 
@@ -1023,7 +994,7 @@ public class MainActivity extends AppCompatActivity
             bar.setProgress(equalizer.getBandLevel(band) - minEQLevel);
 
             TextView maxDb = new TextView(this);
-            maxDb.setText((maxEQLevel / 100) + " dB");
+            maxDb.setText(getString(R.string.db_format, (maxEQLevel / 100)));
             maxDb.setTextColor(Color.WHITE);
             maxDb.setTextSize(10);
 
@@ -1049,7 +1020,6 @@ public class MainActivity extends AppCompatActivity
     public void onSongChanged(Song song) {
         showMiniPlayer(song);
         if (playerDialog != null && playerDialog.isShowing()) {
-            // Sync the shared reference then refresh UI
             currentSongRef[0] = song;
             updatePlayerDialogUI(song);
         }

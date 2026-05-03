@@ -51,7 +51,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="What's that song?\nIdentify it instantly"
+                android:text="@string/identify_music_title"
                 android:textSize="28sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
@@ -62,7 +62,7 @@
                 android:id="@+id/btnIdentifyMusic"
                 android:layout_width="240dp"
                 android:layout_height="56dp"
-                android:text="Identify Music"
+                android:text="@string/identify_music_button"
                 android:textColor="@android:color/black"
                 android:backgroundTint="#F38025"
                 android:textAllCaps="false"
@@ -76,7 +76,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Detect music playing in your surroundings"
+                android:text="@string/identify_music_desc"
                 android:textColor="#AAAAAA"
                 android:textSize="14sp"/>
         </LinearLayout>
@@ -96,7 +96,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="New releases"
+                    android:text="@string/new_releases"
                     android:textColor="@android:color/white"
                     android:textSize="22sp"
                     android:textStyle="bold"
@@ -106,7 +106,7 @@
                     android:id="@+id/tvViewAll"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="View All"
+                    android:text="@string/view_all"
                     android:textColor="#CCCCCC"
                     android:textSize="12sp"
                     android:paddingHorizontal="14dp"
@@ -163,7 +163,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Top Albums"
+                android:text="@string/top_albums"
                 android:textColor="@android:color/white"
                 android:textSize="22sp"
                 android:textStyle="bold"

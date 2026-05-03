@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Favourite Tracks"
+            android:text="@string/favourite_tracks"
             android:textColor="@android:color/white"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -46,7 +46,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="100dp"
-        android:text="No favourite tracks yet"
+        android:text="@string/no_favourite_tracks_yet"
         android:textColor="#88FFFFFF"
         android:textSize="18sp"
         android:visibility="gone" />
