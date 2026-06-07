@@ -18,6 +18,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
@@ -124,6 +125,21 @@ public class SearchFragment extends Fragment {
         setupCategoryCards();
         setupExploreSection();
 
+        if (defaultContent instanceof NestedScrollView) {
+            ((NestedScrollView) defaultContent).setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                if (scrollY > oldScrollY) { // Scrolling down
+                    View child = v.getChildAt(0);
+                    if (child != null) {
+                        if (scrollY >= (child.getMeasuredHeight() - v.getMeasuredHeight() - 500)) {
+                            if (!isLoadingExplore && currentQuery.isEmpty()) {
+                                loadMoreExplore();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         userLoadedListener = user -> {
             if (isAdded() && user != null && user.getProfileImageUrl() != null && !user.getProfileImageUrl().isEmpty() && ivPfp != null) {
                 Glide.with(this)
@@ -136,8 +152,27 @@ public class SearchFragment extends Fragment {
         MyApplication.subscribeUser(userLoadedListener);
 
         adapter = new SearchAdapter(requireContext(), displayList);
-        rvSearch.setLayoutManager(new LinearLayoutManager(requireContext()));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
+        rvSearch.setLayoutManager(layoutManager);
         rvSearch.setAdapter(adapter);
+
+        rvSearch.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0) {
+                    int visibleItemCount = layoutManager.getChildCount();
+                    int totalItemCount = layoutManager.getItemCount();
+                    int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+
+                    if (!isLoadingSearch && !currentQuery.isEmpty()) {
+                        if ((visibleItemCount + pastVisibleItems) >= totalItemCount - 10) {
+                            loadMoreSearch();
+                        }
+                    }
+                }
+            }
+        });
 
         String initialQuery = null;
         if (getArguments() != null) {
@@ -261,26 +296,43 @@ public class SearchFragment extends Fragment {
         MyApplication.subscribeFavouriteSongs(favouriteSongsLoadedListener);
     }
 
+    private boolean isLoadingExplore = false;
+    private int exploreIndex = 0;
+    private static final int EXPLORE_PAGE_SIZE = 40;
+    private boolean exploreLoaded = false;
+
     private void setupExploreSection() {
-        if (!isAdded()) return;
+        if (!isAdded() || exploreLoaded || isLoadingExplore) return;
 
-        exploreList.clear();
-        ArrayList<Song> allSongs = new ArrayList<>(MyApplication.songs);
-        if (allSongs.size() > 0) {
-            Collections.shuffle(allSongs);
-            int count = Math.min(allSongs.size(), 20);
-            for (int i = 0; i < count; i++) {
-                exploreList.add(allSongs.get(i));
+        isLoadingExplore = true;
+        MyApplication.youtubeApiHandler.searchImmediate("songs", new YouTubeApiHandler.YouTubeCallback<List<Song>>() {
+            @Override
+            public void onSuccess(List<Song> result) {
+                if (isAdded()) {
+                    exploreList.clear();
+                    exploreList.addAll(result);
+                    exploreLoaded = true;
+                    
+                    if (exploreAdapter == null) {
+                        exploreAdapter = new ExploreAdapter(requireContext(), exploreList);
+                        rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+                        rvExplore.setAdapter(exploreAdapter);
+                    } else {
+                        exploreAdapter.notifyDataSetChanged();
+                    }
+                    isLoadingExplore = false;
+                }
             }
-        }
 
-        if (exploreAdapter == null) {
-            exploreAdapter = new ExploreAdapter(requireContext(), exploreList);
-            rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
-            rvExplore.setAdapter(exploreAdapter);
-        } else {
-            exploreAdapter.notifyDataSetChanged();
-        }
+            @Override
+            public void onError(Exception e) {
+                isLoadingExplore = false;
+            }
+        });
+    }
+
+    private void loadMoreExplore() {
+        // Not implemented for YouTube Search yet
     }
 
     @Override
@@ -309,12 +361,42 @@ public class SearchFragment extends Fragment {
         }
     }
 
+    private boolean isLoadingSearch = false;
+    private int searchIndex = 0;
+    private static final int SEARCH_PAGE_SIZE = 30;
+
     private void performSearch(String query) {
         this.currentQuery = query;
-        List<Song> results = MyApplication.searchSongs(query);
-        displayList.clear();
-        displayList.addAll(results);
-        adapter.notifyDataSetChanged();
-        updateClearAllVisibility();
+        if (query.trim().isEmpty()) {
+            displayList.clear();
+            displayList.addAll(MyApplication.recentSearches);
+            adapter.notifyDataSetChanged();
+            updateClearAllVisibility();
+            return;
+        }
+
+        isLoadingSearch = true;
+        MyApplication.youtubeApiHandler.search(query, new YouTubeApiHandler.YouTubeCallback<List<Song>>() {
+            @Override
+            public void onSuccess(List<Song> result) {
+                if (query.equals(currentQuery)) {
+                    displayList.clear();
+                    displayList.addAll(result);
+                    adapter.notifyDataSetChanged();
+                    isLoadingSearch = false;
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (isAdded()) {
+                    isLoadingSearch = false;
+                }
+            }
+        });
+    }
+
+    private void loadMoreSearch() {
+        // Not implemented for YouTube Search yet
     }
 }

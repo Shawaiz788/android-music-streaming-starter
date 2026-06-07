@@ -38,6 +38,7 @@ public class MyApplication extends Application {
     public static FirebaseFavouriteArtistHandler favouriteArtistHandler;
     public static FirebaseUserHandler userHandler;
     public static FirebasePlaylistHandler playlistHandler;
+    public static YouTubeApiHandler youtubeApiHandler;
 
 
     public interface OnSongsLoadedListener {
@@ -239,8 +240,9 @@ public class MyApplication extends Application {
 
         songsHandler = new FirebaseSongsHandler();
         albumHandler = new FirebaseAlbumsHandler();
+        youtubeApiHandler = new YouTubeApiHandler();
 
-        addLocal();
+        // addLocal(); // Removed to eliminate need for Google Drive links
 
         DBManager dbManager = new DBManager(this);
         dbManager.Open();
@@ -285,6 +287,27 @@ public class MyApplication extends Application {
 
                 songsHandler.loadSongs();
                 albumHandler.loadAlbums();
+                
+                youtubeApiHandler.searchImmediate("Latest Hit Songs 2025", new YouTubeApiHandler.YouTubeCallback<List<Song>>() {
+                    @Override
+                    public void onSuccess(List<Song> result) {
+                        newReleases.clear();
+                        newReleases.addAll(result);
+                        
+                        for (Song s : result) {
+                            if (!songs.contains(s)) {
+                                songs.add(s);
+                            }
+                        }
+
+                        notifySongsLoaded();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e("MyApplication", "Failed to load YouTube trending", e);
+                    }
+                });
             });
         });
     }
@@ -297,173 +320,5 @@ public class MyApplication extends Application {
         favouriteArtistHandler = new FirebaseFavouriteArtistHandler(userId);
         playlistHandler = new FirebasePlaylistHandler(userId);
         albumHandler = new FirebaseAlbumsHandler();
-    }
-
-    private void addLocal() {
-
-        String cokeStudioId = "local_album_1";
-        String anuvJainId = "local_artist_1";
-
-        Album cokeStudioAlbum = new Album(
-                cokeStudioId,
-                "Coke Studio Bharat (Season 3)",
-                "Anuv Jain",
-                getResourceUri(R.drawable.bharat3),
-                "2025"
-        );
-
-        Song song1 = new Song(
-                "local_song_1",
-                "Arz Kiya Hai",
-                "Anuv Jain",
-                "Coke Studio Bharat (Season 3)",
-                "Indie-Pop",
-                "No lyrics available",
-                294000,
-                "https://drive.google.com/uc?export=download&id=1TCmh2XdGRj0_I9BumsGfT7Sr6WVKHEYI",
-                "https://drive.google.com/uc?export=download&id=1ZoFJ27h9PKXQi3ufe-FOJiqx-ipOoFyo",
-                cokeStudioId,
-                anuvJainId
-        );
-
-        Song song2 = new Song(
-                "local_song_2",
-                "Alag Aasmaan",
-                "Anuv Jain",
-                "Coke Studio Bharat (Season 3)",
-                "Indie-Pop",
-                "No lyrics available",
-                213000,
-                "https://drive.google.com/uc?export=download&id=18oKabt5zEsmt9EIDsdtVF6591M_c6-VW",
-                "https://drive.google.com/uc?export=download&id=1MlwcQy2uLcKAIjZlsa9exjWC0169JjGd",
-                cokeStudioId,
-                anuvJainId
-        );
-
-        allAlbums.add(cokeStudioAlbum);
-        songs.add(song1);
-        songs.add(song2);
-
-        cokeStudioAlbum.getSongIds().add(song1.getId());
-        cokeStudioAlbum.getSongIds().add(song2.getId());
-
-        String album2Id = "local_album_2";
-        String artist2Id = "local_artist_2";
-        Album album2 = new Album(album2Id, "P-Pop culture", "Karan Aujila & Ikky", "https://drive.google.com/uc?export=download&id=1FdRbkB2gfQgtk0f9x4HcgHgJ2BBUESrz", "2025");
-        Song s3 = new Song("local_song_3", "For A Reason", "Karan Aujila & Ikky", "P-Pop culture", "P-Pop", "No lyrics", 309000, "https://drive.google.com/uc?export=download&id=1QND4XxpHAbV0p_rRdB9e63j7FvoL8d-4", "https://drive.google.com/uc?export=download&id=1mYRf5SjqWhhsqdYeo8LxyIo5Jmz6Lukr", album2Id, artist2Id);
-        Song s4 = new Song("local_song_4", "Boyfriend", "Karan Aujila & Ikky", "P-Pop culture", "P-Pop", "No lyrics", 242000, "https://drive.google.com/uc?export=download&id=19xLDf2xDQOga1I3nBhNH61S83FAEJzC7", "https://drive.google.com/uc?export=download&id=1BQpaKQTJmiJIy-oKRDQVaUV8WYGMiHOh", album2Id, artist2Id);
-        allAlbums.add(album2); songs.add(s3); songs.add(s4);
-        album2.getSongIds().add(s3.getId()); album2.getSongIds().add(s4.getId());
-
-        String album3Id = "local_album_3";
-        String artist3Id = "local_artist_3";
-        Album album3 = new Album(album3Id, "Open Letter", "Talha Anjum", "https://drive.google.com/uc?export=download&id=1qMrBo520q_QkYBZ1LbEfZtIn3Hjp-tl_", "2023");
-        Song s5 = new Song("local_song_5", "Happy Hour", "Talha Anjum", "Open Letter", "Urdu Hip Hop", "No lyrics", 315000, "https://drive.google.com/uc?export=download&id=13O4BX4TZPAvXSVTGNTU28torYT_Bnfm6", "https://drive.google.com/uc?export=download&id=1qMrBo520q_QkYBZ1LbEfZtIn3Hjp-tl_", album3Id, artist3Id);
-        Song s6 = new Song("local_song_6", "Studio Gangsters", "Talha Anjum", "Open Letter", "Urdu Hip Hop", "No lyrics", 408000, "https://drive.google.com/uc?export=download&id=1jF5SW4VQLWoRIhtH7Bw3VTOaOG7tC5mW", "https://drive.google.com/uc?export=download&id=1qMrBo520q_QkYBZ1LbEfZtIn3Hjp-tl_", album3Id, artist3Id);
-        allAlbums.add(album3); songs.add(s5); songs.add(s6);
-        album3.getSongIds().add(s5.getId()); album3.getSongIds().add(s6.getId());
-    }
-
-    public String getResourceUri(int resId) {
-        try {
-            String type = getResources().getResourceTypeName(resId);
-            String name = getResources().getResourceEntryName(resId);
-            return "android.resource://" + getPackageName() + "/" + type + "/" + name;
-        } catch (Exception e) {
-            return "android.resource://" + getPackageName() + "/" + resId;
-        }
-    }
-
-    public static ArrayList<Song> searchSongs(String query) {
-        if (query == null || query.trim().isEmpty()) {
-            return new ArrayList<>(recentSearches);
-        }
-
-        String lowerQuery = query.toLowerCase().trim();
-        ArrayList<ScoredSong> scoredSongs = new ArrayList<>();
-
-        for (Song song : songs) {
-            int score = calculateScore(song, lowerQuery);
-            if (score > 0) {
-                scoredSongs.add(new ScoredSong(song, score));
-            }
-        }
-
-        Collections.sort(scoredSongs, (o1, o2) -> Integer.compare(o2.score, o1.score));
-
-        ArrayList<Song> results = new ArrayList<>();
-        for (ScoredSong ss : scoredSongs) {
-            results.add(ss.song);
-        }
-        return results;
-    }
-
-    private static int calculateScore(Song song, String query) {
-        if (query == null || query.isBlank()) return 0;
-
-        String q      = query.trim().toLowerCase();
-        String title  = song.getTitle()  != null ? song.getTitle().trim().toLowerCase()  : "";
-        String artist = song.getArtist() != null ? song.getArtist().trim().toLowerCase() : "";
-        String album  = song.getAlbum()  != null ? song.getAlbum().trim().toLowerCase()  : "";
-
-        int score = 0;
-
-        if (title.equals(q))  score += 100;
-        if (artist.equals(q)) score += 70;
-        if (album.equals(q))  score += 30;
-
-        if (title.contains(q)  || q.contains(title))  score += title.startsWith(q)  || q.startsWith(title)  ? 80 : 40;
-        if (artist.contains(q) || q.contains(artist)) score += artist.startsWith(q) || q.startsWith(artist) ? 50 : 20;
-        if (album.contains(q)  || q.contains(album))  score += 10;
-
-        score += (int) (fuzzy(title,  q) * 80);
-        score += (int) (fuzzy(artist, q) * 50);
-        score += (int) (fuzzy(album,  q) * 20);
-
-        for (String word : q.split("\\s+")) {
-            if (word.length() < 3) continue;
-            score += (int) (fuzzy(title,  word) * 20);
-            score += (int) (fuzzy(artist, word) * 15);
-            score += (int) (fuzzy(album,  word) *  5);
-        }
-
-        return score;
-    }
-
-
-    private static double fuzzy(String a, String b) {
-        if (a.isEmpty() || b.isEmpty()) return 0.0;
-
-        int m = a.length(), n = b.length();
-
-        if (Math.abs(m - n) > Math.max(m, n) / 2) return 0.0;
-
-        int[] prev = new int[n + 1];
-        int[] curr = new int[n + 1];
-        for (int j = 0; j <= n; j++) prev[j] = j;
-
-        for (int i = 1; i <= m; i++) {
-            curr[0] = i;
-            for (int j = 1; j <= n; j++) {
-                curr[j] = a.charAt(i - 1) == b.charAt(j - 1)
-                        ? prev[j - 1]
-                        : 1 + Math.min(prev[j - 1], Math.min(prev[j], curr[j - 1]));
-            }
-            int[] tmp = prev; prev = curr; curr = tmp;
-        }
-
-        int distance = prev[n];
-        double similarity = 1.0 - (double) distance / Math.max(m, n);
-
-        return similarity >= 0.6 ? similarity : 0.0;
-    }
-
-    private static class ScoredSong {
-        Song song;
-        int score;
-        ScoredSong(Song song, int score) {
-            this.song = song;
-            this.score = score;
-        }
     }
 }

@@ -47,6 +47,30 @@ public class DBManager {
     }
 
     public void AddSongs(Song song, OnDownloadListener listener) {
+        if (song.getId() != null && song.getId().startsWith("youtube_") && !song.getSongUrl().startsWith("/")) {
+            // It's a YouTube song, need to get a direct stream link first
+            String videoId = song.getId().replace("youtube_", "");
+            MyApplication.youtubeApiHandler.getStreamUrl(videoId, new YouTubeApiHandler.YouTubeCallback<String>() {
+                @Override
+                public void onSuccess(String streamUrl) {
+                    // Create a copy of the song with the stream URL for downloading
+                    Song downloadSong = new Song(song.getId(), song.getTitle(), song.getArtist(), song.getAlbum(), 
+                                                 song.getGenre(), song.getLyrics(), song.getDuration(), 
+                                                 streamUrl, song.getImageUrl(), song.getAlbumId(), song.getArtistId());
+                    startDownload(downloadSong, listener);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    if (listener != null) listener.onDownloadFailed(e);
+                }
+            });
+        } else {
+            startDownload(song, listener);
+        }
+    }
+
+    private void startDownload(Song song, OnDownloadListener listener) {
         DownloadUtils.getLocalPath(context, song, new DownloadUtils.DownloadCallback() {
             @Override
             public void onDownloadComplete(String localAudioPath) {

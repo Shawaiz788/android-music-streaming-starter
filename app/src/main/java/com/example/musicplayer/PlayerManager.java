@@ -1,13 +1,17 @@
 package com.example.musicplayer;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
+import android.util.Log;
 import android.widget.Toast;
 import java.io.IOException;
 
 public class PlayerManager {
 
+    private static final String TAG = "PlayerManager";
     private static PlayerManager instance;
     private MediaPlayer mediaPlayer;
     private Song currentSong;
@@ -81,33 +85,70 @@ public class PlayerManager {
             mediaPlayer.setOnCompletionListener(null);
             mediaPlayer.setOnPreparedListener(null);
             mediaPlayer.setOnErrorListener(null);
-            mediaPlayer.release();
+            try {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+            } catch (Exception ignored) {}
             mediaPlayer = null;
         }
 
         currentSong = song;
+
+        DBManager dbManager = new DBManager(context);
+        dbManager.Open();
+        boolean isDownloaded = dbManager.isDownloaded(song.getId());
+        String songUrl = song.getSongUrl();
+        if (isDownloaded) {
+            String[] paths = dbManager.getSongPaths(song.getId());
+            if (paths[0] != null && new java.io.File(paths[0]).exists()) {
+                songUrl = paths[0];
+            }
+        }
+        dbManager.Close();
+
+        if (song.getId() != null && song.getId().startsWith("youtube_") && (songUrl == null || !songUrl.startsWith("/"))) {
+            // YouTube song needs stream resolving
+            String videoId = song.getId().replace("youtube_", "");
+            MyApplication.youtubeApiHandler.getStreamUrl(videoId, new YouTubeApiHandler.YouTubeCallback<String>() {
+                @Override
+                public void onSuccess(String streamUrl) {
+                    startMediaPlayer(context, song, streamUrl);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    Log.e(TAG, "YouTube Stream Error: " + e.getMessage());
+                    Toast.makeText(context, "YouTube Stream Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            if (songUrl == null || songUrl.isEmpty()) {
+                Toast.makeText(context, "Invalid song URL", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            startMediaPlayer(context, song, songUrl);
+        }
+    }
+
+    private void startMediaPlayer(Context context, Song song, String url) {
+        if (url == null || url.isEmpty()) {
+            Log.e(TAG, "Attempted to start player with empty URL");
+            return;
+        }
+
         mediaPlayer = new MediaPlayer();
 
         if (MyApplication.songsHandler != null) {
-            MyApplication.songsHandler.incrementPlayCount(song.getId());
+            MyApplication.songsHandler.incrementPlayCount(song);
         }
 
-        try {
-            DBManager dbManager = new DBManager(context);
-            dbManager.Open();
-            String songUrl = song.getSongUrl();
-            if (dbManager.isDownloaded(song.getId())) {
-                String[] paths = dbManager.getSongPaths(song.getId());
-                if (paths[0] != null && new java.io.File(paths[0]).exists()) {
-                    songUrl = paths[0];
-                }
-            }
-            dbManager.Close();
+        notifyService();
 
-            if (songUrl.startsWith("/")) {
-                mediaPlayer.setDataSource(songUrl);
+        try {
+            if (url.startsWith("/")) {
+                mediaPlayer.setDataSource(url);
             } else {
-                mediaPlayer.setDataSource(context, Uri.parse(songUrl));
+                mediaPlayer.setDataSource(context, Uri.parse(url));
             }
 
             mediaPlayer.setOnPreparedListener(mp -> {
@@ -121,6 +162,8 @@ public class PlayerManager {
                         listener.onPlayStateChanged(isPlaying());
                     });
                 }
+                notifyService();
+                preResolveNext();
             });
 
             mediaPlayer.setOnCompletionListener(mp -> {
@@ -130,6 +173,7 @@ public class PlayerManager {
                             listener.onPlayStateChanged(false)
                     );
                 }
+                notifyService();
                 
                 if (repeatEnabled) {
                     play(context, currentQueue, currentIndex);
@@ -139,16 +183,18 @@ public class PlayerManager {
             });
 
             mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                Log.e(TAG, "MediaPlayer Error: " + what + ", " + extra);
                 completed = false;
                 prepared = false;
-                Toast.makeText(context, context.getString(R.string.playback_error, what, extra), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Playback error (" + what + ")", Toast.LENGTH_SHORT).show();
                 return true;
             });
 
             mediaPlayer.prepareAsync();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "IOException in startMediaPlayer", e);
+            Toast.makeText(context, "Failed to load song", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -194,6 +240,7 @@ public class PlayerManager {
             completed = false;
         }
         if (listener != null) listener.onPlayStateChanged(isPlaying());
+        notifyService();
     }
 
     public void resume() {
@@ -201,6 +248,7 @@ public class PlayerManager {
             mediaPlayer.start();
             completed = false;
             if (listener != null) listener.onPlayStateChanged(true);
+            notifyService();
         }
     }
 
@@ -208,6 +256,7 @@ public class PlayerManager {
         if (mediaPlayer != null && prepared && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             if (listener != null) listener.onPlayStateChanged(false);
+            notifyService();
         }
     }
 
@@ -218,12 +267,35 @@ public class PlayerManager {
             mediaPlayer.setOnCompletionListener(null);
             mediaPlayer.setOnPreparedListener(null);
             mediaPlayer.setOnErrorListener(null);
-            mediaPlayer.stop();
-            mediaPlayer.release();
+            try {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+            } catch (Exception ignored) {}
             mediaPlayer = null;
         }
         currentSong = null;
         if (listener != null) listener.onStopped();
+        
+        Context context = MyApplication.getInstance();
+        if (context != null) {
+            Intent serviceIntent = new Intent(context, MusicService.class);
+            context.stopService(serviceIntent);
+        }
+    }
+
+    private void notifyService() {
+        Context context = MyApplication.getInstance();
+        if (context == null) return;
+        Intent serviceIntent = new Intent(context, MusicService.class);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent);
+            } else {
+                context.startService(serviceIntent);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to start MusicService", e);
+        }
     }
 
     public boolean isPlaying() {
@@ -332,6 +404,21 @@ public class PlayerManager {
     public void playSong(Context context, Song song) {
         if (song != null) {
             play(context, currentQueue, currentIndex, queueTitle);
+        }
+    }
+
+    private void preResolveNext() {
+        if (hasNext()) {
+            Song next = currentQueue.get(currentIndex + 1);
+            if (next.getId().startsWith("youtube_")) {
+                String videoId = next.getId().replace("youtube_", "");
+                MyApplication.youtubeApiHandler.getStreamUrl(videoId, new YouTubeApiHandler.YouTubeCallback<String>() {
+                    @Override public void onSuccess(String result) {
+                        Log.d(TAG, "Pre-resolved next song: " + next.getTitle());
+                    }
+                    @Override public void onError(Exception e) {}
+                });
+            }
         }
     }
 }

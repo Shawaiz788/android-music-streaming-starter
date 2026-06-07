@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.shimmer)
     implementation(libs.glide)
     annotationProcessor(libs.glide.compiler)
+    implementation("androidx.media:media:1.7.0")
     implementation(libs.algoliasearch)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

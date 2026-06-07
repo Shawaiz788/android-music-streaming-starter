@@ -28,6 +28,10 @@ public class ReleasesFragment extends Fragment {
     }
 
 
+    private boolean isLoading = false;
+    private int currentIndex = 0;
+    private static final int PAGE_SIZE = 50;
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -41,8 +45,27 @@ public class ReleasesFragment extends Fragment {
         });
         rvReleases=view.findViewById(R.id.rvReleases);
         adapter=new RvReleasesAdapter(requireContext(),MyApplication.newReleases);
-        rvReleases.setLayoutManager(new GridLayoutManager(requireContext(),2,GridLayoutManager.VERTICAL,false));
+        GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 2, GridLayoutManager.VERTICAL, false);
+        rvReleases.setLayoutManager(layoutManager);
         rvReleases.setAdapter(adapter);
+
+        rvReleases.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0) { // Scrolling down
+                    int visibleItemCount = layoutManager.getChildCount();
+                    int totalItemCount = layoutManager.getItemCount();
+                    int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+
+                    if (!isLoading) {
+                        if ((visibleItemCount + pastVisibleItems) >= totalItemCount - 10) {
+                            loadMore();
+                        }
+                    }
+                }
+            }
+        });
 
         songsLoadedListener = songs -> {
             if (getActivity() != null) {
@@ -54,6 +77,40 @@ public class ReleasesFragment extends Fragment {
             }
         };
         MyApplication.subscribe(songsLoadedListener);
+        
+        if (MyApplication.newReleases.isEmpty()) {
+            loadMore();
+        } else {
+            currentIndex = MyApplication.newReleases.size();
+        }
+    }
+
+    private void loadMore() {
+        isLoading = true;
+        MyApplication.youtubeApiHandler.searchImmediate("Trending Music 2025", new YouTubeApiHandler.YouTubeCallback<java.util.List<Song>>() {
+            @Override
+            public void onSuccess(java.util.List<Song> result) {
+                if (isAdded()) {
+                    int start = MyApplication.newReleases.size();
+                    for (Song s : result) {
+                        if (!MyApplication.newReleases.contains(s)) {
+                            MyApplication.newReleases.add(s);
+                            if (!MyApplication.songs.contains(s)) {
+                                MyApplication.songs.add(s);
+                            }
+                        }
+                    }
+                    adapter.notifyDataSetChanged();
+                    currentIndex += result.size();
+                    isLoading = false;
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                isLoading = false;
+            }
+        });
     }
 
     @Override

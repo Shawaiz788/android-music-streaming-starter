@@ -47,6 +47,10 @@ public class HomeFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
+    private boolean isLoadingAlbums = false;
+    private int albumIndex = 0;
+    private static final int PAGE_SIZE = 50;
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -81,9 +85,26 @@ public class HomeFragment extends Fragment {
         rvReleases.setAdapter(releasesAdapter);
 
         albumAdapter = new AlbumAdapter(requireContext(), MyApplication.allAlbums);
-        rvAlbums.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        GridLayoutManager albumLayoutManager = new GridLayoutManager(requireContext(), 2);
+        rvAlbums.setLayoutManager(albumLayoutManager);
         rvAlbums.setAdapter(albumAdapter);
         rvAlbums.setNestedScrollingEnabled(false);
+
+        if (view instanceof androidx.core.widget.NestedScrollView) {
+            ((androidx.core.widget.NestedScrollView) view).setOnScrollChangeListener((androidx.core.widget.NestedScrollView.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                if (scrollY > oldScrollY) { // Scrolling down
+                    View child = v.getChildAt(0);
+                    if (child != null) {
+                        // Check if we are near the bottom of the scroll view
+                        if (scrollY >= (child.getMeasuredHeight() - v.getMeasuredHeight() - 500)) {
+                            if (!isLoadingAlbums) {
+                                loadMoreAlbums();
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         songsLoadedListener = songs -> {
             if (getActivity() != null) {
@@ -115,6 +136,12 @@ public class HomeFragment extends Fragment {
         MyApplication.subscribe(songsLoadedListener);
         MyApplication.subscribeAlbums(albumsLoadedListener);
 
+        if (MyApplication.allAlbums.isEmpty()) {
+            loadMoreAlbums();
+        } else {
+            albumIndex = MyApplication.allAlbums.size();
+        }
+
         cvProfile.setOnClickListener(v -> {
             NavController navController = NavHostFragment.findNavController(this);
             navController.navigate(R.id.profileFragment);
@@ -131,6 +158,13 @@ public class HomeFragment extends Fragment {
                 navController.navigate(R.id.fragment_music_recognition);
             });
         }
+    }
+
+    private void loadMoreAlbums() {
+        isLoadingAlbums = true;
+        // YouTube doesn't have a direct "Top Albums" endpoint in the current handler.
+        // We could search for popular music playlists or just skip for now.
+        isLoadingAlbums = false;
     }
 
     @Override

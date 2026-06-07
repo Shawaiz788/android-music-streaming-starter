@@ -37,4 +37,17 @@ public class Album implements Serializable {
     public void setYear(String year) { this.year = year; }
     public List<String> getSongIds() { return songIds; }
     public void setSongIds(List<String> songIds) { this.songIds = songIds; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Album album = (Album) o;
+        return id != null ? id.equals(album.id) : album.id == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }

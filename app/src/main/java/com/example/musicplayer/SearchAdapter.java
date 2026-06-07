@@ -35,7 +35,12 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Song song = songs.get(position);
-        holder.tvTitle.setText(song.getTitle());
+        
+        String title = song.getTitle();
+        if (song.getId() != null && song.getId().startsWith("youtube_")) {
+            title =title;
+        }
+        holder.tvTitle.setText(title);
         holder.tvArtist.setText(song.getArtist());
         ShimmerDrawable shimmerDrawable = new ShimmerDrawable();
         shimmerDrawable.setShimmer(new Shimmer.ColorHighlightBuilder()

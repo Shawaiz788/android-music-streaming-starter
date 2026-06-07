@@ -128,16 +128,25 @@ public class AlbumDetailsFragment extends Fragment {
 
     private void loadAlbumSongs() {
         albumSongs.clear();
+        
+        // Local/Firebase album
         for (Song song : MyApplication.songs) {
             if (song.getAlbumId() != null && song.getAlbumId().equals(currentAlbum.getId())) {
                 albumSongs.add(song);
             }
         }
+        updateAdapter();
+    }
 
-        adapter = new AlbumSongAdapter(requireContext(), albumSongs, true);
-        adapter.setQueueTitle("Album: " + currentAlbum.getTitle());
-        rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvSongs.setAdapter(adapter);
+    private void updateAdapter() {
+        if (adapter == null) {
+            adapter = new AlbumSongAdapter(requireContext(), albumSongs, true);
+            adapter.setQueueTitle("Album: " + currentAlbum.getTitle());
+            rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
+            rvSongs.setAdapter(adapter);
+        } else {
+            adapter.notifyDataSetChanged();
+        }
     }
 
     private void shareAlbum() {

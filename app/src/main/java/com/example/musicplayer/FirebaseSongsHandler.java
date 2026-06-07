@@ -25,6 +25,8 @@ public class FirebaseSongsHandler {
         void onPlayCountsLoaded(Map<String, Integer> playCounts);
     }
 
+    private final Map<String, Song> firebaseSongsMap = new HashMap<>();
+
     public FirebaseSongsHandler() {
         FirebaseDatabase db = FirebaseDatabase.getInstance("https://musicplayer-33db9-default-rtdb.asia-southeast1.firebasedatabase.app/");
         databaseReference = db.getReference("songs");
@@ -32,47 +34,82 @@ public class FirebaseSongsHandler {
     }
 
     public void loadSongs() {
+        // Independent listener for standard Firebase songs (now including played YouTube songs)
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                MyApplication.songs.clear();
-                MyApplication.newReleases.clear();
-
-                for (DataSnapshot bucketSnapshot : snapshot.getChildren()) {
-                    ArrayList<Song> bucketSongs = new ArrayList<>();
-                    for (DataSnapshot songSnapshot : bucketSnapshot.getChildren()) {
-                        Song cloudSong = songSnapshot.getValue(Song.class);
-                        if (cloudSong != null) {
-                            cloudSong.setId(songSnapshot.getKey());
-                            bucketSongs.add(cloudSong);
-                            MyApplication.songs.add(cloudSong);
+                firebaseSongsMap.clear();
+                // Support both bucketed and non-bucketed structures
+                for (DataSnapshot node : snapshot.getChildren()) {
+                    if (node.hasChild("title") || node.hasChild("artist")) {
+                        // Likely a direct song node
+                        Song s = node.getValue(Song.class);
+                        if (s != null) {
+                            s.setId(node.getKey());
+                            firebaseSongsMap.put(s.getId(), s);
                         }
-                    }
-
-                    int totalInBucket = bucketSongs.size();
-                    if (totalInBucket > 0) {
-                        int countToTake = Math.max(1, (int) Math.ceil(totalInBucket * 0.25));
-                        for (int i = totalInBucket - countToTake; i < totalInBucket; i++) {
-                            MyApplication.newReleases.add(bucketSongs.get(i));
+                    } else {
+                        // Likely a bucket (e.g. "A", "B")
+                        for (DataSnapshot songSnapshot : node.getChildren()) {
+                            Song s = songSnapshot.getValue(Song.class);
+                            if (s != null) {
+                                s.setId(songSnapshot.getKey());
+                                firebaseSongsMap.put(s.getId(), s);
+                            }
                         }
                     }
                 }
-                
-                java.util.Collections.shuffle(MyApplication.newReleases);
-                
-                MyApplication.notifySongsLoaded();
+                mergeAndNotify();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("FirebaseSongsHandler", "Load failed: " + error.getMessage());
+                Log.e("FirebaseSongsHandler", "Songs load failed: " + error.getMessage());
             }
         });
     }
 
-    public void incrementPlayCount(String songId) {
-        if (songId == null) return;
-        playCountsReference.child(songId).setValue(ServerValue.increment(1));
+    private synchronized void mergeAndNotify() {
+        Map<String, Song> merged = new HashMap<>();
+        
+        // 1. First, include songs that are in the "newReleases" (Trending) list
+        for (Song s : MyApplication.newReleases) {
+            if (s.getId() != null) {
+                merged.put(s.getId(), s);
+            }
+        }
+        
+        // 2. Add all standard Firebase songs (this node includes buckets and saved YouTube songs)
+        for (Song s : firebaseSongsMap.values()) {
+            if (s.getId() != null) {
+                merged.put(s.getId(), s);
+            }
+        }
+        
+        // Update the global songs list
+        ArrayList<Song> finalSongs = new ArrayList<>(merged.values());
+        
+        // Update the static list in a safe way
+        MyApplication.songs.clear();
+        MyApplication.songs.addAll(finalSongs);
+        
+        Log.d("FirebaseSongsHandler", "Merged songs count: " + MyApplication.songs.size());
+
+        MyApplication.notifySongsLoaded();
+    }
+
+    public void incrementPlayCount(Song song) {
+        if (song == null || song.getId() == null) return;
+        
+        // Increment count
+        playCountsReference.child(song.getId()).setValue(ServerValue.increment(1));
+        
+        // If it's a YouTube song, also save its metadata to the main 'songs' node
+        // so it can be retrieved and shown in the Top Songs list later.
+        if (song.getId().startsWith("youtube_")) {
+            String bucket = getBucket(song.getTitle());
+            databaseReference.child(bucket).child(song.getId()).setValue(song);
+        }
     }
 
     public void loadPlayCounts(OnPlayCountsLoadedListener listener) {

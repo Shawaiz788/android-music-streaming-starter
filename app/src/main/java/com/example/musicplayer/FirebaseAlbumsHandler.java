@@ -26,13 +26,25 @@ public class FirebaseAlbumsHandler {
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Keep Deezer albums
+                ArrayList<Album> nonFirebaseAlbums = new ArrayList<>();
+                for (Album a : MyApplication.allAlbums) {
+                    if (a.getId() != null && a.getId().startsWith("deezer_")) {
+                        nonFirebaseAlbums.add(a);
+                    }
+                }
+                
                 MyApplication.allAlbums.clear();
+                MyApplication.allAlbums.addAll(nonFirebaseAlbums);
+
                 for (DataSnapshot bucketSnapshot : snapshot.getChildren()) {
                     for (DataSnapshot albumSnapshot : bucketSnapshot.getChildren()) {
                         Album cloudAlbum = albumSnapshot.getValue(Album.class);
                         if (cloudAlbum != null) {
                             cloudAlbum.setId(albumSnapshot.getKey());
-                            MyApplication.allAlbums.add(cloudAlbum);
+                            if (!MyApplication.allAlbums.contains(cloudAlbum)) {
+                                MyApplication.allAlbums.add(cloudAlbum);
+                            }
                         }
                     }
                 }
