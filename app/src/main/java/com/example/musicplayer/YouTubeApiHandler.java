@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,20 +48,20 @@ public class YouTubeApiHandler {
 
     // Hardcoded fallback — well-known, CDN-backed or high-uptime instances
     private static final String[] FALLBACK_INSTANCES = {
+            "https://inv.thepixora.com",
+            "https://inv.tux.rs",
             "https://yewtu.be",
             "https://inv.nadeko.net",
-            "https://invidious.privacyredirect.com",
             "https://iv.datura.network",
             "https://invidious.nerdvpn.de",
             "https://invidious.perennialte.ch",
             "https://yt.cdaut.de",
+            "https://invidious.privacyredirect.com",
             "https://invidious.darkness.services",
-            "https://invidious.tiekoetter.com",
-            "https://inv.thepixora.com",
     };
 
-    // Backoff per attempt index: 0ms, 600ms, 1.2s, 2.5s — then fail
-    private static final long[] BACKOFF_MS = {0, 600, 1200, 2500};
+    // Fast rotation: 0ms, 200ms, 500ms
+    private static final long[] BACKOFF_MS = {0, 200, 500};
 
     private volatile List<String> instances;
     private final Set<String> deadInstances = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -123,8 +124,8 @@ public class YouTubeApiHandler {
                     JSONArray arr = new JSONArray(response.body().string());
                     List<String> fresh = new ArrayList<>();
 
-                    for (int i = 0; i < arr.length(); i++) {
-                        JSONArray pair = arr.getJSONArray(i); // ["domain", {...}]
+                    for (int j = 0; j < arr.length(); j++) {
+                        JSONArray pair = arr.getJSONArray(j); // ["domain", {...}]
                         JSONObject info = pair.getJSONObject(1);
 
                         // Only include instances with API enabled over HTTPS
@@ -136,6 +137,13 @@ public class YouTubeApiHandler {
                     }
 
                     if (!fresh.isEmpty()) {
+                        // Prioritize inv.thepixora.com if it's found in the live list
+                        String preferred = "https://inv.thepixora.com";
+                        if (fresh.contains(preferred)) {
+                            fresh.remove(preferred);
+                            fresh.add(0, preferred);
+                        }
+
                         instances = fresh;
                         deadInstances.clear();
                         currentIndex.set(0);
@@ -353,7 +361,10 @@ public class YouTubeApiHandler {
                             songs.add(song);
                         }
                         markInstanceWorked(instance);
-                        mainHandler.post(() -> callback.onSuccess(songs));
+                        mainHandler.post(() -> {
+                            Toast.makeText(MyApplication.getInstance(), "Source: " + instance, Toast.LENGTH_SHORT).show();
+                            callback.onSuccess(songs);
+                        });
                     } catch (Exception e) {
                         Log.e(TAG, "Search parse error [" + instance + "]", e);
                         tryNextSearch(query, callback, instance, generation, attempt + 1);
@@ -450,7 +461,10 @@ public class YouTubeApiHandler {
                         streamCache.put(videoId, new CachedUrl(chosen));
 
                         final String finalUrl = chosen;
-                        mainHandler.post(() -> callback.onSuccess(finalUrl));
+                        mainHandler.post(() -> {
+                            Toast.makeText(MyApplication.getInstance(), "Stream: " + instance, Toast.LENGTH_SHORT).show();
+                            callback.onSuccess(finalUrl);
+                        });
                     } catch (Exception e) {
                         Log.e(TAG, "Stream parse error [" + instance + "]", e);
                         tryNextStream(videoId, callback, instance, attempt + 1);
@@ -496,14 +510,14 @@ public class YouTubeApiHandler {
             return new OkHttpClient.Builder()
                     .sslSocketFactory(ctx.getSocketFactory(), (X509TrustManager) trustAll[0])
                     .hostnameVerifier((h, s) -> true)
-                    .connectTimeout(8, TimeUnit.SECONDS)
-                    .readTimeout(12, TimeUnit.SECONDS)
+                    .connectTimeout(4, TimeUnit.SECONDS)
+                    .readTimeout(6, TimeUnit.SECONDS)
                     .retryOnConnectionFailure(false)
                     .build();
         } catch (Exception e) {
             return new OkHttpClient.Builder()
-                    .connectTimeout(8, TimeUnit.SECONDS)
-                    .readTimeout(12, TimeUnit.SECONDS)
+                    .connectTimeout(4, TimeUnit.SECONDS)
+                    .readTimeout(6, TimeUnit.SECONDS)
                     .retryOnConnectionFailure(false)
                     .build();
         }

@@ -53,4 +53,5 @@ dependencies {
     implementation("androidx.palette:palette:1.0.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(libs.exifinterface)
+    implementation(libs.youtube.player)
 }

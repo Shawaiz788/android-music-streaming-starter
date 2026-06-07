@@ -50,6 +50,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer;
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener;
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView;
 
 import java.util.ArrayList;
 
@@ -73,6 +76,8 @@ public class MainActivity extends AppCompatActivity
     private boolean wasPlayingBeforePause = false;
 
     private final Song[] currentSongRef = {null};
+    private YouTubePlayer youTubePlayer;
+    private YouTubePlayerView youTubePlayerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +101,17 @@ public class MainActivity extends AppCompatActivity
 
         miniBtnClose.setOnClickListener(v -> PlayerManager.getInstance().stop());
         miniBtnMaximize.setOnClickListener(v -> reopenFullPlayer());
+
+        youTubePlayerView = findViewById(R.id.youtube_player_view);
+        getLifecycle().addObserver(youTubePlayerView);
+
+        youTubePlayerView.initialize(new AbstractYouTubePlayerListener() {
+            @Override
+            public void onReady(@NonNull YouTubePlayer initializedYouTubePlayer) {
+                youTubePlayer = initializedYouTubePlayer;
+                PlayerManager.getInstance().setYouTubePlayer(initializedYouTubePlayer);
+            }
+        });
 
         bottomNav = findViewById(R.id.bottom_navigation);
 
@@ -388,7 +404,7 @@ public class MainActivity extends AppCompatActivity
         updateSeekBar = new Runnable() {
             @Override
             public void run() {
-                if (playerManager.getMediaPlayer() != null) {
+                if (playerManager.getCurrentSong() != null) {
                     if (seekBar.getMax() == 0 && playerManager.getDuration() > 0) {
                         seekBar.setMax(playerManager.getDuration());
                         String totalTime = formatTime(playerManager.getDuration());
