@@ -46,14 +46,28 @@ public class DBManager {
         void onDownloadFailed(Exception e);
     }
 
+    public interface OnDownloadProgressListener extends OnDownloadListener {
+        void onProgress(int progress);
+    }
+
     public void AddSongs(Song song, OnDownloadListener listener) {
-        if (song.getId() != null && song.getId().startsWith("youtube_") && !song.getSongUrl().startsWith("/")) {
+        AddSongsWithProgress(song, new OnDownloadProgressListener() {
+            @Override public void onProgress(int progress) {}
+            @Override public void onDownloadComplete() { if (listener != null) listener.onDownloadComplete(); }
+            @Override public void onDownloadFailed(Exception e) { if (listener != null) listener.onDownloadFailed(e); }
+        });
+    }
+
+    public void AddSongsWithProgress(Song song, OnDownloadProgressListener listener) {
+        Log.d("DBManager", "Adding song with progress: " + song.getTitle());
+        if (song.getId() != null && song.getId().startsWith("youtube_") && (song.getSongUrl() == null || !song.getSongUrl().startsWith("/"))) {
             // It's a YouTube song, need to get a direct stream link first
             String videoId = song.getId().replace("youtube_", "");
+            Log.d("DBManager", "Resolving stream for: " + videoId);
             MyApplication.youtubeApiHandler.getStreamUrl(videoId, new YouTubeApiHandler.YouTubeCallback<String>() {
                 @Override
                 public void onSuccess(String streamUrl) {
-                    // Create a copy of the song with the stream URL for downloading
+                    Log.d("DBManager", "Stream resolved: " + streamUrl);
                     Song downloadSong = new Song(song.getId(), song.getTitle(), song.getArtist(), song.getAlbum(), 
                                                  song.getGenre(), song.getLyrics(), song.getDuration(), 
                                                  streamUrl, song.getImageUrl(), song.getAlbumId(), song.getArtistId());
@@ -62,15 +76,17 @@ public class DBManager {
 
                 @Override
                 public void onError(Exception e) {
+                    Log.e("DBManager", "Stream resolve failed", e);
                     if (listener != null) listener.onDownloadFailed(e);
                 }
             });
         } else {
+            Log.d("DBManager", "Starting direct download for: " + song.getTitle());
             startDownload(song, listener);
         }
     }
 
-    private void startDownload(Song song, OnDownloadListener listener) {
+    private void startDownload(Song song, OnDownloadProgressListener listener) {
         DownloadUtils.getLocalPath(context, song, new DownloadUtils.DownloadCallback() {
             @Override
             public void onDownloadComplete(String localAudioPath) {
@@ -92,6 +108,11 @@ public class DBManager {
             @Override
             public void onDownloadFailed(Exception e) {
                 if (listener != null) listener.onDownloadFailed(e);
+            }
+
+            @Override
+            public void onProgress(int progress) {
+                if (listener != null) listener.onProgress(progress);
             }
         });
     }

@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -72,6 +73,17 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
             holder.ivSong.setImageResource(android.R.color.darker_gray);
         }
 
+        if (DownloadManager.getInstance().isDownloading(song.getId())) {
+            holder.tvDownloadStatus.setVisibility(View.VISIBLE);
+            holder.pbDownload.setVisibility(View.VISIBLE);
+            int progress = DownloadManager.getInstance().getProgress(song.getId());
+            holder.tvDownloadStatus.setText(progress + "%");
+            holder.pbDownload.setProgress(progress);
+        } else {
+            holder.tvDownloadStatus.setVisibility(View.GONE);
+            holder.pbDownload.setVisibility(View.GONE);
+        }
+
         holder.itemView.setOnClickListener(v -> {
             if (MyApplication.recentSearchHandler != null) {
                 MyApplication.recentSearchHandler.addRecentSearch(song);
@@ -90,13 +102,16 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
 
     class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivSong;
-        TextView tvTitle, tvArtist;
+        TextView tvTitle, tvArtist, tvDownloadStatus;
+        ProgressBar pbDownload;
 
         ViewHolder(View view) {
             super(view);
             ivSong = view.findViewById(R.id.ivSong);
             tvTitle = view.findViewById(R.id.tvTitle);
             tvArtist = view.findViewById(R.id.tvArtist);
+            tvDownloadStatus = view.findViewById(R.id.tvDownloadStatus);
+            pbDownload = view.findViewById(R.id.pbDownload);
         }
     }
 }

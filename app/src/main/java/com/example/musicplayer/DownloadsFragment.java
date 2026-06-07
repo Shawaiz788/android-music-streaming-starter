@@ -25,6 +25,7 @@ public class DownloadsFragment extends Fragment {
     private ImageView ivBack;
     private SearchAdapter adapter;
     private MyApplication.OnDownloadsLoadedListener downloadsLoadedListener;
+    private DownloadManager.DownloadProgressListener downloadProgressListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -50,14 +51,22 @@ public class DownloadsFragment extends Fragment {
             }
         };
 
+        downloadProgressListener = new DownloadManager.DownloadProgressListener() {
+            @Override public void onDownloadProgress(String songId, int progress) { if (isAdded()) updateUI(); }
+            @Override public void onDownloadCompleted(String songId) { if (isAdded()) updateUI(); }
+            @Override public void onDownloadFailed(String songId, Exception e) { if (isAdded()) updateUI(); }
+        };
+
         MyApplication.subscribeDownloads(downloadsLoadedListener);
+        DownloadManager.getInstance().addListener(downloadProgressListener);
         updateUI();
     }
 
     private void updateUI() {
-        ArrayList<Song> downloadedSongs = MyApplication.downloadedSongs;
+        ArrayList<Song> allSongs = new ArrayList<>(DownloadManager.getInstance().getDownloadingSongs());
+        allSongs.addAll(MyApplication.downloadedSongs);
 
-        if (downloadedSongs.isEmpty()) {
+        if (allSongs.isEmpty()) {
             tvNoDownloads.setVisibility(View.VISIBLE);
             rvDownloads.setVisibility(View.GONE);
         } else {
@@ -65,10 +74,11 @@ public class DownloadsFragment extends Fragment {
             rvDownloads.setVisibility(View.VISIBLE);
 
             if (adapter == null) {
-                adapter = new SearchAdapter(requireContext(), downloadedSongs);
+                adapter = new SearchAdapter(requireContext(), allSongs);
                 rvDownloads.setLayoutManager(new LinearLayoutManager(requireContext()));
                 rvDownloads.setAdapter(adapter);
             } else {
+                adapter.songs = allSongs;
                 adapter.notifyDataSetChanged();
             }
         }
@@ -79,6 +89,9 @@ public class DownloadsFragment extends Fragment {
         super.onDestroyView();
         if (downloadsLoadedListener != null) {
             MyApplication.unsubscribeDownloads(downloadsLoadedListener);
+        }
+        if (downloadProgressListener != null) {
+            DownloadManager.getInstance().removeListener(downloadProgressListener);
         }
     }
 }

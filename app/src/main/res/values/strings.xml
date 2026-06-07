@@ -152,6 +152,7 @@
     <string name="play_now_format">Play Now: %1$s</string>
     <string name="song_deleted">Song deleted from device</string>
     <string name="downloading">Downloading...</string>
+    <string name="downloading_with_progress">Downloading %1$d%%</string>
     <string name="song_downloaded">Song downloaded successfully</string>
     <string name="time_zero">0:00</string>
     <string name="share_via">Share via</string>

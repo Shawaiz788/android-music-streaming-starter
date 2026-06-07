@@ -287,12 +287,51 @@ public class MainActivity extends AppCompatActivity
 
         Runnable updateDownloadButton = () -> {
             boolean downloaded = dbManager.isDownloaded(currentSongRef[0].getId());
-            btnDownload.setText(downloaded ? getString(R.string.delete) : getString(R.string.download));
-            btnDownload.setIconResource(downloaded
-                    ? android.R.drawable.ic_menu_delete
-                    : android.R.drawable.stat_sys_download);
+            boolean downloading = DownloadManager.getInstance().isDownloading(currentSongRef[0].getId());
+            
+            if (downloaded) {
+                btnDownload.setText(getString(R.string.delete));
+                btnDownload.setIconResource(android.R.drawable.ic_menu_delete);
+                btnDownload.setEnabled(true);
+            } else if (downloading) {
+                int progress = DownloadManager.getInstance().getProgress(currentSongRef[0].getId());
+                btnDownload.setText(getString(R.string.downloading_with_progress, progress));
+                btnDownload.setIconResource(android.R.drawable.stat_sys_download);
+                btnDownload.setEnabled(false);
+            } else {
+                btnDownload.setText(getString(R.string.download));
+                btnDownload.setIconResource(android.R.drawable.stat_sys_download);
+                btnDownload.setEnabled(true);
+            }
         };
         updateDownloadButton.run();
+
+        DownloadManager.DownloadProgressListener playerProgressListener = new DownloadManager.DownloadProgressListener() {
+            @Override
+            public void onDownloadProgress(String songId, int progress) {
+                if (currentSongRef[0] != null && songId.equals(currentSongRef[0].getId())) {
+                    runOnUiThread(updateDownloadButton);
+                }
+            }
+
+            @Override
+            public void onDownloadCompleted(String songId) {
+                if (currentSongRef[0] != null && songId.equals(currentSongRef[0].getId())) {
+                    runOnUiThread(() -> {
+                        updateDownloadButton.run();
+                        Toast.makeText(MainActivity.this, getString(R.string.song_downloaded), Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }
+
+            @Override
+            public void onDownloadFailed(String songId, Exception e) {
+                if (currentSongRef[0] != null && songId.equals(currentSongRef[0].getId())) {
+                    runOnUiThread(updateDownloadButton);
+                }
+            }
+        };
+        DownloadManager.getInstance().addListener(playerProgressListener);
 
         btnDownload.setOnClickListener(v -> {
             Song activeSong = currentSongRef[0];
@@ -302,27 +341,16 @@ public class MainActivity extends AppCompatActivity
                 if (paths[1] != null) new java.io.File(paths[1]).delete();
                 dbManager.deleteSong(activeSong.getId());
                 Toast.makeText(this, getString(R.string.song_deleted), Toast.LENGTH_SHORT).show();
+                
+                // Update MyApplication downloaded songs list
+                MyApplication.downloadedSongs.clear();
+                MyApplication.downloadedSongs.addAll(dbManager.getAllDownloadedSongs());
+                MyApplication.notifyDownloadsLoaded();
+                
                 updateDownloadButton.run();
             } else {
-                btnDownload.setEnabled(false);
-                btnDownload.setText(getString(R.string.downloading));
-                dbManager.AddSongs(activeSong, new DBManager.OnDownloadListener() {
-                    @Override
-                    public void onDownloadComplete() {
-                        runOnUiThread(() -> {
-                            updateDownloadButton.run();
-                            btnDownload.setEnabled(true);
-                            Toast.makeText(MainActivity.this, getString(R.string.song_downloaded), Toast.LENGTH_SHORT).show();
-                        });
-                    }
-                    @Override
-                    public void onDownloadFailed(Exception e) {
-                        runOnUiThread(() -> {
-                            updateDownloadButton.run();
-                            btnDownload.setEnabled(true);
-                        });
-                    }
-                });
+                DownloadManager.getInstance().startDownload(this, activeSong);
+                updateDownloadButton.run();
             }
         });
 
@@ -758,6 +786,12 @@ public class MainActivity extends AppCompatActivity
         dialog.getWindow().setNavigationBarColor(Color.TRANSPARENT);
         dialog.getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        
+        dialog.setOnDismissListener(d -> {
+            DownloadManager.getInstance().removeListener(playerProgressListener);
+            if (dbManager != null) dbManager.Close();
+        });
+
         dialog.show();
 
         view.setTranslationY(2000f);

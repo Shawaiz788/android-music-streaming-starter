@@ -362,7 +362,6 @@ public class YouTubeApiHandler {
                         }
                         markInstanceWorked(instance);
                         mainHandler.post(() -> {
-                            Toast.makeText(MyApplication.getInstance(), "Source: " + instance, Toast.LENGTH_SHORT).show();
                             callback.onSuccess(songs);
                         });
                     } catch (Exception e) {
@@ -405,7 +404,9 @@ public class YouTubeApiHandler {
     private void getStreamUrlInternal(String videoId, YouTubeCallback<String> callback,
                                       String instance, int attempt) {
         Runnable doRequest = () -> {
-            String url = instance + "/api/v1/videos/" + videoId + "?fields=adaptiveFormats";
+            // Force the Invidious instance to proxy the stream via &local=true
+            // AND ensure we use a generic but accepted User-Agent
+            String url = instance + "/api/v1/videos/" + videoId + "?fields=adaptiveFormats&local=true";
 
             client.newCall(new Request.Builder()
                     .url(url)
@@ -450,19 +451,30 @@ public class YouTubeApiHandler {
 
                         String chosen = bestMp4 != null ? bestMp4
                                 : bestOpus != null ? bestOpus
-                                : formats.getJSONObject(0).optString("url", "");
+                                : (formats.length() > 0 ? formats.getJSONObject(0).optString("url", "") : "");
 
                         if (chosen.isEmpty()) {
+                            Log.w(TAG, "No valid audio URL found in adaptiveFormats");
                             tryNextStream(videoId, callback, instance, attempt + 1);
                             return;
                         }
+
+                        // Check for relative URLs or specific proxy markers
+                        if (chosen.startsWith("/")) {
+                            chosen = instance + chosen;
+                        }
                         
+                        // Add some standard YouTube parameters if they are missing and it's not proxied
+                        if (!chosen.contains("ratebypass=yes") && chosen.contains("googlevideo.com")) {
+                             chosen += "&ratebypass=yes";
+                        }
+                        
+                        Log.d(TAG, "Resolved Stream URL: " + chosen);
                         markInstanceWorked(instance);
                         streamCache.put(videoId, new CachedUrl(chosen));
 
                         final String finalUrl = chosen;
                         mainHandler.post(() -> {
-                            Toast.makeText(MyApplication.getInstance(), "Stream: " + instance, Toast.LENGTH_SHORT).show();
                             callback.onSuccess(finalUrl);
                         });
                     } catch (Exception e) {
