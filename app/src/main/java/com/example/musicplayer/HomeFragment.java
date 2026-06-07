@@ -76,13 +76,30 @@ public class HomeFragment extends Fragment {
         shimmerContainer = view.findViewById(R.id.shimmer_view_container);
         shimmerAlbums = view.findViewById(R.id.shimmer_albums);
 
-        rvReleases.setVisibility(View.GONE);
-        rvAlbums.setVisibility(View.GONE);
-        if (shimmerContainer != null) {
-            shimmerContainer.startShimmer();
+        if (!MyApplication.newReleases.isEmpty()) {
+            rvReleases.setVisibility(View.VISIBLE);
+            if (shimmerContainer != null) {
+                shimmerContainer.setVisibility(View.GONE);
+            }
+        } else {
+            rvReleases.setVisibility(View.GONE);
+            if (shimmerContainer != null) {
+                shimmerContainer.startShimmer();
+                shimmerContainer.setVisibility(View.VISIBLE);
+            }
         }
-        if (shimmerAlbums != null) {
-            shimmerAlbums.startShimmer();
+
+        if (!MyApplication.allAlbums.isEmpty()) {
+            rvAlbums.setVisibility(View.VISIBLE);
+            if (shimmerAlbums != null) {
+                shimmerAlbums.setVisibility(View.GONE);
+            }
+        } else {
+            rvAlbums.setVisibility(View.GONE);
+            if (shimmerAlbums != null) {
+                shimmerAlbums.startShimmer();
+                shimmerAlbums.setVisibility(View.VISIBLE);
+            }
         }
 
         releasesAdapter = new RvReleasesAdapter(requireContext(), MyApplication.newReleases);

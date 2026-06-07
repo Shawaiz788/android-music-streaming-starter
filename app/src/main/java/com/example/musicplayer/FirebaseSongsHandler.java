@@ -95,6 +95,10 @@ public class FirebaseSongsHandler {
         
         Log.d("FirebaseSongsHandler", "Merged songs count: " + MyApplication.songs.size());
 
+        if (MyApplication.cacheManager != null) {
+            MyApplication.cacheManager.saveTopSongs(MyApplication.songs);
+        }
+
         MyApplication.notifySongsLoaded();
     }
 
@@ -125,6 +129,11 @@ public class FirebaseSongsHandler {
                         playCounts.put(ds.getKey(), (Integer) val);
                     }
                 }
+                
+                if (MyApplication.cacheManager != null) {
+                    MyApplication.cacheManager.savePlayCounts(playCounts);
+                }
+
                 if (listener != null) listener.onPlayCountsLoaded(playCounts);
             }
 

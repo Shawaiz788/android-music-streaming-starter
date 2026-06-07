@@ -89,6 +89,14 @@ public class TopMusicFragment extends Fragment {
     private void loadData() {
         if (MyApplication.songsHandler == null) return;
 
+        // Load cached play counts first
+        if (MyApplication.cacheManager != null) {
+            this.playCountsMap = MyApplication.cacheManager.loadPlayCounts();
+            if (!this.playCountsMap.isEmpty()) {
+                refreshTopSongs();
+            }
+        }
+
         MyApplication.songsHandler.loadPlayCounts(counts -> {
             this.playCountsMap = counts;
             refreshTopSongs();

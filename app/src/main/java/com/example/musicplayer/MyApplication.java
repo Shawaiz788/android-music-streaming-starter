@@ -25,6 +25,7 @@ public class MyApplication extends Application {
     public static final ArrayList<Artist> favouriteArtists = new ArrayList<>();
     public static final ArrayList<Playlist> favouritePlaylists = new ArrayList<>();
     public static final ArrayList<Song> downloadedSongs = new ArrayList<>();
+    public static final ArrayList<Song> exploreSongs = new ArrayList<>();
 
     public static User currentUserInfo;
     public static long sessionSeed;
@@ -39,7 +40,7 @@ public class MyApplication extends Application {
     public static FirebaseUserHandler userHandler;
     public static FirebasePlaylistHandler playlistHandler;
     public static YouTubeApiHandler youtubeApiHandler;
-
+    public static CacheManager cacheManager;
 
     public interface OnSongsLoadedListener {
         void onSongsLoaded(ArrayList<Song> songs);
@@ -241,8 +242,16 @@ public class MyApplication extends Application {
         songsHandler = new FirebaseSongsHandler();
         albumHandler = new FirebaseAlbumsHandler();
         youtubeApiHandler = new YouTubeApiHandler();
+        cacheManager = new CacheManager(this);
 
-        // addLocal(); // Removed to eliminate need for Google Drive links
+        // Load cached data
+        newReleases.addAll(cacheManager.loadNewReleases());
+        allAlbums.addAll(cacheManager.loadAllAlbums());
+        songs.addAll(cacheManager.loadTopSongs()); // We use 'songs' as base for Top Songs
+        exploreSongs.addAll(cacheManager.loadExploreSongs());
+
+        if (!newReleases.isEmpty()) notifySongsLoaded();
+        if (!allAlbums.isEmpty()) notifyAlbumsLoaded();
 
         DBManager dbManager = new DBManager(this);
         dbManager.Open();
@@ -300,6 +309,7 @@ public class MyApplication extends Application {
                             }
                         }
 
+                        cacheManager.saveNewReleases(newReleases);
                         notifySongsLoaded();
                     }
 

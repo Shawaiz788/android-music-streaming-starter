@@ -18,6 +18,7 @@ glide = "4.16.0"
 algoliasearch = "4.5.4"
 exifinterface = "1.3.7"
 youtubePlayer = "13.0.0"
+gson = "2.10.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -38,6 +39,7 @@ glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", versi
 algoliasearch = { group = "com.algolia", name = "algoliasearch", version.ref = "algoliasearch" }
 exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 youtube-player = { group = "com.pierfrancescosoffritti.androidyoutubeplayer", name = "core", version.ref = "youtubePlayer" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

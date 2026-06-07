@@ -48,6 +48,11 @@ public class FirebaseAlbumsHandler {
                         }
                     }
                 }
+
+                if (MyApplication.cacheManager != null) {
+                    MyApplication.cacheManager.saveAllAlbums(MyApplication.allAlbums);
+                }
+
                 MyApplication.notifyAlbumsLoaded();
             }
 

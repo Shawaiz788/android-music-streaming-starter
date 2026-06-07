@@ -47,7 +47,6 @@ public class SearchFragment extends Fragment {
     ExploreAdapter exploreAdapter;
     ShimmerFrameLayout shimmerExplore;
     List<Song> displayList = new ArrayList<>();
-    List<Song> exploreList = new ArrayList<>();
     CardView cvProfile;
     ImageView ivPfp;
     EditText etSearch;
@@ -307,38 +306,49 @@ public class SearchFragment extends Fragment {
     private void setupExploreSection() {
         if (!isAdded() || isLoadingExplore) return;
 
-        if (exploreLoaded && !exploreList.isEmpty()) {
+        if (!MyApplication.exploreSongs.isEmpty()) {
             if (shimmerExplore != null) {
                 shimmerExplore.stopShimmer();
                 shimmerExplore.setVisibility(GONE);
             }
             if (rvExplore != null) {
                 rvExplore.setVisibility(VISIBLE);
-                // Ensure adapter is attached even if already loaded
                 if (exploreAdapter == null) {
-                    exploreAdapter = new ExploreAdapter(requireContext(), exploreList);
+                    exploreAdapter = new ExploreAdapter(requireContext(), MyApplication.exploreSongs);
                 }
                 rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
                 rvExplore.setAdapter(exploreAdapter);
                 exploreAdapter.notifyDataSetChanged();
             }
-            return;
+            // If we have data, we might still want to refresh it in the background
+            if (exploreLoaded) return;
         }
 
         if (shimmerExplore != null) {
-            shimmerExplore.startShimmer();
-            shimmerExplore.setVisibility(VISIBLE);
+            if (MyApplication.exploreSongs.isEmpty()) {
+                shimmerExplore.startShimmer();
+                shimmerExplore.setVisibility(VISIBLE);
+            } else {
+                shimmerExplore.stopShimmer();
+                shimmerExplore.setVisibility(GONE);
+            }
         }
-        if (rvExplore != null) rvExplore.setVisibility(GONE);
+        if (rvExplore != null) {
+            rvExplore.setVisibility(MyApplication.exploreSongs.isEmpty() ? GONE : VISIBLE);
+        }
 
         isLoadingExplore = true;
         MyApplication.youtubeApiHandler.searchImmediate("songs", new YouTubeApiHandler.YouTubeCallback<List<Song>>() {
             @Override
             public void onSuccess(List<Song> result) {
                 if (isAdded()) {
-                    exploreList.clear();
-                    exploreList.addAll(result);
+                    MyApplication.exploreSongs.clear();
+                    MyApplication.exploreSongs.addAll(result);
                     exploreLoaded = true;
+
+                    if (MyApplication.cacheManager != null) {
+                        MyApplication.cacheManager.saveExploreSongs(MyApplication.exploreSongs);
+                    }
                     
                     if (shimmerExplore != null) {
                         shimmerExplore.stopShimmer();
@@ -347,11 +357,10 @@ public class SearchFragment extends Fragment {
                     if (rvExplore != null) {
                         rvExplore.setVisibility(VISIBLE);
                         if (exploreAdapter == null) {
-                            exploreAdapter = new ExploreAdapter(requireContext(), exploreList);
+                            exploreAdapter = new ExploreAdapter(requireContext(), MyApplication.exploreSongs);
                             rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
                             rvExplore.setAdapter(exploreAdapter);
                         } else {
-                            // Re-bind adapter to the new RecyclerView instance
                             rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
                             rvExplore.setAdapter(exploreAdapter);
                             exploreAdapter.notifyDataSetChanged();

@@ -54,4 +54,5 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(libs.exifinterface)
     implementation(libs.youtube.player)
+    implementation(libs.gson)
 }
