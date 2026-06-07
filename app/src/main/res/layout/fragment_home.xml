@@ -136,9 +136,9 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="24dp"
                     app:shimmer_auto_start="true"
-                    app:shimmer_base_alpha="0.6"
-                    app:shimmer_highlight_alpha="0.9"
-                    app:shimmer_duration="1200">
+                    app:shimmer_base_alpha="0.5"
+                    app:shimmer_highlight_alpha="0.8"
+                    app:shimmer_duration="1000">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -169,11 +169,52 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp"/>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvAlbums"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"/>
+                android:layout_height="wrap_content">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvAlbums"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone" />
+
+                <com.facebook.shimmer.ShimmerFrameLayout
+                    android:id="@+id/shimmer_albums"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:shimmer_auto_start="true"
+                    app:shimmer_base_alpha="0.5"
+                    app:shimmer_highlight_alpha="0.8"
+                    app:shimmer_duration="1000">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:baselineAligned="false">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:baselineAligned="false">
+                            <include layout="@layout/layout_album_shimmer" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                            <include layout="@layout/layout_album_shimmer" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                        </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:baselineAligned="false">
+                            <include layout="@layout/layout_album_shimmer" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                            <include layout="@layout/layout_album_shimmer" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </com.facebook.shimmer.ShimmerFrameLayout>
+            </FrameLayout>
         </LinearLayout>
 
     </LinearLayout>

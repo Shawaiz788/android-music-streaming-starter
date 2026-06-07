@@ -7,12 +7,12 @@
     android:layout_marginTop="2dp"
     android:layout_marginBottom="2dp"
     app:cardCornerRadius="30dp"
-    app:cardBackgroundColor="#444444"
+    app:cardBackgroundColor="#2C2C2C"
     app:cardElevation="0dp">
 
     <View
         android:layout_width="155dp"
         android:layout_height="155dp"
-        android:background="#888888" />
+        android:background="#3D3D3D" />
 
 </androidx.cardview.widget.CardView>

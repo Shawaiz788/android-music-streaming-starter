@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.example.musicplayer.Album;
 import com.example.musicplayer.Song;
 import com.example.musicplayer.User;
@@ -44,6 +45,7 @@ public class SearchFragment extends Fragment {
     TextView tvSearchHeader, tvClearAll;
     SearchAdapter adapter;
     ExploreAdapter exploreAdapter;
+    ShimmerFrameLayout shimmerExplore;
     List<Song> displayList = new ArrayList<>();
     List<Song> exploreList = new ArrayList<>();
     CardView cvProfile;
@@ -110,6 +112,7 @@ public class SearchFragment extends Fragment {
         searchResultContent = view.findViewById(R.id.searchResultContent);
         tvSearchHeader = view.findViewById(R.id.tvSearchHeader);
         tvClearAll = view.findViewById(R.id.tvClearAll);
+        shimmerExplore = view.findViewById(R.id.shimmer_explore);
 
         cvAlbums = view.findViewById(R.id.cvAlbums);
         cvPlaylists = view.findViewById(R.id.cvPlaylists);
@@ -302,7 +305,31 @@ public class SearchFragment extends Fragment {
     private boolean exploreLoaded = false;
 
     private void setupExploreSection() {
-        if (!isAdded() || exploreLoaded || isLoadingExplore) return;
+        if (!isAdded() || isLoadingExplore) return;
+
+        if (exploreLoaded && !exploreList.isEmpty()) {
+            if (shimmerExplore != null) {
+                shimmerExplore.stopShimmer();
+                shimmerExplore.setVisibility(GONE);
+            }
+            if (rvExplore != null) {
+                rvExplore.setVisibility(VISIBLE);
+                // Ensure adapter is attached even if already loaded
+                if (exploreAdapter == null) {
+                    exploreAdapter = new ExploreAdapter(requireContext(), exploreList);
+                }
+                rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+                rvExplore.setAdapter(exploreAdapter);
+                exploreAdapter.notifyDataSetChanged();
+            }
+            return;
+        }
+
+        if (shimmerExplore != null) {
+            shimmerExplore.startShimmer();
+            shimmerExplore.setVisibility(VISIBLE);
+        }
+        if (rvExplore != null) rvExplore.setVisibility(GONE);
 
         isLoadingExplore = true;
         MyApplication.youtubeApiHandler.searchImmediate("songs", new YouTubeApiHandler.YouTubeCallback<List<Song>>() {
@@ -313,12 +340,22 @@ public class SearchFragment extends Fragment {
                     exploreList.addAll(result);
                     exploreLoaded = true;
                     
-                    if (exploreAdapter == null) {
-                        exploreAdapter = new ExploreAdapter(requireContext(), exploreList);
-                        rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
-                        rvExplore.setAdapter(exploreAdapter);
-                    } else {
-                        exploreAdapter.notifyDataSetChanged();
+                    if (shimmerExplore != null) {
+                        shimmerExplore.stopShimmer();
+                        shimmerExplore.setVisibility(GONE);
+                    }
+                    if (rvExplore != null) {
+                        rvExplore.setVisibility(VISIBLE);
+                        if (exploreAdapter == null) {
+                            exploreAdapter = new ExploreAdapter(requireContext(), exploreList);
+                            rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+                            rvExplore.setAdapter(exploreAdapter);
+                        } else {
+                            // Re-bind adapter to the new RecyclerView instance
+                            rvExplore.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+                            rvExplore.setAdapter(exploreAdapter);
+                            exploreAdapter.notifyDataSetChanged();
+                        }
                     }
                     isLoadingExplore = false;
                 }
@@ -351,6 +388,24 @@ public class SearchFragment extends Fragment {
             MyApplication.unsubscribeUser(userLoadedListener);
         }
         instance = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (currentQuery.isEmpty()) {
+            defaultContent.setVisibility(VISIBLE);
+            searchResultContent.setVisibility(GONE);
+            if (etSearch != null) {
+                etSearch.clearFocus();
+                View root = getView();
+                if (root != null) {
+                    View rootLayout = root.findViewById(R.id.rootSearchLayout);
+                    if (rootLayout != null) rootLayout.requestFocus();
+                }
+            }
+            setupExploreSection();
+        }
     }
 
     private void showSearchResults() {

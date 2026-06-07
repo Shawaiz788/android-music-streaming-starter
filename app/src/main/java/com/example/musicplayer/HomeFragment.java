@@ -33,7 +33,7 @@ public class HomeFragment extends Fragment {
     RecyclerView rvReleases, rvAlbums;
     RvReleasesAdapter releasesAdapter;
     AlbumAdapter albumAdapter;
-    ShimmerFrameLayout shimmerContainer;
+    ShimmerFrameLayout shimmerContainer, shimmerAlbums;
     MyApplication.OnSongsLoadedListener songsLoadedListener;
     MyApplication.OnUserLoadedListener userLoadedListener;
     MyApplication.OnAlbumsLoadedListener albumsLoadedListener;
@@ -74,10 +74,15 @@ public class HomeFragment extends Fragment {
         rvReleases = view.findViewById(R.id.rvReleases);
         rvAlbums = view.findViewById(R.id.rvAlbums);
         shimmerContainer = view.findViewById(R.id.shimmer_view_container);
+        shimmerAlbums = view.findViewById(R.id.shimmer_albums);
 
         rvReleases.setVisibility(View.GONE);
+        rvAlbums.setVisibility(View.GONE);
         if (shimmerContainer != null) {
             shimmerContainer.startShimmer();
+        }
+        if (shimmerAlbums != null) {
+            shimmerAlbums.startShimmer();
         }
 
         releasesAdapter = new RvReleasesAdapter(requireContext(), MyApplication.newReleases);
@@ -126,8 +131,15 @@ public class HomeFragment extends Fragment {
         albumsLoadedListener = albums -> {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    if (albumAdapter != null) {
-                        albumAdapter.notifyDataSetChanged();
+                    if (albums != null && !albums.isEmpty()) {
+                        if (albumAdapter != null) {
+                            albumAdapter.notifyDataSetChanged();
+                        }
+                        if (shimmerAlbums != null) {
+                            shimmerAlbums.stopShimmer();
+                            shimmerAlbums.setVisibility(View.GONE);
+                        }
+                        rvAlbums.setVisibility(View.VISIBLE);
                     }
                 });
             }
