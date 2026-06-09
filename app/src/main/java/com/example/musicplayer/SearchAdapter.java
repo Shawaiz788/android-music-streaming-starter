@@ -79,12 +79,17 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
             int progress = DownloadManager.getInstance().getProgress(song.getId());
             holder.tvDownloadStatus.setText(progress + "%");
             holder.pbDownload.setProgress(progress);
+            holder.itemView.setAlpha(0.6f); // Translucent while downloading
         } else {
             holder.tvDownloadStatus.setVisibility(View.GONE);
             holder.pbDownload.setVisibility(View.GONE);
+            holder.itemView.setAlpha(1.0f); // Opaque when finished
         }
 
         holder.itemView.setOnClickListener(v -> {
+            if (DownloadManager.getInstance().isDownloading(song.getId())) {
+                return;
+            }
             if (MyApplication.recentSearchHandler != null) {
                 MyApplication.recentSearchHandler.addRecentSearch(song);
             }

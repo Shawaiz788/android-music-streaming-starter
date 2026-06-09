@@ -58,13 +58,14 @@ public class DownloadManager {
 
             @Override
             public void onDownloadComplete() {
+                // Update MyApplication downloaded songs list first to avoid flickering in UI
+                MyApplication.downloadedSongs.clear();
+                MyApplication.downloadedSongs.addAll(dbManager.getAllDownloadedSongs());
+
                 activeDownloadsSongs.remove(song.getId());
                 activeDownloadsProgress.remove(song.getId());
                 notifyCompleted(song.getId());
                 
-                // Update MyApplication downloaded songs list
-                MyApplication.downloadedSongs.clear();
-                MyApplication.downloadedSongs.addAll(dbManager.getAllDownloadedSongs());
                 MyApplication.notifyDownloadsLoaded();
                 dbManager.Close();
             }

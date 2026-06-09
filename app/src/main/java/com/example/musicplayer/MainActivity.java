@@ -576,12 +576,17 @@ public class MainActivity extends AppCompatActivity
         BottomSheetBehavior.BottomSheetCallback commonCallback = new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                boolean anyVisible = behavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                        eqBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                        lyricsBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                        playlistBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN ||
+                        queueBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN;
+
+                playerContent.setClickable(anyVisible);
+                playerContent.setFocusable(anyVisible);
+
                 if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-                    if (behavior.getState()        == BottomSheetBehavior.STATE_HIDDEN &&
-                            eqBehavior.getState()      == BottomSheetBehavior.STATE_HIDDEN &&
-                            lyricsBehavior.getState()  == BottomSheetBehavior.STATE_HIDDEN &&
-                            playlistBehavior.getState()== BottomSheetBehavior.STATE_HIDDEN &&
-                            queueBehavior.getState()   == BottomSheetBehavior.STATE_HIDDEN) {
+                    if (!anyVisible) {
                         playerContent.animate().alpha(1f).setDuration(200).start();
                     }
                 }
@@ -599,6 +604,16 @@ public class MainActivity extends AppCompatActivity
         lyricsBehavior.addBottomSheetCallback(commonCallback);
         playlistBehavior.addBottomSheetCallback(commonCallback);
         queueBehavior.addBottomSheetCallback(commonCallback);
+
+        playerContent.setOnClickListener(v -> {
+            if (behavior.getState() != BottomSheetBehavior.STATE_HIDDEN) behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            if (eqBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) eqBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            if (lyricsBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) lyricsBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            if (playlistBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) playlistBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            if (queueBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) queueBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        });
+        playerContent.setClickable(false);
+        playerContent.setFocusable(false);
 
         view.findViewById(R.id.btn_music_list).setOnClickListener(v -> {
             behavior.setState(BottomSheetBehavior.STATE_HIDDEN);

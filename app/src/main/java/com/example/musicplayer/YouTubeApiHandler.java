@@ -48,7 +48,7 @@ public class YouTubeApiHandler {
 
     // Hardcoded fallback — well-known, CDN-backed or high-uptime instances
     private static final String[] FALLBACK_INSTANCES = {
-            "https://inv.thepixora.com",
+            "https://invidious.drgns.space",
             "https://inv.tux.rs",
             "https://yewtu.be",
             "https://inv.nadeko.net",
@@ -58,12 +58,13 @@ public class YouTubeApiHandler {
             "https://yt.cdaut.de",
             "https://invidious.privacyredirect.com",
             "https://invidious.darkness.services",
+            "https://inv.nsh.fyi",
+            "https://invidious.flokinet.to"
     };
 
-    // Fast rotation: 0ms, 200ms, 500ms
-    private static final long[] BACKOFF_MS = {0, 200, 500};
+    private static final long[] BACKOFF_MS = {0, 200, 500, 1000, 2000};
 
-    private volatile List<String> instances;
+    private volatile List<String> instances = new ArrayList<>(java.util.Arrays.asList(FALLBACK_INSTANCES));
     private final Set<String> deadInstances = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final AtomicInteger currentIndex = new AtomicInteger(0);
 
@@ -90,11 +91,7 @@ public class YouTubeApiHandler {
     public YouTubeApiHandler() {
         this.client = buildHttpClient();
         this.mainHandler = new Handler(Looper.getMainLooper());
-
-        List<String> seed = new ArrayList<>();
-        Collections.addAll(seed, FALLBACK_INSTANCES);
-        instances = seed;
-
+        // instances already initialized with FALLBACK_INSTANCES
         fetchLiveInstances();
     }
 
@@ -137,8 +134,8 @@ public class YouTubeApiHandler {
                     }
 
                     if (!fresh.isEmpty()) {
-                        // Prioritize inv.thepixora.com if it's found in the live list
-                        String preferred = "https://inv.thepixora.com";
+                        // Prioritize drgns.space if it's found in the live list
+                        String preferred = "https://invidious.drgns.space";
                         if (fresh.contains(preferred)) {
                             fresh.remove(preferred);
                             fresh.add(0, preferred);
@@ -190,9 +187,15 @@ public class YouTubeApiHandler {
         if (justFailed != null) {
             deadInstances.add(justFailed);
             if (justFailed.equals(lastWorkingInstance)) lastWorkingInstance = null;
-            Log.w(TAG, "Dead: " + justFailed + " (" + deadInstances.size() + "/" + instances.size() + ")");
+            Log.w(TAG, "Marking instance dead: " + justFailed + " (" + deadInstances.size() + "/" + instances.size() + ")");
         }
         
+        // If all instances are marked dead, revive them all to try again
+        if (deadInstances.size() >= instances.size()) {
+            Log.i(TAG, "All instances exhausted. Reviving all " + instances.size() + " instances.");
+            deadInstances.clear();
+        }
+
         if (lastWorkingInstance != null && !deadInstances.contains(lastWorkingInstance)) {
             return lastWorkingInstance;
         }
@@ -205,7 +208,10 @@ public class YouTubeApiHandler {
                 return candidate;
             }
         }
-        return null; // all exhausted
+        
+        // Final fallback: if we still have nothing (shouldn't happen now), 
+        // return the first instance or a hardcoded one instead of null
+        return !instances.isEmpty() ? instances.get(0) : FALLBACK_INSTANCES[0];
     }
 
     private synchronized void markInstanceWorked(String instance) {
@@ -276,10 +282,6 @@ public class YouTubeApiHandler {
         int generation = searchGeneration.incrementAndGet();
         whenReady(() -> {
             String first = getNextAliveInstance(null);
-            if (first == null) {
-                mainHandler.post(() -> callback.onError(new Exception("No YouTube instances available.")));
-                return;
-            }
             searchInternal(query, callback, first, generation, 0);
         });
     }
@@ -293,10 +295,6 @@ public class YouTubeApiHandler {
 
         whenReady(() -> {
             String first = getNextAliveInstance(null);
-            if (first == null) {
-                mainHandler.post(() -> callback.onError(new Exception("No YouTube instances available.")));
-                return;
-            }
             getStreamUrlInternal(videoId, callback, first, 0);
         });
     }
@@ -382,37 +380,37 @@ public class YouTubeApiHandler {
     private void tryNextSearch(String query, YouTubeCallback<List<Song>> callback,
                                String failed, int generation, int attempt) {
         if (searchGeneration.get() != generation) return;
-        if (attempt >= BACKOFF_MS.length) {
+        if (attempt >= 10) { // Try up to 10 instances
             mainHandler.post(() -> callback.onError(
                     new Exception("Search unavailable. Check your connection and try again.")));
             return;
         }
         String next = getNextAliveInstance(failed);
-        if (next == null) {
-            mainHandler.post(() -> callback.onError(
-                    new Exception("Search unavailable. All sources are currently unreachable.")));
-        } else {
-            searchInternal(query, callback, next, generation, attempt);
-        }
+        searchInternal(query, callback, next, generation, attempt);
     }
 
     // ── Stream URL ────────────────────────────────────────────────────────────
-    // Invidious: GET /api/v1/videos/{videoId}?fields=adaptiveFormats
-    // Response : { adaptiveFormats: [{type, bitrate, url, ...}] }
-    // We pick the highest-bitrate audio/mp4 (AAC) stream, falling back to audio/webm (Opus)
 
     private void getStreamUrlInternal(String videoId, YouTubeCallback<String> callback,
                                       String instance, int attempt) {
+        if (attempt >= 10) {
+            callback.onError(new Exception("Failed to resolve stream after 10 attempts."));
+            return;
+        }
+
         Runnable doRequest = () -> {
-            // Force the Invidious instance to proxy the stream via &local=true
-            // AND ensure we use a generic but accepted User-Agent
-            String url = instance + "/api/v1/videos/" + videoId + "?fields=adaptiveFormats&local=true";
+            // Attempt 1: Try Invidious API
+            String invidiousUrl = instance + "/api/v1/videos/" + videoId + "?fields=adaptiveFormats,formatStreams&local=true";
+            
+            // Attempt 2: Backup - Try Piped API (Different architecture, often more stable)
+            String pipedUrl = "https://pipedapi.kavin.rocks/streams/" + videoId;
 
-            client.newCall(new Request.Builder()
-                    .url(url)
+            Request request = new Request.Builder()
+                    .url(attempt % 2 == 0 ? invidiousUrl : pipedUrl)
                     .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                    .build()).enqueue(new Callback() {
+                    .build();
 
+            client.newCall(request).enqueue(new Callback() {
                 @Override public void onFailure(Call call, IOException e) {
                     Log.e(TAG, "Stream FAIL [" + instance + "]: " + e.getMessage());
                     tryNextStream(videoId, callback, instance, attempt + 1);
@@ -425,60 +423,56 @@ public class YouTubeApiHandler {
                         return;
                     }
                     try {
-                        JSONArray formats = new JSONObject(response.body().string())
-                                .optJSONArray("adaptiveFormats");
-                        if (formats == null || formats.length() == 0) {
-                            tryNextStream(videoId, callback, instance, attempt + 1);
-                            return;
-                        }
+                        String bodyStr = response.body().string();
+                        JSONObject json = new JSONObject(bodyStr);
+                        String chosen = null;
 
-                        String bestMp4 = null, bestOpus = null;
-                        long mp4Bitrate = 0, opusBitrate = 0;
-
-                        for (int i = 0; i < formats.length(); i++) {
-                            JSONObject f = formats.getJSONObject(i);
-                            String type = f.optString("type", "");       // e.g. "audio/mp4; codecs=\"mp4a.40.2\""
-                            String streamUrl = f.optString("url", "");
-                            long bitrate = f.optLong("bitrate", 0);
-                            if (streamUrl.isEmpty()) continue;
-
-                            if (type.contains("audio/mp4") && bitrate > mp4Bitrate) {
-                                bestMp4 = streamUrl; mp4Bitrate = bitrate;
-                            } else if (type.contains("audio/webm") && bitrate > opusBitrate) {
-                                bestOpus = streamUrl; opusBitrate = bitrate;
+                        // Check Piped Format
+                        if (json.has("audioStreams")) {
+                            JSONArray audioStreams = json.getJSONArray("audioStreams");
+                            if (audioStreams.length() > 0) {
+                                // Find highest bitrate
+                                int maxBitrate = -1;
+                                for (int i = 0; i < audioStreams.length(); i++) {
+                                    JSONObject stream = audioStreams.getJSONObject(i);
+                                    int bitrate = stream.optInt("bitrate", 0);
+                                    if (bitrate > maxBitrate) {
+                                        maxBitrate = bitrate;
+                                        chosen = stream.optString("url");
+                                    }
+                                }
+                            }
+                        } 
+                        // Check Invidious Format
+                        else {
+                            JSONArray formats = json.optJSONArray("adaptiveFormats");
+                            if (formats == null) formats = json.optJSONArray("formatStreams");
+                            
+                            if (formats != null) {
+                                for (int i = 0; i < formats.length(); i++) {
+                                    JSONObject f = formats.getJSONObject(i);
+                                    String type = f.optString("type", "");
+                                    String streamUrl = f.optString("url", "");
+                                    if (type.contains("audio/mp4") || type.contains("audio/webm")) {
+                                        chosen = streamUrl;
+                                        break;
+                                    }
+                                }
                             }
                         }
 
-                        String chosen = bestMp4 != null ? bestMp4
-                                : bestOpus != null ? bestOpus
-                                : (formats.length() > 0 ? formats.getJSONObject(0).optString("url", "") : "");
-
-                        if (chosen.isEmpty()) {
-                            Log.w(TAG, "No valid audio URL found in adaptiveFormats");
+                        if (chosen == null || chosen.isEmpty()) {
                             tryNextStream(videoId, callback, instance, attempt + 1);
                             return;
                         }
 
-                        // Check for relative URLs or specific proxy markers
-                        if (chosen.startsWith("/")) {
-                            chosen = instance + chosen;
-                        }
+                        if (chosen.startsWith("/")) chosen = instance + chosen;
                         
-                        // Add some standard YouTube parameters if they are missing and it's not proxied
-                        if (!chosen.contains("ratebypass=yes") && chosen.contains("googlevideo.com")) {
-                             chosen += "&ratebypass=yes";
-                        }
-                        
-                        Log.d(TAG, "Resolved Stream URL: " + chosen);
-                        markInstanceWorked(instance);
-                        streamCache.put(videoId, new CachedUrl(chosen));
-
                         final String finalUrl = chosen;
-                        mainHandler.post(() -> {
-                            callback.onSuccess(finalUrl);
-                        });
+                        markInstanceWorked(instance);
+                        streamCache.put(videoId, new CachedUrl(finalUrl));
+                        mainHandler.post(() -> callback.onSuccess(finalUrl));
                     } catch (Exception e) {
-                        Log.e(TAG, "Stream parse error [" + instance + "]", e);
                         tryNextStream(videoId, callback, instance, attempt + 1);
                     } finally {
                         response.close();
@@ -494,18 +488,13 @@ public class YouTubeApiHandler {
 
     private void tryNextStream(String videoId, YouTubeCallback<String> callback,
                                String failed, int attempt) {
-        if (attempt >= BACKOFF_MS.length) {
+        if (attempt >= 10) { // Try up to 10 instances
             mainHandler.post(() -> callback.onError(
                     new Exception("Stream unavailable. Check your connection and try again.")));
             return;
         }
         String next = getNextAliveInstance(failed);
-        if (next == null) {
-            mainHandler.post(() -> callback.onError(
-                    new Exception("Stream unavailable. All sources are currently unreachable.")));
-        } else {
-            getStreamUrlInternal(videoId, callback, next, attempt);
-        }
+        getStreamUrlInternal(videoId, callback, next, attempt);
     }
 
     // ── OkHttp client ─────────────────────────────────────────────────────────
@@ -522,15 +511,15 @@ public class YouTubeApiHandler {
             return new OkHttpClient.Builder()
                     .sslSocketFactory(ctx.getSocketFactory(), (X509TrustManager) trustAll[0])
                     .hostnameVerifier((h, s) -> true)
-                    .connectTimeout(4, TimeUnit.SECONDS)
-                    .readTimeout(6, TimeUnit.SECONDS)
-                    .retryOnConnectionFailure(false)
+                    .connectTimeout(15, TimeUnit.SECONDS)
+                    .readTimeout(20, TimeUnit.SECONDS)
+                    .retryOnConnectionFailure(true)
                     .build();
         } catch (Exception e) {
             return new OkHttpClient.Builder()
-                    .connectTimeout(4, TimeUnit.SECONDS)
-                    .readTimeout(6, TimeUnit.SECONDS)
-                    .retryOnConnectionFailure(false)
+                    .connectTimeout(15, TimeUnit.SECONDS)
+                    .readTimeout(20, TimeUnit.SECONDS)
+                    .retryOnConnectionFailure(true)
                     .build();
         }
     }
