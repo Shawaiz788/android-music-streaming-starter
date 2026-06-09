@@ -46,6 +46,7 @@ public class ProfileFragment extends Fragment {
 
     ImageView btnClose, btnEditProfile, ivProfilePic;
     TextView profileName, profileEmail;
+    View statusBarSpacer, topBar;
 
     private ActivityResultLauncher<Intent> imagePickerLauncher;
     private MyApplication.OnUserLoadedListener userListener;
@@ -157,6 +158,8 @@ public class ProfileFragment extends Fragment {
         ivProfilePic = view.findViewById(R.id.ivProfilePic);
         profileName = view.findViewById(R.id.profileName);
         profileEmail = view.findViewById(R.id.profileEmail);
+        statusBarSpacer = view.findViewById(R.id.statusBarSpacer);
+        topBar = view.findViewById(R.id.topBar);
 
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
@@ -179,6 +182,7 @@ public class ProfileFragment extends Fragment {
 
         String currentTheme = ThemeHelper.getTheme(requireContext());
         highlightSelectedTheme(currentTheme);
+        ThemeHelper.applyTheme(view);
 
         btnEditProfile.setOnClickListener((v) -> showEditProfileDialog());
 
@@ -238,7 +242,7 @@ public class ProfileFragment extends Fragment {
     private void updateTheme(String themeName, View view) {
         ThemeHelper.saveTheme(requireContext(), themeName);
         highlightSelectedTheme(themeName);
-        Toast.makeText(requireContext(), getString(R.string.theme_changed_to, themeName), Toast.LENGTH_SHORT).show();
+        ThemeHelper.applyTheme(view);
     }
 
     private void showEditProfileDialog() {

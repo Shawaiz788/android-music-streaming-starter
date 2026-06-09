@@ -101,6 +101,8 @@ public class SearchFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         instance = this;
+
+        ThemeHelper.applyTheme(view);
         
         cvProfile = view.findViewById(R.id.cvProfile);
         ivPfp = view.findViewById(R.id.ivPfp);
