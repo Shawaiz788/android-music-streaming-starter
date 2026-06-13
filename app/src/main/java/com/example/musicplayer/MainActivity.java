@@ -185,7 +185,9 @@ public class MainActivity extends AppCompatActivity
 
     private void showMiniPlayer(Song song) {
         miniTitle.setText(song.getTitle());
+        miniTitle.setSelected(true);
         miniArtist.setText(song.getArtist());
+        miniArtist.setSelected(true);
         miniPlayer.setAlpha(0f);
         miniPlayer.setVisibility(View.VISIBLE);
         miniPlayer.animate().alpha(1f).setDuration(300).start();
@@ -357,7 +359,9 @@ public class MainActivity extends AppCompatActivity
         PlayerManager playerManager = PlayerManager.getInstance();
 
         tvTitle.setText(song.getTitle());
+        tvTitle.setSelected(true);
         tvArtist.setText(song.getArtist());
+        tvArtist.setSelected(true);
         tvSongNameMenu.setText(song.getTitle());
         tvArtistNameMenu.setText(song.getArtist());
 
@@ -412,7 +416,9 @@ public class MainActivity extends AppCompatActivity
             seekBar.setMax(0);
         } else {
             tvTitle.setText(song.getTitle());
+            tvTitle.setSelected(true);
             tvArtist.setText(song.getArtist());
+            tvArtist.setSelected(true);
             tvSongNameMenu.setText(song.getTitle());
             tvArtistNameMenu.setText(song.getArtist());
 
@@ -847,7 +853,9 @@ public class MainActivity extends AppCompatActivity
         }
 
         tvTitle.setText(song.getTitle());
+        tvTitle.setSelected(true);
         tvArtist.setText(song.getArtist());
+        tvArtist.setSelected(true);
         tvSongNameMenu.setText(song.getTitle());
         tvArtistNameMenu.setText(song.getArtist());
 

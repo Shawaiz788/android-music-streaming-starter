@@ -47,23 +47,31 @@
 
         <TextView
             android:id="@+id/tvSongTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:maxLines="1"
-            android:ellipsize="end"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             tools:text="Burning" />
 
         <TextView
             android:id="@+id/tvSongArtist"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#B3FFFFFF"
             android:textSize="14sp"
-            android:maxLines="1"
-            android:ellipsize="end"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             tools:text="Podval Caplella" />
     </LinearLayout>
 

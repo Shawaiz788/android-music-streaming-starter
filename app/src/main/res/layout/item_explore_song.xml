@@ -45,8 +45,12 @@
         android:textColor="@android:color/white"
         android:textSize="14sp"
         android:textStyle="bold"
-        android:maxLines="1"
-        android:ellipsize="end"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:scrollHorizontally="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:gravity="center"
         tools:text="Song Title" />
 
@@ -56,8 +60,12 @@
         android:layout_height="wrap_content"
         android:textColor="#B3FFFFFF"
         android:textSize="12sp"
-        android:maxLines="1"
-        android:ellipsize="end"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:scrollHorizontally="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:gravity="center"
         tools:text="Artist Name" />
 

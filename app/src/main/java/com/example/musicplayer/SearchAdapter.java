@@ -42,7 +42,9 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
             title =title;
         }
         holder.tvTitle.setText(title);
+        holder.tvTitle.setSelected(true);
         holder.tvArtist.setText(song.getArtist());
+        holder.tvArtist.setSelected(true);
         ShimmerDrawable shimmerDrawable = new ShimmerDrawable();
         shimmerDrawable.setShimmer(new Shimmer.ColorHighlightBuilder()
                 .setBaseColor(0xFF555555)

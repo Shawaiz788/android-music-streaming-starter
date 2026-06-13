@@ -53,7 +53,9 @@ public class AlbumSongAdapter extends RecyclerView.Adapter<AlbumSongAdapter.Song
         Song song = songs.get(position);
         holder.tvIndex.setText(String.valueOf(position + 1));
         holder.tvSongTitle.setText(song.getTitle());
+        holder.tvSongTitle.setSelected(true);
         holder.tvSongArtist.setText(song.getArtist());
+        holder.tvSongArtist.setSelected(true);
 
         if (song.getImageUrl() != null && !song.getImageUrl().isEmpty()) {
             Glide.with(context)

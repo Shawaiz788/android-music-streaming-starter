@@ -37,7 +37,9 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.AlbumViewHol
     public void onBindViewHolder(@NonNull AlbumViewHolder holder, int position) {
         Album album = albums.get(position);
         holder.tvAlbumTitle.setText(album.getTitle());
+        holder.tvAlbumTitle.setSelected(true);
         holder.tvArtistName.setText(album.getArtist());
+        holder.tvArtistName.setSelected(true);
         String year;
         if(album.getYear()!=null){
             year=album.getYear();

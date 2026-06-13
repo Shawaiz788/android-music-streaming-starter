@@ -36,7 +36,9 @@ public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Song song = songs.get(position);
         holder.tvTitle.setText(song.getTitle());
+        holder.tvTitle.setSelected(true);
         holder.tvArtist.setText(song.getArtist());
+        holder.tvArtist.setSelected(true);
 
         ShimmerDrawable shimmerDrawable = new ShimmerDrawable();
         shimmerDrawable.setShimmer(new Shimmer.ColorHighlightBuilder()
