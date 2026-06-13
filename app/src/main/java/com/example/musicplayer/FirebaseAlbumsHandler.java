@@ -26,10 +26,10 @@ public class FirebaseAlbumsHandler {
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // Keep Deezer albums
+                // Keep Deezer and YouTube albums
                 ArrayList<Album> nonFirebaseAlbums = new ArrayList<>();
                 for (Album a : MyApplication.allAlbums) {
-                    if (a.getId() != null && a.getId().startsWith("deezer_")) {
+                    if (a.getId() != null && (a.getId().startsWith("deezer_") || a.getId().startsWith("yt_playlist_"))) {
                         nonFirebaseAlbums.add(a);
                     }
                 }

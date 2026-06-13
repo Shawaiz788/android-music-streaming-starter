@@ -23,6 +23,7 @@ import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class HomeFragment extends Fragment {
 
@@ -190,10 +191,49 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadMoreAlbums() {
+        if (isLoadingAlbums) return;
         isLoadingAlbums = true;
-        // YouTube doesn't have a direct "Top Albums" endpoint in the current handler.
-        // We could search for popular music playlists or just skip for now.
-        isLoadingAlbums = false;
+        
+        String[] queries = {
+            "Arijit Singh Official Albums", 
+            "Taylor Swift Official Albums", 
+            "The Weeknd Starboy Album", 
+            "Drake Scorpion Album", 
+            "Ed Sheeran Divide Album", 
+            "Justin Bieber Justice Album",
+            "Post Malone Hollywood's Bleeding Album",
+            "Dua Lipa Future Nostalgia Album",
+            "Popular Hindi Music Albums 2025", 
+            "Global Top Albums Official"
+        };
+        String query = queries[new java.util.Random().nextInt(queries.length)];
+        
+        MyApplication.youtubeApiHandler.searchAlbums(query, new YouTubeApiHandler.YouTubeCallback<List<Album>>() {
+            @Override
+            public void onSuccess(List<Album> result) {
+                if (isAdded() && getActivity() != null) {
+                    for (Album a : result) {
+                        if (!MyApplication.allAlbums.contains(a)) {
+                            MyApplication.allAlbums.add(a);
+                            // Prefetch each new album
+                            MyApplication.prefetchAlbumSongs(a);
+                        }
+                    }
+                    getActivity().runOnUiThread(() -> {
+                        if (albumAdapter != null) {
+                            albumAdapter.notifyDataSetChanged();
+                        }
+                    });
+                    MyApplication.cacheManager.saveAllAlbums(MyApplication.allAlbums);
+                    isLoadingAlbums = false;
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                isLoadingAlbums = false;
+            }
+        });
     }
 
     @Override

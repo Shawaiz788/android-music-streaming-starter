@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,7 @@ public class AlbumDetailsFragment extends Fragment {
     private ImageButton btnShare, btnFavorite;
     private FloatingActionButton btnPlay;
     private Toolbar toolbar;
+    private ProgressBar progressBar;
     private Album currentAlbum;
     private AlbumSongAdapter adapter;
 
@@ -93,6 +95,7 @@ public class AlbumDetailsFragment extends Fragment {
         btnPlay = view.findViewById(R.id.btnPlay);
         btnFavorite = view.findViewById(R.id.btnFavorite);
         toolbar = view.findViewById(R.id.toolbar);
+        progressBar = view.findViewById(R.id.progressBar);
     }
 
     private void setupUI() {
@@ -129,13 +132,56 @@ public class AlbumDetailsFragment extends Fragment {
     private void loadAlbumSongs() {
         albumSongs.clear();
         
-        // Local/Firebase album
+        // Check if songs are already in the general pool (prefetched or previously loaded)
         for (Song song : MyApplication.songs) {
             if (song.getAlbumId() != null && song.getAlbumId().equals(currentAlbum.getId())) {
                 albumSongs.add(song);
             }
         }
-        updateAdapter();
+
+        if (!albumSongs.isEmpty()) {
+            updateAdapter();
+            return;
+        }
+
+        if (currentAlbum.getId() != null && currentAlbum.getId().startsWith("yt_playlist_")) {
+            if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+            
+            String query = currentAlbum.getTitle() + " " + currentAlbum.getArtist() + " full album";
+            MyApplication.youtubeApiHandler.searchImmediate(query, new YouTubeApiHandler.YouTubeCallback<List<Song>>() {
+                @Override
+                public void onSuccess(List<Song> result) {
+                    if (isAdded()) {
+                        if (progressBar != null) progressBar.setVisibility(View.GONE);
+                        
+                        // Set album info for the songs found via search
+                        for (Song s : result) {
+                            s.setAlbum(currentAlbum.getTitle());
+                            s.setAlbumId(currentAlbum.getId());
+                        }
+
+                        albumSongs.addAll(result);
+                        updateAdapter();
+                    }
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    if (isAdded()) {
+                        if (progressBar != null) progressBar.setVisibility(View.GONE);
+                        Toast.makeText(getContext(), "Failed to load songs for this album", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        } else {
+            // Local/Firebase album
+            for (Song song : MyApplication.songs) {
+                if (song.getAlbumId() != null && song.getAlbumId().equals(currentAlbum.getId())) {
+                    albumSongs.add(song);
+                }
+            }
+            updateAdapter();
+        }
     }
 
     private void updateAdapter() {

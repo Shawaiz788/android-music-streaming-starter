@@ -4,7 +4,6 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,21 +31,12 @@ import okhttp3.Response;
 
 /**
  * Fetches YouTube search results and audio stream URLs via the Invidious API.
- *
- * Invidious API used:
- *   Search  : GET {instance}/api/v1/search?q={query}&type=video&fields=videoId,title,author,videoThumbnails,lengthSeconds
- *   Stream  : GET {instance}/api/v1/videos/{videoId}?fields=adaptiveFormats
- *
- * Instance list refreshed at startup from https://api.invidious.io/instances.json
- * Falls back to a hardcoded set if that fetch fails.
  */
 public class YouTubeApiHandler {
     private static final String TAG = "YouTubeApiHandler";
 
-    // Official Invidious instances API — returns array of [domain, {api: true, ...}] pairs
     private static final String INSTANCES_API_URL = "https://api.invidious.io/instances.json?sort_by=health";
 
-    // Hardcoded fallback — well-known, CDN-backed or high-uptime instances
     private static final String[] FALLBACK_INSTANCES = {
             "https://invidious.drgns.space",
             "https://inv.tux.rs",
@@ -86,22 +76,12 @@ public class YouTubeApiHandler {
         void onError(Exception e);
     }
 
-    // ── Constructor ───────────────────────────────────────────────────────────
-
     public YouTubeApiHandler() {
         this.client = buildHttpClient();
         this.mainHandler = new Handler(Looper.getMainLooper());
-        // instances already initialized with FALLBACK_INSTANCES
         fetchLiveInstances();
     }
 
-    // ── Live instance list ────────────────────────────────────────────────────
-
-    /**
-     * Fetches the official Invidious instances list sorted by health.
-     * Only keeps instances that have the API enabled and use HTTPS.
-     * Format: [ ["domain", { "api": true/false, "uri": "https://...", ... }], ... ]
-     */
     private void fetchLiveInstances() {
         Request req = new Request.Builder()
                 .url(INSTANCES_API_URL)
@@ -122,10 +102,9 @@ public class YouTubeApiHandler {
                     List<String> fresh = new ArrayList<>();
 
                     for (int j = 0; j < arr.length(); j++) {
-                        JSONArray pair = arr.getJSONArray(j); // ["domain", {...}]
+                        JSONArray pair = arr.getJSONArray(j);
                         JSONObject info = pair.getJSONObject(1);
 
-                        // Only include instances with API enabled over HTTPS
                         if (!info.optBoolean("api", false)) continue;
                         String uri = info.optString("uri", "").trim();
                         if (!uri.startsWith("https://")) continue;
@@ -134,7 +113,6 @@ public class YouTubeApiHandler {
                     }
 
                     if (!fresh.isEmpty()) {
-                        // Prioritize drgns.space if it's found in the live list
                         String preferred = "https://invidious.drgns.space";
                         if (fresh.contains(preferred)) {
                             fresh.remove(preferred);
@@ -168,8 +146,6 @@ public class YouTubeApiHandler {
         else pendingQueue.add(task);
     }
 
-    // ── Instance rotation ─────────────────────────────────────────────────────
-
     private static String lastWorkingInstance = null;
     private final java.util.Map<String, CachedUrl> streamCache = new ConcurrentHashMap<>();
 
@@ -187,12 +163,10 @@ public class YouTubeApiHandler {
         if (justFailed != null) {
             deadInstances.add(justFailed);
             if (justFailed.equals(lastWorkingInstance)) lastWorkingInstance = null;
-            Log.w(TAG, "Marking instance dead: " + justFailed + " (" + deadInstances.size() + "/" + instances.size() + ")");
+            Log.w(TAG, "Marking instance dead: " + justFailed);
         }
         
-        // If all instances are marked dead, revive them all to try again
         if (deadInstances.size() >= instances.size()) {
-            Log.i(TAG, "All instances exhausted. Reviving all " + instances.size() + " instances.");
             deadInstances.clear();
         }
 
@@ -209,8 +183,6 @@ public class YouTubeApiHandler {
             }
         }
         
-        // Final fallback: if we still have nothing (shouldn't happen now), 
-        // return the first instance or a hardcoded one instead of null
         return !instances.isEmpty() ? instances.get(0) : FALLBACK_INSTANCES[0];
     }
 
@@ -219,20 +191,6 @@ public class YouTubeApiHandler {
             lastWorkingInstance = instance;
             deadInstances.remove(instance);
         }
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private String extractVideoId(String rawUrl) {
-        if (rawUrl == null || rawUrl.isEmpty()) return "";
-        try {
-            Uri uri = Uri.parse(rawUrl);
-            String v = uri.getQueryParameter("v");
-            if (v != null && !v.isEmpty()) return v;
-            String last = uri.getLastPathSegment();
-            if (last != null && !last.isEmpty()) return last;
-        } catch (Exception ignored) {}
-        return rawUrl.substring(rawUrl.lastIndexOf('/') + 1);
     }
 
     private long backoffMs(int attempt) {
@@ -253,24 +211,17 @@ public class YouTubeApiHandler {
                 }
             }
             if (url.isEmpty()) url = thumbs.getJSONObject(0).optString("url", "");
-            
-            if (url.startsWith("/")) {
-                url = instance + url;
-            }
+            if (url.startsWith("/")) url = instance + url;
             return url;
         } catch (Exception e) { return ""; }
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
-    /** Debounced search — wire to TextWatcher. */
     public void search(String query, YouTubeCallback<List<Song>> callback) {
         if (pendingSearch != null) debounceHandler.removeCallbacks(pendingSearch);
         pendingSearch = () -> { pendingSearch = null; startSearch(query, callback); };
         debounceHandler.postDelayed(pendingSearch, SEARCH_DEBOUNCE_MS);
     }
 
-    /** Immediate search — wire to IME action / search button. */
     public void searchImmediate(String query, YouTubeCallback<List<Song>> callback) {
         if (pendingSearch != null) { debounceHandler.removeCallbacks(pendingSearch); pendingSearch = null; }
         startSearch(query, callback);
@@ -299,205 +250,380 @@ public class YouTubeApiHandler {
         });
     }
 
-    public void cancel() {
-        if (pendingSearch != null) { debounceHandler.removeCallbacks(pendingSearch); pendingSearch = null; }
-        Call active = activeSearchCall.getAndSet(null);
-        if (active != null) active.cancel();
+    public void searchAlbums(String query, YouTubeCallback<List<Album>> callback) {
+        whenReady(() -> {
+            String first = getNextAliveInstance(null);
+            // Search for "Artist Name Album" or "Top Albums"
+            searchAlbumsInternal(query, callback, first, 0);
+        });
     }
 
-    // ── Search  ───────────────────────────────────────────────────────────────
-    // Invidious: GET /api/v1/search?q=QUERY&type=video
-    // Response : JSON array of video objects with videoId, title, author, videoThumbnails, lengthSeconds
+    private void searchAlbumsInternal(String query, YouTubeCallback<List<Album>> callback, String instance, int attempt) {
+        // Appending "full album" to improve chances of finding official content
+        String enhancedQuery = query;
+        if (!query.toLowerCase().contains("album")) {
+            enhancedQuery += " full album";
+        }
+        
+        String url = instance + "/api/v1/search?q=" + Uri.encode(enhancedQuery)
+                + "&type=playlist&fields=playlistId,title,author,playlistThumbnail";
 
-    private void searchInternal(String query, YouTubeCallback<List<Song>> callback,
-                                String instance, int generation, int attempt) {
-        if (searchGeneration.get() != generation) return;
+        client.newCall(new Request.Builder()
+                .url(url)
+                .addHeader("User-Agent", "Mozilla/5.0")
+                .build()).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                tryNextAlbumSearch(query, callback, instance, attempt + 1);
+            }
 
-        Runnable doRequest = () -> {
-            if (searchGeneration.get() != generation) return;
-
-            String url = instance + "/api/v1/search?q=" + Uri.encode(query)
-                    + "&type=video&fields=videoId,title,author,videoThumbnails,lengthSeconds";
-
-            Call call = client.newCall(new Request.Builder()
-                    .url(url)
-                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                    .build());
-            activeSearchCall.set(call);
-
-            call.enqueue(new Callback() {
-                @Override public void onFailure(Call call, IOException e) {
-                    if (call.isCanceled()) return;
-                    Log.e(TAG, "Search FAIL [" + instance + "]: " + e.getMessage());
-                    tryNextSearch(query, callback, instance, generation, attempt + 1);
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    response.close();
+                    tryNextAlbumSearch(query, callback, instance, attempt + 1);
+                    return;
                 }
+                try {
+                    JSONArray results = new JSONArray(response.body().string());
+                    List<Album> albums = new ArrayList<>();
 
-                @Override public void onResponse(Call call, Response response) throws IOException {
-                    if (call.isCanceled()) { response.close(); return; }
-                    if (!response.isSuccessful()) {
-                        Log.w(TAG, "Search HTTP " + response.code() + " [" + instance + "]");
-                        response.close();
-                        tryNextSearch(query, callback, instance, generation, attempt + 1);
+                    for (int i = 0; i < results.length(); i++) {
+                        JSONObject item = results.getJSONObject(i);
+                        String playlistId = item.optString("playlistId", "");
+                        if (playlistId.isEmpty()) continue;
+
+                        String title = item.optString("title", "");
+                        String author = item.optString("author", "");
+                        
+                        // Filter out generic user playlists
+                        String lowTitle = title.toLowerCase();
+                        if (lowTitle.contains("mix") || lowTitle.contains("favorites") || 
+                            lowTitle.contains("my songs") || lowTitle.contains("playlist")) continue;
+
+                        Album album = new Album();
+                        album.setId("yt_playlist_" + playlistId);
+                        album.setTitle(title);
+                        // Clean up " - Topic" from artist name for better UI
+                        album.setArtist(author.replace(" - Topic", ""));
+                        album.setImageUrl(item.optString("playlistThumbnail", ""));
+                        album.setYear("2025");
+                        
+                        // Prioritize official Topic channels
+                        if (author.endsWith(" - Topic")) {
+                            albums.add(0, album);
+                        } else {
+                            albums.add(album);
+                        }
+                    }
+                    
+                    if (albums.isEmpty() && attempt < 3) {
+                        tryNextAlbumSearch(query, callback, instance, attempt + 1);
                         return;
                     }
-                    try {
-                        JSONArray results = new JSONArray(response.body().string());
-                        List<Song> songs = new ArrayList<>();
 
-                        for (int i = 0; i < results.length(); i++) {
-                            JSONObject item = results.getJSONObject(i);
-                            String videoId = item.optString("videoId", "");
+                    markInstanceWorked(instance);
+                    mainHandler.post(() -> callback.onSuccess(albums));
+                } catch (Exception e) {
+                    tryNextAlbumSearch(query, callback, instance, attempt + 1);
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    private void tryNextAlbumSearch(String query, YouTubeCallback<List<Album>> callback, String failed, int attempt) {
+        if (attempt >= 10) {
+            mainHandler.post(() -> callback.onError(new Exception("Album search unavailable")));
+            return;
+        }
+        String next = getNextAliveInstance(failed);
+        searchAlbumsInternal(query, callback, next, attempt);
+    }
+
+    public void getPlaylistSongs(String playlistId, YouTubeCallback<List<Song>> callback) {
+        whenReady(() -> {
+            String first = getNextAliveInstance(null);
+            getPlaylistSongsInternal(playlistId, callback, first, 0);
+        });
+    }
+
+    private void getPlaylistSongsInternal(String playlistId, YouTubeCallback<List<Song>> callback, String instance, int attempt) {
+        // Mixes (RD...) and high attempt counts go to Piped
+        if (playlistId.startsWith("RD") || attempt > 3) {
+            getPipedPlaylistSongs(playlistId, callback, attempt);
+            return;
+        }
+
+        String url = instance + "/api/v1/playlists/" + playlistId;
+        Log.d(TAG, "Requesting playlist songs (Attempt " + attempt + ") from " + instance + ": " + url);
+
+        client.newCall(new Request.Builder()
+                .url(url)
+                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .build()).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "Playlist request failure [" + instance + "]: " + e.getMessage());
+                tryNextPlaylistSongs(playlistId, callback, instance, attempt + 1);
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                String body = "";
+                try {
+                    if (!response.isSuccessful()) {
+                        Log.w(TAG, "Playlist response unsuccessful [" + instance + "]: " + response.code());
+                        response.close();
+                        tryNextPlaylistSongs(playlistId, callback, instance, attempt + 1);
+                        return;
+                    }
+                    
+                    body = response.body().string();
+                    JSONObject result = new JSONObject(body);
+                    
+                    JSONArray videos = result.optJSONArray("videos");
+                    if (videos == null) videos = result.optJSONArray("playlistVideos");
+                    
+                    List<Song> songs = new ArrayList<>();
+                    if (videos != null && videos.length() > 0) {
+                        for (int i = 0; i < videos.length(); i++) {
+                            JSONObject item = videos.getJSONObject(i);
+                            String videoId = item.optString("videoId", item.optString("id", ""));
                             if (videoId.isEmpty()) continue;
 
                             Song song = new Song();
                             song.setId("youtube_" + videoId);
                             song.setTitle(item.optString("title", "Unknown Title"));
-                            song.setArtist(item.optString("author", "Unknown Artist"));
-                            song.setImageUrl(bestThumbnail(item.optJSONArray("videoThumbnails"), instance));
-                            song.setDuration(item.optInt("lengthSeconds", 0) * 1000);
+                            song.setArtist(item.optString("author", item.optString("uploaderName", "Unknown Artist")));
+                            
+                            JSONArray thumbs = item.optJSONArray("videoThumbnails");
+                            if (thumbs == null) thumbs = item.optJSONArray("thumbnails");
+                            song.setImageUrl(bestThumbnail(thumbs, instance));
+                            
+                            int duration = item.optInt("lengthSeconds", item.optInt("duration", 0));
+                            song.setDuration(duration * 1000);
                             song.setSongUrl("https://www.youtube.com/watch?v=" + videoId);
+                            song.setAlbum(result.optString("title", "YouTube Album"));
+                            song.setAlbumId("yt_playlist_" + playlistId);
                             songs.add(song);
                         }
-                        markInstanceWorked(instance);
-                        mainHandler.post(() -> {
-                            callback.onSuccess(songs);
-                        });
-                    } catch (Exception e) {
-                        Log.e(TAG, "Search parse error [" + instance + "]", e);
-                        tryNextSearch(query, callback, instance, generation, attempt + 1);
-                    } finally {
-                        response.close();
                     }
+                    
+                    if (songs.isEmpty()) {
+                        Log.w(TAG, "Empty playlist from Invidious [" + instance + "]. Retrying with Piped.");
+                        getPipedPlaylistSongs(playlistId, callback, attempt + 1);
+                    } else {
+                        Log.i(TAG, "Loaded " + songs.size() + " songs from " + instance);
+                        markInstanceWorked(instance);
+                        mainHandler.post(() -> callback.onSuccess(songs));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parsing playlist from " + instance, e);
+                    tryNextPlaylistSongs(playlistId, callback, instance, attempt + 1);
+                } finally {
+                    response.close();
                 }
-            });
-        };
-
-        long delay = backoffMs(attempt);
-        if (delay > 0) mainHandler.postDelayed(doRequest, delay);
-        else doRequest.run();
+            }
+        });
     }
 
-    private void tryNextSearch(String query, YouTubeCallback<List<Song>> callback,
-                               String failed, int generation, int attempt) {
+    private void getPipedPlaylistSongs(String playlistId, YouTubeCallback<List<Song>> callback, int attempt) {
+        // Rotate Piped instances if needed, but start with the main one
+        String pipedInstance = "https://pipedapi.kavin.rocks";
+        if (attempt > 7) pipedInstance = "https://pipedapi.tokhmi.xyz";
+        
+        String url = pipedInstance + "/playlists/" + playlistId;
+        Log.d(TAG, "Requesting playlist from Piped: " + url);
+
+        client.newCall(new Request.Builder()
+                .url(url)
+                .build()).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "Piped playlist failure: " + e.getMessage());
+                if (attempt < 10) {
+                    tryNextPlaylistSongs(playlistId, callback, "piped", attempt + 1);
+                } else {
+                    mainHandler.post(() -> callback.onError(new Exception("Failed after multiple retries")));
+                }
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful()) {
+                        throw new IOException("Piped error " + response.code());
+                    }
+                    String body = response.body().string();
+                    JSONObject result = new JSONObject(body);
+                    JSONArray streams = result.optJSONArray("relatedStreams");
+                    
+                    List<Song> songs = new ArrayList<>();
+                    if (streams != null) {
+                        for (int i = 0; i < streams.length(); i++) {
+                            JSONObject item = streams.getJSONObject(i);
+                            String videoUrl = item.optString("url", "");
+                            String videoId = "";
+                            if (videoUrl.contains("v=")) {
+                                videoId = videoUrl.split("v=")[1].split("&")[0];
+                            } else if (videoUrl.contains("/watch?v=")) {
+                                videoId = videoUrl.replace("/watch?v=", "").split("&")[0];
+                            }
+                            
+                            if (videoId.isEmpty()) continue;
+
+                            Song song = new Song();
+                            song.setId("youtube_" + videoId);
+                            song.setTitle(item.optString("title", "Unknown Title"));
+                            song.setArtist(item.optString("uploaderName", "Unknown Artist"));
+                            song.setImageUrl(item.optString("thumbnail", ""));
+                            song.setDuration(item.optInt("duration", 0) * 1000);
+                            song.setSongUrl("https://www.youtube.com/watch?v=" + videoId);
+                            song.setAlbum(result.optString("name", "YouTube Album"));
+                            song.setAlbumId("yt_playlist_" + playlistId);
+                            songs.add(song);
+                        }
+                    }
+
+                    if (songs.isEmpty()) {
+                        Log.w(TAG, "Piped returned empty streams. Retrying next Invidious.");
+                        tryNextPlaylistSongs(playlistId, callback, "piped", attempt + 1);
+                    } else {
+                        Log.i(TAG, "Loaded " + songs.size() + " songs from Piped");
+                        mainHandler.post(() -> callback.onSuccess(songs));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parsing Piped playlist", e);
+                    tryNextPlaylistSongs(playlistId, callback, "piped", attempt + 1);
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    private void tryNextPlaylistSongs(String playlistId, YouTubeCallback<List<Song>> callback, String failed, int attempt) {
+        if (attempt >= 10) {
+            mainHandler.post(() -> callback.onError(new Exception("Failed to load songs")));
+            return;
+        }
+        String next = getNextAliveInstance(failed);
+        getPlaylistSongsInternal(playlistId, callback, next, attempt);
+    }
+
+    public void cancel() {
+        if (pendingSearch != null) debounceHandler.removeCallbacks(pendingSearch);
+        Call active = activeSearchCall.getAndSet(null);
+        if (active != null) active.cancel();
+    }
+
+    private void searchInternal(String query, YouTubeCallback<List<Song>> callback, String instance, int generation, int attempt) {
         if (searchGeneration.get() != generation) return;
-        if (attempt >= 10) { // Try up to 10 instances
-            mainHandler.post(() -> callback.onError(
-                    new Exception("Search unavailable. Check your connection and try again.")));
+        String url = instance + "/api/v1/search?q=" + Uri.encode(query) + "&type=video&fields=videoId,title,author,videoThumbnails,lengthSeconds";
+        Call call = client.newCall(new Request.Builder().url(url).addHeader("User-Agent", "Mozilla/5.0").build());
+        activeSearchCall.set(call);
+        call.enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                if (call.isCanceled()) return;
+                tryNextSearch(query, callback, instance, generation, attempt + 1);
+            }
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (call.isCanceled()) { response.close(); return; }
+                if (!response.isSuccessful()) {
+                    response.close();
+                    tryNextSearch(query, callback, instance, generation, attempt + 1);
+                    return;
+                }
+                try {
+                    JSONArray results = new JSONArray(response.body().string());
+                    List<Song> songs = new ArrayList<>();
+                    for (int i = 0; i < results.length(); i++) {
+                        JSONObject item = results.getJSONObject(i);
+                        String videoId = item.optString("videoId", "");
+                        if (videoId.isEmpty()) continue;
+                        Song song = new Song();
+                        song.setId("youtube_" + videoId);
+                        song.setTitle(item.optString("title", "Unknown Title"));
+                        song.setArtist(item.optString("author", "Unknown Artist"));
+                        song.setImageUrl(bestThumbnail(item.optJSONArray("videoThumbnails"), instance));
+                        song.setDuration(item.optInt("lengthSeconds", 0) * 1000);
+                        song.setSongUrl("https://www.youtube.com/watch?v=" + videoId);
+                        songs.add(song);
+                    }
+                    markInstanceWorked(instance);
+                    mainHandler.post(() -> callback.onSuccess(songs));
+                } catch (Exception e) {
+                    tryNextSearch(query, callback, instance, generation, attempt + 1);
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    private void tryNextSearch(String query, YouTubeCallback<List<Song>> callback, String failed, int generation, int attempt) {
+        if (searchGeneration.get() != generation) return;
+        if (attempt >= 10) {
+            mainHandler.post(() -> callback.onError(new Exception("Search unavailable")));
             return;
         }
         String next = getNextAliveInstance(failed);
         searchInternal(query, callback, next, generation, attempt);
     }
 
-    // ── Stream URL ────────────────────────────────────────────────────────────
-
-    private void getStreamUrlInternal(String videoId, YouTubeCallback<String> callback,
-                                      String instance, int attempt) {
+    private void getStreamUrlInternal(String videoId, YouTubeCallback<String> callback, String instance, int attempt) {
         if (attempt >= 10) {
-            callback.onError(new Exception("Failed to resolve stream after 10 attempts."));
+            callback.onError(new Exception("Stream unavailable"));
             return;
         }
-
-        Runnable doRequest = () -> {
-            // Attempt 1: Try Invidious API
-            String invidiousUrl = instance + "/api/v1/videos/" + videoId + "?fields=adaptiveFormats,formatStreams&local=true";
-            
-            // Attempt 2: Backup - Try Piped API (Different architecture, often more stable)
-            String pipedUrl = "https://pipedapi.kavin.rocks/streams/" + videoId;
-
-            Request request = new Request.Builder()
-                    .url(attempt % 2 == 0 ? invidiousUrl : pipedUrl)
-                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                    .build();
-
-            client.newCall(request).enqueue(new Callback() {
-                @Override public void onFailure(Call call, IOException e) {
-                    Log.e(TAG, "Stream FAIL [" + instance + "]: " + e.getMessage());
+        String url = instance + "/api/v1/videos/" + videoId + "?fields=adaptiveFormats,formatStreams&local=true";
+        client.newCall(new Request.Builder().url(url).addHeader("User-Agent", "Mozilla/5.0").build()).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                tryNextStream(videoId, callback, instance, attempt + 1);
+            }
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    response.close();
                     tryNextStream(videoId, callback, instance, attempt + 1);
+                    return;
                 }
-
-                @Override public void onResponse(Call call, Response response) throws IOException {
-                    if (!response.isSuccessful()) {
-                        response.close();
+                try {
+                    JSONObject json = new JSONObject(response.body().string());
+                    String chosen = null;
+                    JSONArray formats = json.optJSONArray("adaptiveFormats");
+                    if (formats == null) formats = json.optJSONArray("formatStreams");
+                    if (formats != null) {
+                        for (int i = 0; i < formats.length(); i++) {
+                            JSONObject f = formats.getJSONObject(i);
+                            String type = f.optString("type", "");
+                            if (type.contains("audio/mp4") || type.contains("audio/webm")) {
+                                chosen = f.optString("url", "");
+                                break;
+                            }
+                        }
+                    }
+                    if (chosen == null || chosen.isEmpty()) {
                         tryNextStream(videoId, callback, instance, attempt + 1);
                         return;
                     }
-                    try {
-                        String bodyStr = response.body().string();
-                        JSONObject json = new JSONObject(bodyStr);
-                        String chosen = null;
-
-                        // Check Piped Format
-                        if (json.has("audioStreams")) {
-                            JSONArray audioStreams = json.getJSONArray("audioStreams");
-                            if (audioStreams.length() > 0) {
-                                // Find highest bitrate
-                                int maxBitrate = -1;
-                                for (int i = 0; i < audioStreams.length(); i++) {
-                                    JSONObject stream = audioStreams.getJSONObject(i);
-                                    int bitrate = stream.optInt("bitrate", 0);
-                                    if (bitrate > maxBitrate) {
-                                        maxBitrate = bitrate;
-                                        chosen = stream.optString("url");
-                                    }
-                                }
-                            }
-                        } 
-                        // Check Invidious Format
-                        else {
-                            JSONArray formats = json.optJSONArray("adaptiveFormats");
-                            if (formats == null) formats = json.optJSONArray("formatStreams");
-                            
-                            if (formats != null) {
-                                for (int i = 0; i < formats.length(); i++) {
-                                    JSONObject f = formats.getJSONObject(i);
-                                    String type = f.optString("type", "");
-                                    String streamUrl = f.optString("url", "");
-                                    if (type.contains("audio/mp4") || type.contains("audio/webm")) {
-                                        chosen = streamUrl;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (chosen == null || chosen.isEmpty()) {
-                            tryNextStream(videoId, callback, instance, attempt + 1);
-                            return;
-                        }
-
-                        if (chosen.startsWith("/")) chosen = instance + chosen;
-                        
-                        final String finalUrl = chosen;
-                        markInstanceWorked(instance);
-                        streamCache.put(videoId, new CachedUrl(finalUrl));
-                        mainHandler.post(() -> callback.onSuccess(finalUrl));
-                    } catch (Exception e) {
-                        tryNextStream(videoId, callback, instance, attempt + 1);
-                    } finally {
-                        response.close();
-                    }
+                    if (chosen.startsWith("/")) chosen = instance + chosen;
+                    final String finalUrl = chosen;
+                    markInstanceWorked(instance);
+                    streamCache.put(videoId, new CachedUrl(finalUrl));
+                    mainHandler.post(() -> callback.onSuccess(finalUrl));
+                } catch (Exception e) {
+                    tryNextStream(videoId, callback, instance, attempt + 1);
+                } finally {
+                    response.close();
                 }
-            });
-        };
-
-        long delay = backoffMs(attempt);
-        if (delay > 0) mainHandler.postDelayed(doRequest, delay);
-        else doRequest.run();
+            }
+        });
     }
 
-    private void tryNextStream(String videoId, YouTubeCallback<String> callback,
-                               String failed, int attempt) {
-        if (attempt >= 10) { // Try up to 10 instances
-            mainHandler.post(() -> callback.onError(
-                    new Exception("Stream unavailable. Check your connection and try again.")));
+    private void tryNextStream(String videoId, YouTubeCallback<String> callback, String failed, int attempt) {
+        if (attempt >= 10) {
+            mainHandler.post(() -> callback.onError(new Exception("Stream unavailable")));
             return;
         }
         String next = getNextAliveInstance(failed);
         getStreamUrlInternal(videoId, callback, next, attempt);
     }
-
-    // ── OkHttp client ─────────────────────────────────────────────────────────
 
     private OkHttpClient buildHttpClient() {
         try {
@@ -516,11 +642,7 @@ public class YouTubeApiHandler {
                     .retryOnConnectionFailure(true)
                     .build();
         } catch (Exception e) {
-            return new OkHttpClient.Builder()
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(20, TimeUnit.SECONDS)
-                    .retryOnConnectionFailure(true)
-                    .build();
+            return new OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).retryOnConnectionFailure(true).build();
         }
     }
 }

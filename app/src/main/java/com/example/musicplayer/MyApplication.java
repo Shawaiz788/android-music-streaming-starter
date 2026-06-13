@@ -266,6 +266,30 @@ public class MyApplication extends Application {
         }
     }
 
+    public static void prefetchAlbumSongs(Album album) {
+        if (album == null || album.getId() == null) return;
+        
+        // Already prefetched?
+        for (Song s : songs) {
+            if (album.getId().equals(s.getAlbumId())) return;
+        }
+
+        String query = album.getTitle() + " " + album.getArtist();
+        youtubeApiHandler.searchImmediate(query, new YouTubeApiHandler.YouTubeCallback<List<Song>>() {
+            @Override
+            public void onSuccess(List<Song> result) {
+                for (Song s : result) {
+                    s.setAlbumId(album.getId());
+                    s.setAlbum(album.getTitle());
+                    if (!songs.contains(s)) {
+                        songs.add(s);
+                    }
+                }
+            }
+            @Override public void onError(Exception e) {}
+        });
+    }
+
     private void syncData() {
         albumHandler.syncLocalAlbums(new ArrayList<>(allAlbums), albumIdMap -> {
 
@@ -316,6 +340,30 @@ public class MyApplication extends Application {
                     @Override
                     public void onError(Exception e) {
                         Log.e("MyApplication", "Failed to load YouTube trending", e);
+                    }
+                });
+
+                youtubeApiHandler.searchAlbums("Official Music Albums 2025", new YouTubeApiHandler.YouTubeCallback<List<Album>>() {
+                    @Override
+                    public void onSuccess(List<Album> result) {
+                        for (Album a : result) {
+                            if (!allAlbums.contains(a)) {
+                                allAlbums.add(a);
+                            }
+                        }
+                        
+                        // Prefetch songs for the top albums
+                        for (int i = 0; i < Math.min(10, allAlbums.size()); i++) {
+                            prefetchAlbumSongs(allAlbums.get(i));
+                        }
+
+                        cacheManager.saveAllAlbums(allAlbums);
+                        notifyAlbumsLoaded();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e("MyApplication", "Failed to load YouTube albums", e);
                     }
                 });
             });
