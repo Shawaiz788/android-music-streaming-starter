@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity
         miniBtnMaximize.setOnClickListener(v -> reopenFullPlayer());
 
         youTubePlayerView = findViewById(R.id.youtube_player_view);
-        getLifecycle().addObserver(youTubePlayerView);
+        // getLifecycle().addObserver(youTubePlayerView); // Removed to allow background playback
 
         youTubePlayerView.initialize(new AbstractYouTubePlayerListener() {
             @Override
@@ -1108,6 +1108,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+        if (youTubePlayerView != null) {
+            youTubePlayerView.release();
+        }
         super.onDestroy();
         stopProgressUpdater();
     }

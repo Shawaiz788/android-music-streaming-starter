@@ -211,6 +211,7 @@ public class PlayerManager {
         }
 
         mediaPlayer = new MediaPlayer();
+        mediaPlayer.setWakeMode(context, android.os.PowerManager.PARTIAL_WAKE_LOCK);
 
         if (MyApplication.songsHandler != null) {
             MyApplication.songsHandler.incrementPlayCount(song);

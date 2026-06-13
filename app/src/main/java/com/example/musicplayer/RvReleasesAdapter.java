@@ -47,7 +47,7 @@ ArrayList<Song>songs;
                 .setDuration(1000)
                 .build());
         Song song = songs.get(position);
-        
+
         Object imageSource = song.getImageUrl();
         DBManager dbManager = new DBManager(context);
         dbManager.Open();
