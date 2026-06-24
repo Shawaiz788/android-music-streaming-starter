@@ -11,6 +11,7 @@ import android.media.audiofx.Equalizer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -90,6 +91,15 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+        // Check and request permission in your Activity before starting the Service
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, 1234);
+            }
+        }
+
         miniPlayer = findViewById(R.id.mini_player);
         miniTitle = findViewById(R.id.mini_tv_title);
         miniArtist = findViewById(R.id.mini_tv_artist);
@@ -112,7 +122,7 @@ public class MainActivity extends AppCompatActivity
                 PlayerManager.getInstance().setYouTubePlayer(initializedYouTubePlayer);
             }
         });
-
+        youTubePlayerView.enableBackgroundPlayback(true);
         bottomNav = findViewById(R.id.bottom_navigation);
 
         NavHostFragment navHostFragment =
@@ -1111,7 +1121,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override public void onStopped() { hideMiniPlayer();
+    @Override public void onStopped() {
+        hideMiniPlayer();
         }
 
     @Override

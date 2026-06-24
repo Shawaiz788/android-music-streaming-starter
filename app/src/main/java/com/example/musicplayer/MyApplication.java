@@ -232,6 +232,14 @@ public class MyApplication extends Application {
         instance = this;
         super.onCreate();
         
+        // Start MusicService early to initialize YouTube player and foreground state
+        android.content.Intent serviceIntent = new android.content.Intent(this, MusicService.class);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+
         sessionSeed = new Random().nextLong();
         
         songs.clear();

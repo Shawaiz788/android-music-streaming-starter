@@ -2,11 +2,14 @@ package com.example.musicplayer;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants;
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer;
@@ -55,6 +58,16 @@ public class PlayerManager {
         this.youTubePlayer = youTubePlayer;
         if (this.youTubePlayer != null) {
             this.youTubePlayer.addListener(new AbstractYouTubePlayerListener() {
+                @Override
+                public void onReady(@NonNull YouTubePlayer youTubePlayer) {
+                    // If a YouTube song was requested before the player was ready, load it now
+                    if (currentSong != null && currentSong.getId() != null && currentSong.getId().startsWith("youtube_")) {
+                        String videoId = currentSong.getId().replace("youtube_", "").trim();
+                        Log.d(TAG, "YouTube player ready, loading pending video: " + videoId);
+                        youTubePlayer.loadVideo(videoId, 0);
+                    }
+                }
+
                 @Override
                 public void onStateChange(YouTubePlayer youTubePlayer, PlayerConstants.PlayerState state) {
                     if (currentSong != null && currentSong.getId() != null && currentSong.getId().startsWith("youtube_")) {
@@ -176,7 +189,12 @@ public class PlayerManager {
                 }
                 notifyService();
             } else {
-                Toast.makeText(context, "YouTube Player not ready", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "YouTube Player not ready, will load when ready");
+                // The song is set, and it will be loaded in onReady listener
+                if (listener != null) {
+                    listener.onSongChanged(currentSong);
+                }
+                notifyService();
             }
             return;
         }
@@ -212,6 +230,13 @@ public class PlayerManager {
 
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setWakeMode(context, android.os.PowerManager.PARTIAL_WAKE_LOCK);
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build());
+        }
 
         if (MyApplication.songsHandler != null) {
             MyApplication.songsHandler.incrementPlayCount(song);
